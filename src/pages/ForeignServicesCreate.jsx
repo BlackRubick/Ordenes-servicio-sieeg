@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import SignaturePadCanvas from '../components/SignaturePadCanvas';
 
 const getToday = () => new Date().toISOString().slice(0, 10);
 const generarFolioForaneo = () => `SF${new Date().toISOString().replace(/[-:T.]/g, '').slice(2, 11)}`;
@@ -46,8 +47,12 @@ function ForeignServicesCreate() {
     { area: '', ...defaultRow }
   ]);
   const [showTable, setShowTable] = useState(false);
+  const [nombreRecibe, setNombreRecibe] = useState('');
+  const [signatureData, setSignatureData] = useState('');
+  const [showSignatureModal, setShowSignatureModal] = useState(false);
   const navigate = useNavigate();
   const pdfRef = useRef();
+  const signaturePadRef = useRef();
 
   const cargarPlantilla = () => {
     setRows(AREAS.map(area => ({ area, ...defaultRow })));
@@ -335,6 +340,37 @@ function ForeignServicesCreate() {
       y += rowH;
     });
 
+    // Signature section
+    if (signatureData && nombreRecibe) {
+      y += 12;
+      y = sectionHeader('Firma de Cliente', mx, y, cw);
+      y += 8;
+
+      // Nombre de quien recibe
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      setTxt(C.bodyText);
+      doc.text('Nombre quien recibe:', mx, y);
+      doc.setFont('helvetica', 'normal');
+      doc.text(nombreRecibe, mx + 70, y);
+      y += 14;
+
+      // Firma (imagen)
+      try {
+        const sigImgWidth = 80;
+        const sigImgHeight = 40;
+        doc.addImage(signatureData, 'PNG', mx, y, sigImgWidth, sigImgHeight);
+        y += sigImgHeight + 8;
+      } catch (_) {
+        // Si hay error al cargar la firma, solo continuar
+      }
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      setTxt(C.labelText);
+      doc.text('Firma del cliente', mx, y);
+    }
+
     drawFooter(1);
 
     // Convertir a Blob
@@ -391,7 +427,8 @@ function ForeignServicesCreate() {
       description: 'Servicio foráneo',
       diagnostico: '',
       observaciones: JSON.stringify({ direccion: direccion.trim(), rows }),
-      firma: '',
+      firma: signatureData || null,
+      nombreRecibe: nombreRecibe.trim() || null,
       status: 'pendiente',
       technicianId: null,
       trabajos: [],
@@ -438,6 +475,14 @@ function ForeignServicesCreate() {
           <input className="px-4 py-3 rounded-xl border border-border bg-white shadow-card" placeholder="Dirección" value={direccion} onChange={e => setDireccion(e.target.value)} />
           <input className="px-4 py-3 rounded-xl border border-border bg-white shadow-card" placeholder="Teléfono" value={telefono} onChange={e => setTelefono(e.target.value)} maxLength={10} />
           <input className="px-4 py-3 rounded-xl border border-border bg-white shadow-card" placeholder="Fecha de mantenimiento" value={fecha} onChange={e => setFecha(e.target.value)} type="date" />
+          <input className="px-4 py-3 rounded-xl border border-border bg-white shadow-card" placeholder="Nombre de quien recibe (opcional)" value={nombreRecibe} onChange={e => setNombreRecibe(e.target.value)} />
+          <button
+            className={`px-4 py-3 rounded-xl font-bold shadow-card transition-all ${signatureData ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-cyan-500 text-white hover:bg-cyan-600'}`}
+            onClick={() => setShowSignatureModal(true)}
+            title="Capturar firma (opcional)"
+          >
+            {signatureData ? '✓ Firma Capturada' : '✍️ Capturar Firma'}
+          </button>
         </div>
         <div className="flex gap-2 mb-4 justify-end">
           {showTable && (
@@ -590,6 +635,62 @@ function ForeignServicesCreate() {
           )}
         </div>
       </div>
+
+      {/* Signature Modal */}
+      {showSignatureModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-dark mb-4">Capturar Firma del Cliente</h3>
+            
+            {/* Signature Pad */}
+            <div className="mb-4 border-2 border-border rounded-lg overflow-hidden bg-gray-50">
+              <SignaturePadCanvas
+                ref={signaturePadRef}
+                width={300}
+                height={150}
+              />
+            </div>
+
+            {/* Clear Button */}
+            <button
+              onClick={() => signaturePadRef.current?.clear()}
+              className="w-full mb-3 px-3 py-2 bg-gray-300 text-dark font-semibold rounded-lg hover:bg-gray-400 transition-all"
+            >
+              Limpiar Firma
+            </button>
+
+            {/* Confirm/Cancel Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowSignatureModal(false);
+                  signaturePadRef.current?.clear();
+                }}
+                className="flex-1 px-3 py-2 bg-gray-400 text-white font-semibold rounded-lg hover:bg-gray-500 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  if (signaturePadRef.current?.isEmpty?.()) {
+                    Swal.fire('Error', 'Por favor captura la firma', 'error');
+                    return;
+                  }
+                  // Get signature data as base64
+                  const signatureImage = signaturePadRef.current?.toDataURL?.();
+                  setSignatureData(signatureImage);
+                  setShowSignatureModal(false);
+                  signaturePadRef.current?.clear();
+                  Swal.fire('Éxito', 'Firma capturada correctamente', 'success');
+                }}
+                className="flex-1 px-3 py-2 bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-600 transition-all"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

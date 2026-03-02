@@ -20,6 +20,7 @@ const Order = sequelize.define('Order', {
   diagnostico: { type: DataTypes.TEXT, allowNull: true },
   observaciones: { type: DataTypes.STRING, allowNull: true },
   firma: { type: DataTypes.TEXT, allowNull: true },
+  nombreRecibe: { type: DataTypes.STRING, allowNull: true },
   status: { type: DataTypes.STRING, allowNull: false },
   technicianId: { type: DataTypes.INTEGER, allowNull: true },
   trabajos: { type: DataTypes.JSON, allowNull: true },

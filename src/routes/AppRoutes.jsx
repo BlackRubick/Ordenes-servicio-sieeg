@@ -47,7 +47,7 @@ const AppRoutes = () => (
   <BrowserRouter>
     <Routes>
       <Route path="/login_magic" element={<Login />} />
-      <Route path="/consulta-publica" element={<ConsultaPublica />} />
+      <Route path="/consulta-tu-orden" element={<ConsultaPublica />} />
       <Route path="/solicitar-orden-cliente" element={<SolicitarOrdenCliente />} />
 
       <Route path="/admin" element={<PrivateRoute element={<AdminDashboard />} allowedRoles={['Administrador', 'admin']} />} />
