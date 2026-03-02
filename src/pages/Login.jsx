@@ -48,11 +48,11 @@ const Login = () => {
           console.log('Usuario logueado:', data.user);
           const rol = data.user.rol?.toLowerCase();
           if (rol === 'admin' || rol === 'administrador') {
-            console.log('Navegando a /admin');
-            navigate('/admin');
+            console.log('Navegando a /admin/dashboard');
+            navigate('/admin/dashboard');
           } else if (rol === 'technician' || rol === 'técnico') {
-            console.log('Navegando a /technician');
-            navigate('/technician');
+            console.log('Navegando a /admin/orders');
+            navigate('/admin/orders');
           }
         } else {
           setError('Credenciales incorrectas');
