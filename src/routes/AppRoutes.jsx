@@ -50,20 +50,21 @@ const AppRoutes = () => (
       <Route path="/consulta-publica" element={<ConsultaPublica />} />
       <Route path="/solicitar-orden-cliente" element={<SolicitarOrdenCliente />} />
 
-      <Route path="/admin" element={<PrivateRoute element={<AdminDashboard />} allowedRoles={['Administrador']} />} />
-      <Route path="/admin/orders" element={<PrivateRoute element={<Orders />} allowedRoles={['Administrador', 'Técnico']} />} />
-      <Route path="/admin/orders/create" element={<PrivateRoute element={<CreateOrder />} allowedRoles={['Administrador']} />} />
-      <Route path="/admin/orders/:folio" element={<PrivateRoute element={<OrderDetail />} allowedRoles={['Administrador']} />} />
-      <Route path="/admin/orders/deleted" element={<PrivateRoute element={<DeletedOrders />} allowedRoles={['Administrador']} />} />
-      <Route path="/admin/technicians" element={<PrivateRoute element={<Technicians />} allowedRoles={['Administrador']} />} />
+      <Route path="/admin" element={<PrivateRoute element={<AdminDashboard />} allowedRoles={['Administrador', 'admin']} />} />
+      <Route path="/admin/dashboard" element={<PrivateRoute element={<AdminDashboard />} allowedRoles={['Administrador', 'admin']} />} />
+      <Route path="/admin/orders" element={<PrivateRoute element={<Orders />} allowedRoles={['Administrador', 'admin', 'Técnico', 'tecnico']} />} />
+      <Route path="/admin/orders/create" element={<PrivateRoute element={<CreateOrder />} allowedRoles={['Administrador', 'admin']} />} />
+      <Route path="/admin/orders/:folio" element={<PrivateRoute element={<OrderDetail />} allowedRoles={['Administrador', 'admin']} />} />
+      <Route path="/admin/orders/deleted" element={<PrivateRoute element={<DeletedOrders />} allowedRoles={['Administrador', 'admin']} />} />
+      <Route path="/admin/technicians" element={<PrivateRoute element={<Technicians />} allowedRoles={['Administrador', 'admin']} />} />
       <Route path="/technician" element={<PrivateRoute element={<TechnicianOrders />} allowedRoles={['Administrador']} />} />
       <Route path="/technician/order/:id" element={<PrivateRoute element={<TechnicianOrderDetail />} allowedRoles={['Administrador']} />} />
       <Route path="/public/create" element={<PrivateRoute element={<PublicOrderCreate />} allowedRoles={['Administrador']} />} />
       <Route path="/public/lookup" element={<PrivateRoute element={<PublicOrderLookup />} allowedRoles={['Administrador']} />} />
-      <Route path="/servicios-foraneos" element={<PrivateRoute element={<ForeignServices />} allowedRoles={['Administrador', 'Técnico']} />} />
-      <Route path="/servicios-foraneos/crear" element={<PrivateRoute element={<ForeignServicesCreate />} allowedRoles={['Administrador']} />} />
-      <Route path="/ordenes-clientes" element={<PrivateRoute element={<OrdenesClientes />} allowedRoles={['Administrador', 'Técnico']} />} />
-      <Route path="/ordenes-clientes/:id" element={<PrivateRoute element={<OrdenClienteDetalle />} allowedRoles={['Administrador', 'Técnico']} />} />
+      <Route path="/servicios-foraneos" element={<PrivateRoute element={<ForeignServices />} allowedRoles={['Administrador', 'admin', 'Técnico', 'tecnico']} />} />
+      <Route path="/servicios-foraneos/crear" element={<PrivateRoute element={<ForeignServicesCreate />} allowedRoles={['Administrador', 'admin']} />} />
+      <Route path="/ordenes-clientes" element={<PrivateRoute element={<OrdenesClientes />} allowedRoles={['Administrador', 'admin', 'Técnico', 'tecnico']} />} />
+      <Route path="/ordenes-clientes/:id" element={<PrivateRoute element={<OrdenClienteDetalle />} allowedRoles={['Administrador', 'admin', 'Técnico', 'tecnico']} />} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
