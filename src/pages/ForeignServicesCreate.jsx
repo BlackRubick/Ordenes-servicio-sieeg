@@ -394,17 +394,24 @@ function ForeignServicesCreate() {
     doc.setLineWidth(0.5);
     doc.roundedRect(sigBoxX, sigBoxY, sigBoxW, sigBoxH, 3, 3, 'S');
 
-    // Si hay firma, mostrarla, si no mostrar línea punteada
+    // Si hay firma, mostrarla
     if (signatureData) {
       try {
-        doc.addImage(signatureData, 'PNG', sigBoxX + 5, sigBoxY + 5, sigBoxW - 10, sigBoxH - 10);
-      } catch (_) {
-        // Si hay error, mostrar línea
-        doc.setLineWidth(1);
+        // Asegurarse de que es un data URL válido
+        let imageData = signatureData;
+        if (!imageData.startsWith('data:')) {
+          imageData = 'data:image/png;base64,' + imageData;
+        }
+        doc.addImage(imageData, 'PNG', sigBoxX + 5, sigBoxY + 5, sigBoxW - 10, sigBoxH - 10);
+      } catch (e) {
+        // Si hay error, mostrar línea punteada
+        setStroke(C.divider);
+        doc.setLineWidth(0.8);
         doc.line(sigBoxX + 10, sigBoxY + sigBoxH / 2, sigBoxX + sigBoxW - 10, sigBoxY + sigBoxH / 2);
       }
     } else {
       // Línea punteada en el centro para firmar
+      setStroke(C.divider);
       doc.setLineWidth(0.8);
       doc.line(sigBoxX + 10, sigBoxY + sigBoxH / 2, sigBoxX + sigBoxW - 10, sigBoxY + sigBoxH / 2);
     }
@@ -519,7 +526,7 @@ function ForeignServicesCreate() {
             onClick={() => setShowSignatureModal(true)}
             title="Capturar firma (opcional)"
           >
-            {signatureData ? '✓ Firma Capturada' : '✍️ Capturar Firma'}
+            {signatureData ? '✓ Firma Capturada' : 'Capturar Firma'}
           </button>
         </div>
         <div className="flex gap-2 mb-4 justify-end">
@@ -714,12 +721,17 @@ function ForeignServicesCreate() {
                     Swal.fire('Error', 'Por favor captura la firma', 'error');
                     return;
                   }
-                  // Get signature data as base64
-                  const signatureImage = signaturePadRef.current?.toDataURL?.();
-                  setSignatureData(signatureImage);
-                  setShowSignatureModal(false);
-                  signaturePadRef.current?.clear();
-                  Swal.fire('Éxito', 'Firma capturada correctamente', 'success');
+                  // Get signature data using getTrimmedCanvas for better quality
+                  try {
+                    const canvas = signaturePadRef.current?.getTrimmedCanvas?.() || signaturePadRef.current?.toDataURL?.();
+                    const signatureImage = typeof canvas === 'string' ? canvas : canvas?.toDataURL?.();
+                    setSignatureData(signatureImage);
+                    setShowSignatureModal(false);
+                    signaturePadRef.current?.clear();
+                    Swal.fire('Éxito', 'Firma capturada correctamente', 'success');
+                  } catch (e) {
+                    Swal.fire('Error', 'No se pudo capturar la firma', 'error');
+                  }
                 }}
                 className="flex-1 px-3 py-2 bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-600 transition-all"
               >
