@@ -390,6 +390,85 @@ export default function ForeignServices() {
       y += rowH;
     });
 
+    // ════════════════════════════════════════════════════════════════
+    //  FIRMAS Y ACEPTACIÓN - Solo mostrar si hay nombre o firma
+    // ════════════════════════════════════════════════════════════════
+    
+    if (service.firma || service.nombreRecibe) {
+      // Añadir nueva página si es necesario
+      if (y > H - 220) {
+        drawFooter(1);
+        doc.addPage();
+        drawPageBg();
+        drawHeader();
+        y = 110;
+      }
+
+      y += 20;
+      
+      // Título sección en azul oscuro navy
+      const sigSectionH = 32;
+      filledRoundRect(mx, y, cw, sigSectionH, 6, C.navy);
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(11);
+      setTxt(C.white);
+      doc.text('FIRMAS Y ACEPTACIÓN', mx + cw / 2, y + sigSectionH / 2 + 4, { align: 'center' });
+      y += sigSectionH + 14;
+
+      // Contenedor de firma del cliente
+      const sigBoxW = 250;
+      const sigBoxH = 100;
+      const sigBoxX = mx + (cw - sigBoxW) / 2; // Centrado
+      
+      // Fondo blanco con borde redondeado en azul oscuro
+      filledRoundRect(sigBoxX, y, sigBoxW, sigBoxH + 40, 8, C.white);
+      setStroke(C.navy);
+      doc.setLineWidth(1.5);
+      doc.roundedRect(sigBoxX, y, sigBoxW, sigBoxH + 40, 8, 8, 'S');
+
+      // Área de firma
+      const sigAreaY = y + 8;
+      filledRoundRect(sigBoxX + 10, sigAreaY, sigBoxW - 20, sigBoxH, 4, '#f0f4f8');
+      setStroke(C.divider);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(sigBoxX + 10, sigAreaY, sigBoxW - 20, sigBoxH, 4, 4, 'S');
+
+      // Dibujar firma si existe
+      if (service.firma) {
+        try {
+          let imageData = service.firma;
+          if (!imageData.startsWith('data:')) {
+            imageData = 'data:image/png;base64,' + imageData;
+          }
+          doc.addImage(imageData, 'PNG', sigBoxX + 15, sigAreaY + 5, sigBoxW - 30, sigBoxH - 10);
+        } catch (e) {
+          // Línea para firmar si hay error
+          setStroke(C.divider);
+          doc.setLineWidth(1);
+          doc.line(sigBoxX + 30, sigAreaY + sigBoxH / 2, sigBoxX + sigBoxW - 30, sigAreaY + sigBoxH / 2);
+        }
+      } else {
+        // Línea para firmar si no hay firma
+        setStroke(C.divider);
+        doc.setLineWidth(1);
+        doc.line(sigBoxX + 30, sigAreaY + sigBoxH / 2, sigBoxX + sigBoxW - 30, sigAreaY + sigBoxH / 2);
+      }
+
+      // Label "FIRMA DEL CLIENTE" en azul oscuro
+      const labelY = sigAreaY + sigBoxH + 8;
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(8);
+      setTxt(C.navy);
+      doc.text('FIRMA DEL CLIENTE', sigBoxX + sigBoxW / 2, labelY, { align: 'center' });
+
+      // Nombre de quien recibe debajo
+      const nameY = labelY + 12;
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(8);
+      setTxt(C.bodyText);
+      doc.text(service.nombreRecibe || '___________________________', sigBoxX + sigBoxW / 2, nameY, { align: 'center' });
+    }
+
     drawFooter(1);
 
     // Convertir a Blob
