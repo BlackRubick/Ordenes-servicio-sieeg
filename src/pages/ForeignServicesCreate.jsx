@@ -210,15 +210,13 @@ function ForeignServicesCreate() {
       doc.setFontSize(9);
       setTxt('#000000');
       doc.text('SIEEG', textX, textY + 16);
-      // Recuadro a la derecha en azul oscuro
+      // Recuadro a la derecha en azul oscuro con fondo
       const boxW = 120, boxH = 28;
       const boxX = W - boxW - 50, boxY = logoY + 6;
-      setStroke(C.navy);
-      doc.setLineWidth(1.2);
-      doc.roundedRect(boxX, boxY, boxW, boxH, 7, 7, 'S');
+      filledRoundRect(boxX, boxY, boxW, boxH, 7, C.navy);
       doc.setFont('helvetica','bold');
       doc.setFontSize(11);
-      setTxt('#000000');
+      setTxt(C.white);
       doc.text('SERVICIO FORÁNEO', boxX + boxW / 2, boxY + boxH / 2 + 3, { align: 'center' });
     };
 
