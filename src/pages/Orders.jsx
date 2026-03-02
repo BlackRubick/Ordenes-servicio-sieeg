@@ -47,208 +47,238 @@ const Orders = () => {
   const [signatureData, setSignatureData] = useState(null);
   const signaturePadRef = React.useRef();
 
-  const generateOrderPdfDoc = async (order) => {
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-    const W = doc.internal.pageSize.getWidth();
-    const H = doc.internal.pageSize.getHeight();
+const generateOrderPdfDoc = async (order) => {
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
 
-    const statusKey = order.status || order.estado || 'pendiente';
-    const statusLabel = ESTADOS[statusKey]?.label || statusKey;
-    const details = order.description || order.detalles || order.observaciones || 'No especificado';
-    const equipo = [order.tipo, order.marca, order.modelo, order.serie].filter(Boolean).join(' ');
-    const total = typeof order.resumen?.total === 'number' ? `$${order.resumen.total.toFixed(2)}` : '$0.00';
+  const statusKey = order.status || order.estado || 'pendiente';
+  const statusLabel = ESTADOS[statusKey]?.label || statusKey;
+  const details = order.description || order.detalles || order.observaciones || 'No especificado';
+  const total = typeof order.resumen?.total === 'number' ? `$${order.resumen.total.toFixed(2)}` : '$0.00';
 
-    const C = {
-      navy: '#08c7e1',
-      blue: '#35def4',
-      bg: '#F4F6F9',
-      white: '#FFFFFF',
-      divider: '#DDE3EC',
-      labelText: '#6B7A99',
-      bodyText: '#1A1A2E',
-      footerText: '#9099B2',
-    };
-
-    const rgb = (hex) => {
-      const r = parseInt(hex.slice(1, 3), 16);
-      const g = parseInt(hex.slice(3, 5), 16);
-      const b = parseInt(hex.slice(5, 7), 16);
-      return [r, g, b];
-    };
-    const setFill = (hex) => doc.setFillColor(...rgb(hex));
-    const setStroke = (hex) => doc.setDrawColor(...rgb(hex));
-    const setTxt = (hex) => doc.setTextColor(...rgb(hex));
-
-    const filledRoundRect = (x, y, w, h, r, color) => {
-      setFill(color);
-      doc.roundedRect(x, y, w, h, r, r, 'F');
-    };
-
-    const getLogoBase64 = (src) => new Promise((resolve) => {
-      const img = new window.Image();
-      img.crossOrigin = '';
-      img.onload = function () {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        canvas.getContext('2d').drawImage(img, 0, 0);
-        resolve(canvas.toDataURL('image/png'));
-      };
-      img.onerror = () => resolve(null);
-      img.src = src;
-    });
-    const logoBase64 = await getLogoBase64('/images/logo.ico');
-
-    const sectionHeader = (label, x, y, w) => {
-      filledRoundRect(x, y, w, 22, 4, C.navy);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8.5);
-      setTxt(C.white);
-      doc.text(label.toUpperCase(), x + 10, y + 14.5);
-      return y + 22;
-    };
-
-    const fieldCell = (label, value, x, y, w, h = 30) => {
-      filledRoundRect(x, y, w, h, 3, C.bg);
-      setStroke(C.divider);
-      doc.setLineWidth(0.4);
-      doc.roundedRect(x, y, w, h, 3, 3, 'S');
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(6.5);
-      setTxt(C.labelText);
-      doc.text(label.toUpperCase(), x + 6, y + 9);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8.5);
-      setTxt(C.bodyText);
-      const txt = doc.splitTextToSize(String(value || '—'), w - 12);
-      doc.text(txt[0] || '—', x + 6, y + 21);
-    };
-
-    // Background
-    setFill(C.bg);
-    doc.rect(0, 0, W, H, 'F');
-    filledRoundRect(20, 20, W - 40, H - 40, 8, C.white);
-
-    // Header
-    setFill(C.bg);
-    doc.rect(0, 0, W, 90, 'F');
-    const logoY = 22, logoH = 40, logoW = 100;
-    if (logoBase64) {
-      doc.addImage(logoBase64, 'PNG', 40, logoY, logoW, logoH);
-    }
-    const textX = 40 + logoW + 22;
-    const textY = logoY + 14;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(13);
-    setTxt('#000000');
-    doc.text('Ingeniería y Telecomunicaciones', textX, textY);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text('SIEEG', textX, textY + 16);
-    const boxW = 120, boxH = 28;
-    const boxX = W - boxW - 50, boxY = logoY + 6;
-    setStroke('#35def4');
-    doc.setLineWidth(1.2);
-    doc.roundedRect(boxX, boxY, boxW, boxH, 7, 7, 'S');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11);
-    doc.text('ORDEN DE SERVICIO', boxX + boxW / 2, boxY + boxH / 2 + 3, { align: 'center' });
-
-    const mx = 34;
-    const cw = W - mx * 2;
-    let y = 112;
-
-    // Franja superior: folio y fecha (igual estilo original)
-    const strip2W = (cw - 8) / 2;
-    filledRoundRect(mx, y, cw, 38, 5, C.bg);
-    setStroke(C.divider);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(mx, y, cw, 38, 5, 5, 'S');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(6.5);
-    setTxt(C.labelText);
-    doc.text('FOLIO', mx + 10, y + 11);
-    doc.setFontSize(10);
-    setTxt(C.blue);
-    doc.text(String(order.folio || '—'), mx + 10, y + 27);
-    doc.setFontSize(6.5);
-    setTxt(C.labelText);
-    doc.text('FECHA DE INGRESO', mx + strip2W + 10, y + 11);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    setTxt(C.bodyText);
-    const fechaFmt = String(order.fecha || '').includes('-') ? String(order.fecha).split('-').reverse().join('/') : (order.fecha || '—');
-    doc.text(fechaFmt, mx + strip2W + 10, y + 27);
-    y += 52;
-
-    // Información del cliente
-    y = sectionHeader('Información del Cliente', mx, y, cw);
-    y += 8;
-    const col3 = (cw - 12) / 3;
-    fieldCell('Nombre Completo', order.clientName || '—', mx, y, col3);
-    fieldCell('Teléfono', order.telefono || '—', mx + col3 + 6, y, col3);
-    fieldCell('Correo Electrónico', order.correo || '—', mx + col3 * 2 + 12, y, col3);
-    y += 44;
-
-    // Información del equipo
-    y = sectionHeader('Información del Equipo', mx, y, cw);
-    y += 8;
-    const col4 = (cw - 18) / 4;
-    fieldCell('Tipo de Equipo', order.tipo || '—', mx, y, col4);
-    fieldCell('Marca', order.marca || '—', mx + col4 + 6, y, col4);
-    fieldCell('Modelo', order.modelo || '—', mx + col4 * 2 + 12, y, col4);
-    fieldCell('Núm. de Serie', order.serie || '—', mx + col4 * 3 + 18, y, col4);
-    y += 44;
-
-    // Accesorios y seguridad
-    y = sectionHeader('Accesorios y Seguridad', mx, y, cw);
-    y += 8;
-    const halfW = (cw - 8) / 2;
-    const accs = [order.accesorios, order.otrosAccesorios].filter(Boolean).join(', ') || 'Sin accesorios marcados';
-    fieldCell('Accesorios Incluidos', accs, mx, y, halfW);
-    fieldCell('Contraseña / PIN', order.seguridad || '—', mx + halfW + 8, y, halfW);
-    y += 44;
-
-    // Descripción de la falla
-    y = sectionHeader('Descripción de la Falla', mx, y, cw);
-    y += 8;
-    const probLines = doc.splitTextToSize(String(details || '—'), cw - 24);
-    const probH = Math.max(44, probLines.length * 13 + 18);
-    filledRoundRect(mx, y, cw, probH, 4, C.bg);
-    setStroke(C.divider);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(mx, y, cw, probH, 4, 4, 'S');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(6.5);
-    setTxt(C.labelText);
-    doc.text('PROBLEMA REPORTADO', mx + 8, y + 10);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    setTxt(C.bodyText);
-    doc.text(probLines, mx + 8, y + 22);
-    y += probH + 16;
-
-    // Técnico asignado + estado + total
-    y = sectionHeader('Técnico Asignado', mx, y, cw);
-    y += 8;
-    const col3b = (cw - 12) / 3;
-    fieldCell('Técnico Responsable', order.tecnico || '—', mx, y, col3b);
-    fieldCell('Estado', statusLabel || '—', mx + col3b + 6, y, col3b);
-    fieldCell('Total', total || '$0.00', mx + col3b * 2 + 12, y, col3b);
-
-    // Footer
-    setStroke(C.divider);
-    doc.setLineWidth(0.5);
-    doc.line(34, H - 38, W - 34, H - 38);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.5);
-    setTxt(C.footerText);
-    doc.text('Boulevard Belisario Domínguez #4213 L5, Fracc. La Gloria, Tuxtla Gutiérrez, Chiapas', 34, H - 26);
-    doc.text('Tel: 961 118 0157  ·  WhatsApp: 961 333 6529', 34, H - 16);
-    doc.text('Página 1 de 1', W - 34, H - 16, { align: 'right' });
-
-    return doc;
+  // ── Paleta ──────────────────────────────────────────────────────
+  const C = {
+    cyan:      '#08c7e1',
+    cyanLight: '#35def4',
+    cyanDark:  '#06a8bf',
+    navy:      '#0a1628',
+    navyMid:   '#0f2040',
+    white:     '#FFFFFF',
+    offWhite:  '#F7FAFC',
+    border:    '#CBD5E0',
+    labelGray: '#718096',
+    bodyText:  '#1A202C',
+    mutedText: '#A0AEC0',
   };
+
+  const rgb = (hex) => [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+  const setFill   = (hex) => doc.setFillColor(...rgb(hex));
+  const setStroke = (hex) => doc.setDrawColor(...rgb(hex));
+  const setTxt    = (hex) => doc.setTextColor(...rgb(hex));
+  const fillRect  = (x,y,w,h,c)       => { setFill(c);   doc.rect(x,y,w,h,'F'); };
+  const fillRR    = (x,y,w,h,r,c)     => { setFill(c);   doc.roundedRect(x,y,w,h,r,r,'F'); };
+  const strokeRR  = (x,y,w,h,r,c,lw=0.5) => { setStroke(c); doc.setLineWidth(lw); doc.roundedRect(x,y,w,h,r,r,'S'); };
+
+  // ── Logo ────────────────────────────────────────────────────────
+  const getLogoBase64 = (src) => new Promise((resolve) => {
+    const img = new window.Image();
+    img.crossOrigin = '';
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      c.getContext('2d').drawImage(img, 0, 0);
+      resolve(c.toDataURL('image/png'));
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+  const logoBase64 = await getLogoBase64('/images/logo.ico');
+
+  // ════════════════════════════════════════════════════════════════
+  //  FONDO
+  // ════════════════════════════════════════════════════════════════
+  fillRect(0, 0, W, H, C.offWhite);
+
+  // ════════════════════════════════════════════════════════════════
+  //  HEADER ejecutivo de dos capas
+  // ════════════════════════════════════════════════════════════════
+  const hdrH = 112;
+  fillRect(0, 0, W, hdrH, C.navy);
+  fillRect(0, 0, W * 0.58, hdrH, C.navyMid);   // degradado simulado izquierda
+  fillRect(0, hdrH - 3, W, 3, C.cyan);           // línea de acento inferior
+  fillRect(W - 5, 0, 5, hdrH, C.cyanDark);       // borde lateral derecho
+
+  // Logo
+  if (logoBase64) doc.addImage(logoBase64, 'PNG', 30, 24, 58, 58);
+
+  // Texto empresa
+  const txtX = logoBase64 ? 102 : 30;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(15.5);
+  setTxt(C.white);
+  doc.text('Ingeniería y Telecomunicaciones', txtX, 52);
+
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+  setTxt(C.cyanLight);
+  doc.text('SIEEG  ·  Soluciones tecnológicas integrales', txtX, 67);
+
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
+  setTxt(C.mutedText);
+  doc.text('Blvd. Belisario Domínguez #4213 L5, Fracc. La Gloria, Tuxtla Gutiérrez, Chis.', txtX, 82);
+  doc.text('Tel: 961 118 0157   ·   WhatsApp: 961 333 6529', txtX, 94);
+
+  // Caja "ORDEN DE SERVICIO" (esquina superior derecha)
+  const tagW = 150, tagH = 56, tagX = W - tagW - 26, tagY = 26;
+  fillRR(tagX, tagY, tagW, tagH, 7, C.cyan);
+  setStroke(C.white); doc.setLineWidth(0.8);
+  doc.roundedRect(tagX + 3.5, tagY + 3.5, tagW - 7, tagH - 7, 4.5, 4.5, 'S');
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
+  setTxt(C.navy);
+  doc.text('ORDEN DE SERVICIO', tagX + tagW / 2, tagY + 21, { align: 'center' });
+
+  // Separador interno
+  setStroke(C.navy); doc.setLineWidth(0.5);
+  doc.line(tagX + 12, tagY + 27, tagX + tagW - 12, tagY + 27);
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
+  setTxt(C.navy);
+  doc.text(String(order.folio || '—'), tagX + tagW / 2, tagY + 45, { align: 'center' });
+
+  // ════════════════════════════════════════════════════════════════
+  //  SUBHEADER — banda info rápida
+  // ════════════════════════════════════════════════════════════════
+  const subY = hdrH + 8;
+  const subH = 46;
+  fillRR(18, subY, W - 36, subH, 6, C.white);
+  strokeRR(18, subY, W - 36, subH, 6, C.border, 0.5);
+
+  const fechaFmt = String(order.fecha || '').includes('-')
+    ? String(order.fecha).split('-').reverse().join('/')
+    : (order.fecha || '—');
+
+  // Folio
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); setTxt(C.labelGray);
+  doc.text('FOLIO', 34, subY + 15);
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); setTxt(C.cyan);
+  doc.text(String(order.folio || '—'), 34, subY + 35);
+
+  setStroke(C.border); doc.setLineWidth(0.5);
+  doc.line(132, subY + 9, 132, subY + subH - 9);
+
+  // Fecha
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); setTxt(C.labelGray);
+  doc.text('FECHA DE INGRESO', 146, subY + 15);
+  doc.setFont('helvetica','normal'); doc.setFontSize(10.5); setTxt(C.bodyText);
+  doc.text(fechaFmt, 146, subY + 33);
+
+  doc.line(W / 2 + 10, subY + 9, W / 2 + 10, subY + subH - 9);
+
+  // Estado — pill coloreado
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); setTxt(C.labelGray);
+  doc.text('ESTADO DE LA ORDEN', W / 2 + 24, subY + 15);
+
+  const pillX = W / 2 + 24, pillY = subY + 20, pillW = 120, pillH = 18;
+  fillRR(pillX, pillY, pillW, pillH, 9, '#e6fbfd');
+  strokeRR(pillX, pillY, pillW, pillH, 9, C.cyan, 0.7);
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); setTxt(C.cyanDark);
+  doc.text(statusLabel.toUpperCase(), pillX + pillW / 2, pillY + 12, { align: 'center' });
+
+  // ════════════════════════════════════════════════════════════════
+  //  HELPERS de sección
+  // ════════════════════════════════════════════════════════════════
+  const mx = 18;
+  const cw = W - mx * 2;
+  let y = subY + subH + 14;
+  const gap = 6;
+
+  const sectionHeader = (label, sx, sy, sw) => {
+    fillRR(sx, sy, sw, 21, 4, C.navy);
+    fillRR(sx, sy, 5, 21, 2, C.cyan);       // acento lateral cyan
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); setTxt(C.white);
+    doc.text(label.toUpperCase(), sx + 15, sy + 14);
+    return sy + 21;
+  };
+
+  const fieldCell = (label, value, fx, fy, fw, fh = 33) => {
+    fillRR(fx, fy, fw, fh, 4, C.white);
+    strokeRR(fx, fy, fw, fh, 4, C.border, 0.4);
+    // Fina línea de acento arriba
+    fillRR(fx, fy, fw, 2.5, 1, '#35def455');
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(6); setTxt(C.labelGray);
+    doc.text(label.toUpperCase(), fx + 8, fy + 12);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setTxt(C.bodyText);
+    const lines = doc.splitTextToSize(String(value || '—'), fw - 16);
+    doc.text(lines[0] || '—', fx + 8, fy + 25);
+  };
+
+  // ── Cliente ──────────────────────────────────────────────────
+  y = sectionHeader('Información del Cliente', mx, y, cw); y += 7;
+  const col3 = (cw - gap * 2) / 3;
+  fieldCell('Nombre Completo',    order.clientName || '—',  mx, y, col3);
+  fieldCell('Teléfono',           order.telefono   || '—',  mx + col3 + gap, y, col3);
+  fieldCell('Correo Electrónico', order.correo     || '—',  mx + col3 * 2 + gap * 2, y, col3);
+  y += 44;
+
+  // ── Equipo ───────────────────────────────────────────────────
+  y = sectionHeader('Información del Equipo', mx, y, cw); y += 7;
+  const col4 = (cw - gap * 3) / 4;
+  fieldCell('Tipo de Equipo', order.tipo   || '—', mx, y, col4);
+  fieldCell('Marca',          order.marca  || '—', mx + col4 + gap, y, col4);
+  fieldCell('Modelo',         order.modelo || '—', mx + col4 * 2 + gap * 2, y, col4);
+  fieldCell('Núm. de Serie',  order.serie  || '—', mx + col4 * 3 + gap * 3, y, col4);
+  y += 44;
+
+  // ── Accesorios ───────────────────────────────────────────────
+  y = sectionHeader('Accesorios y Seguridad', mx, y, cw); y += 7;
+  const half = (cw - gap) / 2;
+  const accs = [order.accesorios, order.otrosAccesorios].filter(Boolean).join(', ') || 'Sin accesorios marcados';
+  fieldCell('Accesorios Incluidos', accs,                 mx, y, half);
+  fieldCell('Contraseña / PIN',     order.seguridad||'—', mx + half + gap, y, half);
+  y += 44;
+
+  // ── Descripción ──────────────────────────────────────────────
+  y = sectionHeader('Descripción del Problema Reportado', mx, y, cw); y += 7;
+  const probLines = doc.splitTextToSize(String(details), cw - 24);
+  const probH = Math.max(50, probLines.length * 13 + 24);
+  fillRR(mx, y, cw, probH, 4, C.white);
+  strokeRR(mx, y, cw, probH, 4, C.border, 0.4);
+  fillRR(mx, y, cw, 2.5, 1, '#35def455');
+  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setTxt(C.bodyText);
+  doc.text(probLines, mx + 10, y + 17);
+  y += probH + 14;
+
+  // ── Técnico y total ──────────────────────────────────────────
+  y = sectionHeader('Asignación y Resumen Económico', mx, y, cw); y += 7;
+  const col3b = (cw - gap * 2) / 3;
+  fieldCell('Técnico Responsable', order.tecnico || '—', mx, y, col3b);
+  fieldCell('Estado',              statusLabel   || '—', mx + col3b + gap, y, col3b);
+
+  // Celda TOTAL con diseño especial oscuro
+  const totX = mx + col3b * 2 + gap * 2, totW = col3b;
+  fillRR(totX, y, totW, 33, 4, C.navy);
+  strokeRR(totX, y, totW, 33, 4, C.cyan, 0.8);
+  doc.setFont('helvetica','bold'); doc.setFontSize(6); setTxt(C.mutedText);
+  doc.text('TOTAL', totX + 8, y + 12);
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); setTxt(C.cyan);
+  doc.text(total, totX + totW / 2, y + 27, { align: 'center' });
+
+  // ════════════════════════════════════════════════════════════════
+  //  FOOTER ejecutivo
+  // ════════════════════════════════════════════════════════════════
+  fillRect(0, H - 42, W, 42, C.navy);
+  fillRect(0, H - 42, W, 3, C.cyan);
+
+  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setTxt(C.mutedText);
+  doc.text('Boulevard Belisario Domínguez #4213 L5, Fracc. La Gloria, Tuxtla Gutiérrez, Chiapas', W / 2, H - 24, { align: 'center' });
+  doc.text('Tel: 961 118 0157  ·  WhatsApp: 961 333 6529  ·  SIEEG Ingeniería y Telecomunicaciones', W / 2, H - 11, { align: 'center' });
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); setTxt(C.cyanLight);
+  doc.text('Pág. 1 / 1', W - 28, H - 14, { align: 'right' });
+
+  return doc;
+};
 
   const handlePreviewPdf = async (order) => {
     const doc = await generateOrderPdfDoc(order);
