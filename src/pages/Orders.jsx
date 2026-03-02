@@ -59,26 +59,32 @@ const generateOrderPdfDoc = async (order) => {
 
   // ── Paleta ──────────────────────────────────────────────────────
   const C = {
-    cyan:      '#08c7e1',
-    cyanLight: '#35def4',
-    cyanDark:  '#06a8bf',
-    navy:      '#0a1628',
-    navyMid:   '#0f2040',
-    white:     '#FFFFFF',
-    offWhite:  '#F7FAFC',
-    border:    '#CBD5E0',
-    labelGray: '#718096',
-    bodyText:  '#1A202C',
-    mutedText: '#A0AEC0',
+    primary:     '#1a3a5e',
+    primaryMid:  '#162f50',
+    primaryDark: '#0f2440',
+    primaryLight: '#2e5f9e',
+    accent:      '#4a90d9',
+    white:       '#FFFFFF',
+    offWhite:    '#F7FAFC',
+    border:      '#CBD5E0',
+    labelGray:   '#6b7a99',
+    bodyText:    '#1A202C',
+    mutedText:   '#a8c4e0',
+    mutedText2:  '#6a8faf',
+    subtleBlue:  '#eef2f7',
   };
 
-  const rgb = (hex) => [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+  const rgb = (hex) => [
+    parseInt(hex.slice(1,3),16),
+    parseInt(hex.slice(3,5),16),
+    parseInt(hex.slice(5,7),16),
+  ];
   const setFill   = (hex) => doc.setFillColor(...rgb(hex));
   const setStroke = (hex) => doc.setDrawColor(...rgb(hex));
   const setTxt    = (hex) => doc.setTextColor(...rgb(hex));
-  const fillRect  = (x,y,w,h,c)       => { setFill(c);   doc.rect(x,y,w,h,'F'); };
-  const fillRR    = (x,y,w,h,r,c)     => { setFill(c);   doc.roundedRect(x,y,w,h,r,r,'F'); };
-  const strokeRR  = (x,y,w,h,r,c,lw=0.5) => { setStroke(c); doc.setLineWidth(lw); doc.roundedRect(x,y,w,h,r,r,'S'); };
+  const fillRect  = (x,y,w,h,c)          => { setFill(c);   doc.rect(x,y,w,h,'F'); };
+  const fillRR    = (x,y,w,h,r,c)        => { setFill(c);   doc.roundedRect(x,y,w,h,r,r,'F'); };
+  const strokeRR  = (x,y,w,h,r,c,lw=0.5)=> { setStroke(c); doc.setLineWidth(lw); doc.roundedRect(x,y,w,h,r,r,'S'); };
 
   // ── Logo ────────────────────────────────────────────────────────
   const getLogoBase64 = (src) => new Promise((resolve) => {
@@ -96,62 +102,92 @@ const generateOrderPdfDoc = async (order) => {
   const logoBase64 = await getLogoBase64('/images/logo.ico');
 
   // ════════════════════════════════════════════════════════════════
-  //  FONDO
+  //  FONDO GENERAL
   // ════════════════════════════════════════════════════════════════
   fillRect(0, 0, W, H, C.offWhite);
 
   // ════════════════════════════════════════════════════════════════
-  //  HEADER ejecutivo de dos capas
+  //  HEADER ejecutivo — azul corporativo #1a3a5e
   // ════════════════════════════════════════════════════════════════
-  const hdrH = 112;
-  fillRect(0, 0, W, hdrH, C.navy);
-  fillRect(0, 0, W * 0.58, hdrH, C.navyMid);   // degradado simulado izquierda
-  fillRect(0, hdrH - 3, W, 3, C.cyan);           // línea de acento inferior
-  fillRect(W - 5, 0, 5, hdrH, C.cyanDark);       // borde lateral derecho
+  const hdrH = 100;
 
-  // Logo
-  if (logoBase64) doc.addImage(logoBase64, 'PNG', 30, 24, 58, 58);
+  // Fondo principal del header
+  fillRect(0, 0, W, hdrH, C.primary);
 
-  // Texto empresa
-  const txtX = logoBase64 ? 102 : 30;
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(15.5);
+  // Franja superior decorativa muy sutil
+  fillRect(0, 0, W, 3, C.primaryLight);
+
+  // Panel izquierdo ligeramente más oscuro (donde va el logo)
+  fillRect(0, 0, 88, hdrH, C.primaryMid);
+  // Separador vertical sutil entre panel logo y texto
+  fillRect(88, 0, 1.5, hdrH, C.primaryLight);
+
+  // Línea de cierre inferior del header (doble)
+  fillRect(0, hdrH - 4, W, 4, C.primaryDark);
+  fillRect(0, hdrH - 2, W, 2, C.primaryLight);
+
+  // Logo centrado en el panel izquierdo
+  if (logoBase64) {
+    doc.addImage(logoBase64, 'PNG', 14, 20, 58, 58);
+  }
+
+  // Nombre de la empresa
+  const txtX = 104;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
   setTxt(C.white);
-  doc.text('Ingeniería y Telecomunicaciones', txtX, 52);
+  doc.text('Ingeniería y Telecomunicaciones', txtX, 42);
 
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
-  setTxt(C.cyanLight);
-  doc.text('SIEEG  ·  Soluciones tecnológicas integrales', txtX, 67);
+  // Línea de acento bajo el nombre
+  fillRect(txtX, 46, 248, 1.5, C.accent);
 
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
   setTxt(C.mutedText);
-  doc.text('Blvd. Belisario Domínguez #4213 L5, Fracc. La Gloria, Tuxtla Gutiérrez, Chis.', txtX, 82);
-  doc.text('Tel: 961 118 0157   ·   WhatsApp: 961 333 6529', txtX, 94);
+  doc.text('SIEEG  ·  Soluciones Tecnológicas Integrales', txtX, 60);
 
-  // Caja "ORDEN DE SERVICIO" (esquina superior derecha)
-  const tagW = 150, tagH = 56, tagX = W - tagW - 26, tagY = 26;
-  fillRR(tagX, tagY, tagW, tagH, 7, C.cyan);
-  setStroke(C.white); doc.setLineWidth(0.8);
-  doc.roundedRect(tagX + 3.5, tagY + 3.5, tagW - 7, tagH - 7, 4.5, 4.5, 'S');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  setTxt(C.mutedText2);
+  doc.text('Blvd. Belisario Domínguez #4213 L5, Fracc. La Gloria, Tuxtla Gutiérrez, Chis.', txtX, 74);
+  doc.text('Tel: 961 118 0157   ·   WhatsApp: 961 333 6529', txtX, 85);
 
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
-  setTxt(C.navy);
-  doc.text('ORDEN DE SERVICIO', tagX + tagW / 2, tagY + 21, { align: 'center' });
+  // ── Badge "ORDEN DE SERVICIO" (esquina derecha) ──────────────────
+  const tagW = 148, tagH = 64, tagX = W - tagW - 24, tagY = 17;
 
-  // Separador interno
-  setStroke(C.navy); doc.setLineWidth(0.5);
-  doc.line(tagX + 12, tagY + 27, tagX + tagW - 12, tagY + 27);
+  // Fondo blanco del badge
+  fillRR(tagX, tagY, tagW, tagH, 5, C.white);
+  setStroke(C.primary); doc.setLineWidth(1.5);
+  doc.roundedRect(tagX, tagY, tagW, tagH, 5, 5, 'S');
 
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(15);
-  setTxt(C.navy);
-  doc.text(String(order.folio || '—'), tagX + tagW / 2, tagY + 45, { align: 'center' });
+  // Franja superior azul dentro del badge
+  fillRR(tagX, tagY, tagW, 23, 5, C.primary);
+  // Rectángulo para tapar las esquinas inferiores redondeadas de la franja
+  fillRect(tagX, tagY + 15, tagW, 8, C.primary);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  setTxt(C.white);
+  doc.text('ORDEN DE SERVICIO', tagX + tagW / 2, tagY + 15, { align: 'center' });
+
+  // Folio grande en la zona blanca del badge
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(19);
+  setTxt(C.primary);
+  doc.text(String(order.folio || '—'), tagX + tagW / 2, tagY + 50, { align: 'center' });
+
+  // Línea decorativa bajo el folio
+  setStroke('#d0dce8'); doc.setLineWidth(0.5);
+  doc.line(tagX + 16, tagY + 57, tagX + tagW - 16, tagY + 57);
 
   // ════════════════════════════════════════════════════════════════
-  //  SUBHEADER — banda info rápida
+  //  SUBHEADER — banda de info rápida
   // ════════════════════════════════════════════════════════════════
   const subY = hdrH + 8;
   const subH = 46;
-  fillRR(18, subY, W - 36, subH, 6, C.white);
-  strokeRR(18, subY, W - 36, subH, 6, C.border, 0.5);
+
+  fillRR(18, subY, W - 36, subH, 5, C.white);
+  strokeRR(18, subY, W - 36, subH, 5, C.border, 0.5);
 
   const fechaFmt = String(order.fecha || '').includes('-')
     ? String(order.fecha).split('-').reverse().join('/')
@@ -160,13 +196,13 @@ const generateOrderPdfDoc = async (order) => {
   // Folio
   doc.setFont('helvetica','bold'); doc.setFontSize(6.5); setTxt(C.labelGray);
   doc.text('FOLIO', 34, subY + 15);
-  doc.setFont('helvetica','bold'); doc.setFontSize(14); setTxt(C.cyan);
-  doc.text(String(order.folio || '—'), 34, subY + 35);
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); setTxt(C.primary);
+  doc.text(String(order.folio || '—'), 34, subY + 34);
 
   setStroke(C.border); doc.setLineWidth(0.5);
   doc.line(132, subY + 9, 132, subY + subH - 9);
 
-  // Fecha
+  // Fecha de ingreso
   doc.setFont('helvetica','bold'); doc.setFontSize(6.5); setTxt(C.labelGray);
   doc.text('FECHA DE INGRESO', 146, subY + 15);
   doc.setFont('helvetica','normal'); doc.setFontSize(10.5); setTxt(C.bodyText);
@@ -174,27 +210,26 @@ const generateOrderPdfDoc = async (order) => {
 
   doc.line(W / 2 + 10, subY + 9, W / 2 + 10, subY + subH - 9);
 
-  // Estado — pill coloreado
+  // Estado — pill corporativo
   doc.setFont('helvetica','bold'); doc.setFontSize(6.5); setTxt(C.labelGray);
   doc.text('ESTADO DE LA ORDEN', W / 2 + 24, subY + 15);
-
   const pillX = W / 2 + 24, pillY = subY + 20, pillW = 120, pillH = 18;
-  fillRR(pillX, pillY, pillW, pillH, 9, '#e6fbfd');
-  strokeRR(pillX, pillY, pillW, pillH, 9, C.cyan, 0.7);
-  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); setTxt(C.cyanDark);
+  fillRR(pillX, pillY, pillW, pillH, 9, C.subtleBlue);
+  strokeRR(pillX, pillY, pillW, pillH, 9, C.primary, 0.7);
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); setTxt(C.primary);
   doc.text(statusLabel.toUpperCase(), pillX + pillW / 2, pillY + 12, { align: 'center' });
 
   // ════════════════════════════════════════════════════════════════
-  //  HELPERS de sección
+  //  HELPERS — sección y campos
   // ════════════════════════════════════════════════════════════════
-  const mx = 18;
-  const cw = W - mx * 2;
-  let y = subY + subH + 14;
+  const mx  = 18;
+  const cw  = W - mx * 2;
+  let y     = subY + subH + 14;
   const gap = 6;
 
   const sectionHeader = (label, sx, sy, sw) => {
-    fillRR(sx, sy, sw, 21, 4, C.navy);
-    fillRR(sx, sy, 5, 21, 2, C.cyan);       // acento lateral cyan
+    fillRR(sx, sy, sw, 21, 4, C.primary);
+    fillRR(sx, sy, 5, 21, 2, C.accent);
     doc.setFont('helvetica','bold'); doc.setFontSize(8); setTxt(C.white);
     doc.text(label.toUpperCase(), sx + 15, sy + 14);
     return sy + 21;
@@ -203,8 +238,8 @@ const generateOrderPdfDoc = async (order) => {
   const fieldCell = (label, value, fx, fy, fw, fh = 33) => {
     fillRR(fx, fy, fw, fh, 4, C.white);
     strokeRR(fx, fy, fw, fh, 4, C.border, 0.4);
-    // Fina línea de acento arriba
-    fillRR(fx, fy, fw, 2.5, 1, '#35def455');
+    // Línea de acento superior muy sutil
+    fillRR(fx, fy, fw, 2.5, 1, C.accent + '55');
 
     doc.setFont('helvetica','bold'); doc.setFontSize(6); setTxt(C.labelGray);
     doc.text(label.toUpperCase(), fx + 8, fy + 12);
@@ -213,68 +248,75 @@ const generateOrderPdfDoc = async (order) => {
     doc.text(lines[0] || '—', fx + 8, fy + 25);
   };
 
-  // ── Cliente ──────────────────────────────────────────────────
+  // ── Información del Cliente ───────────────────────────────────
   y = sectionHeader('Información del Cliente', mx, y, cw); y += 7;
   const col3 = (cw - gap * 2) / 3;
-  fieldCell('Nombre Completo',    order.clientName || '—',  mx, y, col3);
-  fieldCell('Teléfono',           order.telefono   || '—',  mx + col3 + gap, y, col3);
+  fieldCell('Nombre Completo',    order.clientName || '—',  mx,                       y, col3);
+  fieldCell('Teléfono',           order.telefono   || '—',  mx + col3 + gap,          y, col3);
   fieldCell('Correo Electrónico', order.correo     || '—',  mx + col3 * 2 + gap * 2, y, col3);
   y += 44;
 
-  // ── Equipo ───────────────────────────────────────────────────
+  // ── Información del Equipo ────────────────────────────────────
   y = sectionHeader('Información del Equipo', mx, y, cw); y += 7;
   const col4 = (cw - gap * 3) / 4;
-  fieldCell('Tipo de Equipo', order.tipo   || '—', mx, y, col4);
-  fieldCell('Marca',          order.marca  || '—', mx + col4 + gap, y, col4);
+  fieldCell('Tipo de Equipo', order.tipo   || '—', mx,                       y, col4);
+  fieldCell('Marca',          order.marca  || '—', mx + col4 + gap,          y, col4);
   fieldCell('Modelo',         order.modelo || '—', mx + col4 * 2 + gap * 2, y, col4);
   fieldCell('Núm. de Serie',  order.serie  || '—', mx + col4 * 3 + gap * 3, y, col4);
   y += 44;
 
-  // ── Accesorios ───────────────────────────────────────────────
+  // ── Accesorios y Seguridad ────────────────────────────────────
   y = sectionHeader('Accesorios y Seguridad', mx, y, cw); y += 7;
   const half = (cw - gap) / 2;
   const accs = [order.accesorios, order.otrosAccesorios].filter(Boolean).join(', ') || 'Sin accesorios marcados';
-  fieldCell('Accesorios Incluidos', accs,                 mx, y, half);
-  fieldCell('Contraseña / PIN',     order.seguridad||'—', mx + half + gap, y, half);
+  fieldCell('Accesorios Incluidos', accs,                  mx,           y, half);
+  fieldCell('Contraseña / PIN',     order.seguridad || '—', mx + half + gap, y, half);
   y += 44;
 
-  // ── Descripción ──────────────────────────────────────────────
+  // ── Descripción del Problema ──────────────────────────────────
   y = sectionHeader('Descripción del Problema Reportado', mx, y, cw); y += 7;
   const probLines = doc.splitTextToSize(String(details), cw - 24);
   const probH = Math.max(50, probLines.length * 13 + 24);
   fillRR(mx, y, cw, probH, 4, C.white);
   strokeRR(mx, y, cw, probH, 4, C.border, 0.4);
-  fillRR(mx, y, cw, 2.5, 1, '#35def455');
+  fillRR(mx, y, cw, 2.5, 1, C.accent + '55');
   doc.setFont('helvetica','normal'); doc.setFontSize(8.5); setTxt(C.bodyText);
   doc.text(probLines, mx + 10, y + 17);
   y += probH + 14;
 
-  // ── Técnico y total ──────────────────────────────────────────
+  // ── Asignación y Resumen ──────────────────────────────────────
   y = sectionHeader('Asignación y Resumen Económico', mx, y, cw); y += 7;
   const col3b = (cw - gap * 2) / 3;
-  fieldCell('Técnico Responsable', order.tecnico || '—', mx, y, col3b);
-  fieldCell('Estado',              statusLabel   || '—', mx + col3b + gap, y, col3b);
+  fieldCell('Técnico Responsable', order.tecnico || '—', mx,                y, col3b);
+  fieldCell('Estado de la Orden',  statusLabel   || '—', mx + col3b + gap, y, col3b);
 
-  // Celda TOTAL con diseño especial oscuro
-  const totX = mx + col3b * 2 + gap * 2, totW = col3b;
-  fillRR(totX, y, totW, 33, 4, C.navy);
-  strokeRR(totX, y, totW, 33, 4, C.cyan, 0.8);
+  // Celda TOTAL — diseño destacado
+  const totX = mx + col3b * 2 + gap * 2;
+  const totW = col3b;
+  fillRR(totX, y, totW, 33, 4, C.primary);
+  strokeRR(totX, y, totW, 33, 4, C.primaryLight, 0.8);
   doc.setFont('helvetica','bold'); doc.setFontSize(6); setTxt(C.mutedText);
   doc.text('TOTAL', totX + 8, y + 12);
-  doc.setFont('helvetica','bold'); doc.setFontSize(14); setTxt(C.cyan);
+  doc.setFont('helvetica','bold'); doc.setFontSize(14); setTxt(C.white);
   doc.text(total, totX + totW / 2, y + 27, { align: 'center' });
 
   // ════════════════════════════════════════════════════════════════
   //  FOOTER ejecutivo
   // ════════════════════════════════════════════════════════════════
-  fillRect(0, H - 42, W, 42, C.navy);
-  fillRect(0, H - 42, W, 3, C.cyan);
+  fillRect(0, H - 42, W, 42, C.primary);
+  fillRect(0, H - 42, W, 2, C.primaryLight);
 
   doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setTxt(C.mutedText);
-  doc.text('Boulevard Belisario Domínguez #4213 L5, Fracc. La Gloria, Tuxtla Gutiérrez, Chiapas', W / 2, H - 24, { align: 'center' });
-  doc.text('Tel: 961 118 0157  ·  WhatsApp: 961 333 6529  ·  SIEEG Ingeniería y Telecomunicaciones', W / 2, H - 11, { align: 'center' });
+  doc.text(
+    'Boulevard Belisario Domínguez #4213 L5, Fracc. La Gloria, Tuxtla Gutiérrez, Chiapas',
+    W / 2, H - 22, { align: 'center' }
+  );
+  doc.text(
+    'Tel: 961 118 0157  ·  WhatsApp: 961 333 6529  ·  SIEEG Ingeniería y Telecomunicaciones',
+    W / 2, H - 10, { align: 'center' }
+  );
 
-  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); setTxt(C.cyanLight);
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); setTxt(C.mutedText);
   doc.text('Pág. 1 / 1', W - 28, H - 14, { align: 'right' });
 
   return doc;
