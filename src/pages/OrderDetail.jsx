@@ -58,7 +58,7 @@ export default function OrderDetail() {
     }).then(result => {
       if (result.isConfirmed) {
         const nuevosTrabajos = trabajos.filter((_, i) => i !== idx);
-        fetch(`http://localhost:3001/api/orders/${order.folio}/trabajos`, {
+        fetch(`/api/orders/${order.folio}/trabajos`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ trabajos: nuevosTrabajos })
@@ -101,7 +101,7 @@ export default function OrderDetail() {
     const nuevosTrabajos = trabajos.map((t, idx) =>
       idx === editIndex ? { descripcion: editDescripcion, costo: parseFloat(editCosto) } : t
     );
-    fetch(`http://localhost:3001/api/orders/${order.folio}/trabajos`, {
+    fetch(`/api/orders/${order.folio}/trabajos`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ trabajos: nuevosTrabajos })
@@ -134,7 +134,7 @@ export default function OrderDetail() {
       return;
     }
     const nuevosTrabajos = [...trabajos, { descripcion: trabajoDescripcion, costo: parseFloat(trabajoCosto) }];
-    fetch(`http://localhost:3001/api/orders/${order.folio}/trabajos`, {
+    fetch(`/api/orders/${order.folio}/trabajos`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ trabajos: nuevosTrabajos })
@@ -159,7 +159,7 @@ export default function OrderDetail() {
 
   const handleGuardarDiagnostico = async () => {
     try {
-      await fetch(`http://localhost:3001/api/orders/${order.folio}/diagnostico`, {
+      await fetch(`/api/orders/${order.folio}/diagnostico`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ diagnostico })
@@ -184,7 +184,7 @@ export default function OrderDetail() {
   };
 
   React.useEffect(() => {
-    fetch(`http://localhost:3001/api/orders?folio=${folio}`)
+    fetch(`/api/orders?folio=${folio}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.length > 0) {
@@ -338,7 +338,7 @@ export default function OrderDetail() {
                 const newEstado = e.target.value;
                 setEstadoTecnico(newEstado);
                 try {
-                  await fetch(`http://localhost:3001/api/orders/${order.folio}/estado`, {
+                  await fetch(`/api/orders/${order.folio}/estado`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ estado: newEstado })

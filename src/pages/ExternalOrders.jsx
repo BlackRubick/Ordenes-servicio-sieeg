@@ -9,7 +9,7 @@ export default function ExternalOrders() {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    fetch('http://localhost:3001/api/orders?external=true')
+    fetch('/api/orders?external=true')
       .then(res => res.json())
       .then(data => setOrders(data))
       .catch(() => setOrders([]));

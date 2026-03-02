@@ -29,7 +29,7 @@ export default function ConsultaPublica() {
       return;
     }
     
-    fetch(`http://localhost:3001/api/orders`)
+    fetch(`/api/orders`)
       .then(res => res.json())
       .then(data => {
         const allOrders = Array.isArray(data) ? data : [];
@@ -97,7 +97,6 @@ export default function ConsultaPublica() {
       )}
       {order && (
         <div className="w-full max-w-2xl mt-8 animate-fade-in">
-          {/* Header azul con folio */}
           <div className="rounded-t-2xl bg-blue-500 px-6 pt-6 pb-3 flex items-center justify-between shadow-md">
             <div>
               <div className="text-xs text-white/80 font-semibold">Folio de Orden</div>

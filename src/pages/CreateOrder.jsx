@@ -45,7 +45,7 @@ const CreateOrder = () => {
   const [tecnicos, setTecnicos] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/users')
+    fetch('/api/users')
       .then(res => res.json())
       .then(data => {
         // Filtra solo usuarios con rol 'Técnico' (case-insensitive)
@@ -149,7 +149,7 @@ const CreateOrder = () => {
       technicianId: form.tecnico ? parseInt(form.tecnico) : null,
     };
     try {
-      const res = await fetch('http://localhost:3001/api/orders', {
+      const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

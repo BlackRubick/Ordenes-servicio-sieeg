@@ -5,7 +5,7 @@ const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/orders')
+    fetch('/api/orders')
       .then(res => res.json())
       .then(data => setOrders(data))
       .catch(() => setOrders([]));

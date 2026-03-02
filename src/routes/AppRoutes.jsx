@@ -36,7 +36,6 @@ const PrivateRoute = ({ element, allowedRoles = [] }) => {
   
   if (!user) return <NotFound />;
   
-  // Si hay roles permitidos y el usuario no tiene uno de ellos
   if (normalizedAllowed.length > 0 && !normalizedAllowed.includes(normalizedRole)) {
     return <NotFound />;
   }
@@ -51,7 +50,6 @@ const AppRoutes = () => (
       <Route path="/consulta-publica" element={<ConsultaPublica />} />
       <Route path="/solicitar-orden-cliente" element={<SolicitarOrdenCliente />} />
 
-      {/* Rutas privadas solo si hay usuario autenticado */}
       <Route path="/admin" element={<PrivateRoute element={<AdminDashboard />} allowedRoles={['Administrador']} />} />
       <Route path="/admin/orders" element={<PrivateRoute element={<Orders />} allowedRoles={['Administrador', 'Técnico']} />} />
       <Route path="/admin/orders/create" element={<PrivateRoute element={<CreateOrder />} allowedRoles={['Administrador']} />} />

@@ -263,7 +263,7 @@ const Orders = () => {
   };
 
   React.useEffect(() => {
-    fetch('http://localhost:3001/api/orders?excludeForeign=true')
+    fetch('/api/orders?excludeForeign=true')
       .then(res => res.json())
       .then(data => {
         // Parse resumen if it's a string
@@ -286,7 +286,7 @@ const Orders = () => {
         setOrders(filtered);
       })
       .catch(() => Swal.fire('Error', 'No se pudieron cargar las órdenes', 'error'));
-    fetch('http://localhost:3001/api/technicians')
+    fetch('/api/technicians')
       .then(res => res.json())
       .then(data => setAllTechnicians(data))
       .catch(() => Swal.fire('Error', 'No se pudieron cargar los técnicos', 'error'));
@@ -405,7 +405,7 @@ const Orders = () => {
                           if (!selected) return;
                           setOrders(prev => prev.map((ord, i) => i === idx ? { ...ord, tecnico: newTecnico } : ord));
                           try {
-                            await fetch(`http://localhost:3001/api/orders/${o.folio}/tecnico`, {
+                            await fetch(`/api/orders/${o.folio}/tecnico`, {
                               method: 'PUT',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({ technicianId: selected.id })
@@ -443,7 +443,7 @@ const Orders = () => {
                             setOrders(prev => prev.map((ord, i) => i === idx ? { ...ord, status: newEstado } : ord));
                             // Actualiza en backend
                             try {
-                              await fetch(`http://localhost:3001/api/orders/${o.folio}/estado`, {
+                              await fetch(`/api/orders/${o.folio}/estado`, {
                                 method: 'PUT',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ estado: newEstado })

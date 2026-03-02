@@ -18,7 +18,7 @@ const Technicians = () => {
         cancelButtonText: 'Cancelar',
       }).then(result => {
         if (result.isConfirmed) {
-          fetch(`http://localhost:3001/api/users/${user.id}`, {
+          fetch(`/api/users/${user.id}`, {
             method: 'DELETE'
           })
             .then(res => res.json())
@@ -37,7 +37,7 @@ const Technicians = () => {
   const [createData, setCreateData] = useState({ nombre: '', correo: '', contrasena: '', rol: ROLES[0], estado: ESTADOS[0] });
 
   React.useEffect(() => {
-    fetch('http://localhost:3001/api/users')
+    fetch('/api/users')
       .then(res => res.json())
       .then(data => {
         console.log('Usuarios recibidos:', data);
@@ -56,7 +56,7 @@ const Technicians = () => {
 
   const handleSave = () => {
     const user = users[editIdx];
-    fetch(`http://localhost:3001/api/users/${user.id}`, {
+    fetch(`/api/users/${user.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(editData)
@@ -141,7 +141,7 @@ const Technicians = () => {
             <div className="flex gap-2 justify-end mt-2">
               <button className="px-4 py-2 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300" onClick={() => setShowCreate(false)}>Cancelar</button>
               <button className="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700" onClick={() => {
-                fetch('http://localhost:3001/api/users', {
+                fetch('/api/users', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({

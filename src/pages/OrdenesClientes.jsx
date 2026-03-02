@@ -37,7 +37,7 @@ function OrdenesClientes() {
 
   useEffect(() => {
     // Cargar órdenes de tipo cliente
-    fetch('http://localhost:3001/api/orders')
+    fetch('/api/orders')
       .then(res => res.json())
       .then(data => {
         let clienteOrders = (Array.isArray(data) ? data : [])
@@ -66,7 +66,7 @@ function OrdenesClientes() {
       });
 
     // Cargar técnicos
-    fetch('http://localhost:3001/api/users')
+    fetch('/api/users')
       .then(res => res.json())
       .then(data => {
         setTechnicians(data.filter(u => (u.rol || '').toLowerCase() === 'técnico'));
@@ -82,7 +82,7 @@ function OrdenesClientes() {
     setOrdenes(prev => prev.map((o, i) => (i === idx ? { ...o, tecnico: technicianName } : o)));
 
     try {
-      await fetch(`http://localhost:3001/api/orders/${orden.folio}/tecnico`, {
+      await fetch(`/api/orders/${orden.folio}/tecnico`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ technicianId: selected.id }),
@@ -97,7 +97,7 @@ function OrdenesClientes() {
     setOrdenes(prev => prev.map((o, i) => (i === idx ? { ...o, estado: newEstado } : o)));
 
     try {
-      await fetch(`http://localhost:3001/api/orders/${orden.folio}/estado`, {
+      await fetch(`/api/orders/${orden.folio}/estado`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estado: newEstado }),

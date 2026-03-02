@@ -54,7 +54,7 @@ export default function ForeignServices() {
   const [technicians, setTechnicians] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/orders?foraneo=true')
+    fetch('/api/orders?foraneo=true')
       .then(res => res.json())
       .then(data => {
         let mapped = (Array.isArray(data) ? data : [])
@@ -75,7 +75,7 @@ export default function ForeignServices() {
         setServices([]);
       });
 
-    fetch('http://localhost:3001/api/technicians')
+    fetch('/api/technicians')
       .then(res => res.json())
       .then(data => setTechnicians(Array.isArray(data) ? data : []))
       .catch(() => setTechnicians([]));
@@ -89,7 +89,7 @@ export default function ForeignServices() {
     setServices(prev => prev.map((s, i) => (i === idx ? { ...s, tecnico: technicianName } : s)));
 
     try {
-      await fetch(`http://localhost:3001/api/orders/${service.folio}/tecnico`, {
+      await fetch(`/api/orders/${service.folio}/tecnico`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ technicianId: selected.id }),
@@ -104,7 +104,7 @@ export default function ForeignServices() {
     setServices(prev => prev.map((s, i) => (i === idx ? { ...s, status: newEstado } : s)));
 
     try {
-      await fetch(`http://localhost:3001/api/orders/${service.folio}/estado`, {
+      await fetch(`/api/orders/${service.folio}/estado`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ estado: newEstado }),
@@ -130,7 +130,7 @@ export default function ForeignServices() {
     if (!result.isConfirmed) return;
 
     try {
-      const res = await fetch(`http://localhost:3001/api/orders/${service.folio}`, {
+      const res = await fetch(`/api/orders/${service.folio}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
       });
