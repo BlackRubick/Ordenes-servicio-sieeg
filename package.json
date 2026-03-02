@@ -7,6 +7,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
+    "jspdf": "^2.5.1",
     "mysql2": "^3.18.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -15,7 +16,8 @@
     "sequelize": "^6.37.7",
     "sequelize-cli": "^6.6.5",
     "sweetalert2": "^11.26.20",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "zustand": "^4.4.1"
   },
   "scripts": {
     "start": "react-scripts start",

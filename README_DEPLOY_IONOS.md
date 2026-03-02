@@ -17,7 +17,7 @@ Guía práctica para dejar la plataforma funcionando en producción, con:
 | **Dominio Frontend** | `ordenes.sieeg.com.mx` |
 | **Directorio destino** | `/var/www/ordenes-servicio-sieeg` |
 | **Backend Port** | `3001` |
-| **Base de datos** | `newordenes_prod` |
+| **Base de datos** | `newordenes_db` |
 
 > **IMPORTANTE:** Asegúrate de que el DNS apunte `ordenes.sieeg.com.mx` a `74.208.164.167`
 
@@ -84,9 +84,9 @@ mysql -u root -p
 Ejecutar:
 
 ```sql
-CREATE DATABASE IF NOT EXISTS newordenes_prod CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS newordenes_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER IF NOT EXISTS 'cesar'@'localhost' IDENTIFIED BY 'cesar123';
-GRANT ALL PRIVILEGES ON newordenes_prod.* TO 'cesar'@'localhost';
+GRANT ALL PRIVILEGES ON newordenes_db.* TO 'cesar'@'localhost';
 FLUSH PRIVILEGES;
 EXIT;
 ```
@@ -101,7 +101,7 @@ Crear archivo:
 cat > /var/www/ordenes-servicio-sieeg/api/.env << 'EOF'
 PORT=3001
 DB_HOST=localhost
-DB_NAME=newordenes_prod
+DB_NAME=newordenes_db
 DB_USER=cesar
 DB_PASS=cesar123
 EOF
@@ -157,6 +157,14 @@ Esto genera `/var/www/ordenes-servicio-sieeg/build`.
 
 ## 8) Levantar backend con PM2
 
+Primero, si hay procesos viejos, elimínalos:
+
+```bash
+pm2 delete all
+```
+
+Luego inicia el backend:
+
 ```bash
 cd /var/www/ordenes-servicio-sieeg
 pm2 start api/index.js --name neworders-api
@@ -166,10 +174,17 @@ pm2 startup
 
 El comando `pm2 startup` te dará otra línea para ejecutar (cópiala y ejecútala).
 
-Validar backend:
+Validar que esté corriendo:
 
 ```bash
 pm2 status
+```
+
+Debe mostrar **solo un proceso** llamado `neworders-api` con estado `online`.
+
+Probar que responda:
+
+```bash
 curl http://127.0.0.1:3001/
 ```
 
