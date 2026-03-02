@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
 import { useAuthStore } from '../store/authStore';
+import SignaturePadCanvas from '../components/SignaturePadCanvas';
 
 const STATUS_OPTIONS = [
   { value: 'pendiente', label: 'Pendiente' },
@@ -52,6 +53,10 @@ export default function ForeignServices() {
   const currentUserName = user?.nombre || user?.name || '';
   const [services, setServices] = useState([]);
   const [technicians, setTechnicians] = useState([]);
+  const [signatureFolioIdx, setSignatureFolioIdx] = useState(null);
+  const [signatureName, setSignatureName] = useState('');
+  const [signatureData, setSignatureData] = useState(null);
+  const signaturePadRef = useRef();
 
   useEffect(() => {
     fetch('/api/orders?foraneo=true')
@@ -390,6 +395,37 @@ export default function ForeignServices() {
       y += rowH;
     });
 
+    // Signature section
+    if (service.signatureData && service.signatureName) {
+      y += 12;
+      y = sectionHeader('Firma de Cliente', mx, y, cw);
+      y += 8;
+
+      // Nombre de quien firma
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      setTxt(C.bodyText);
+      doc.text('Nombre:', mx, y);
+      doc.setFont('helvetica', 'normal');
+      doc.text(service.signatureName, mx + 40, y);
+      y += 14;
+
+      // Firma (imagen)
+      try {
+        const sigImgWidth = 80;
+        const sigImgHeight = 40;
+        doc.addImage(service.signatureData, 'PNG', mx, y, sigImgWidth, sigImgHeight);
+        y += sigImgHeight + 8;
+      } catch (_) {
+        // Si hay error al cargar la firma, solo continuar
+      }
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      setTxt(C.labelText);
+      doc.text('Firma del cliente', mx, y);
+    }
+
     drawFooter(1);
 
     // Convertir a Blob
@@ -428,6 +464,7 @@ export default function ForeignServices() {
               <th className="py-3 px-4">Cliente</th>
               <th className="py-3 px-4">Dirección</th>
               <th className="py-3 px-4">Fecha</th>
+              <th className="py-3 px-4">Firma</th>
               <th className="py-3 px-4">Técnico</th>
               <th className="py-3 px-4">Estado</th>
               <th className="py-3 px-4 rounded-tr-2xl">Acciones</th>
@@ -436,7 +473,7 @@ export default function ForeignServices() {
           <tbody>
             {services.length === 0 && (
               <tr>
-                <td colSpan={7} className="text-center text-muted py-8 bg-white rounded-b-2xl">
+                <td colSpan={8} className="text-center text-muted py-8 bg-white rounded-b-2xl">
                   No hay servicios foráneos registrados.
                 </td>
               </tr>
@@ -449,7 +486,27 @@ export default function ForeignServices() {
                 <td className="py-4 px-4 font-bold text-dark">{service.folio || '-'}</td>
                 <td className="py-4 px-4">{service.clientName || '-'}</td>
                 <td className="py-4 px-4">{service.direccion}</td>
-                <td className="py-4 px-4">{service.fecha || '-'}</td>
+                <td className="py-4 px-4">
+                  <div className="flex items-center gap-2">
+                    <span>{service.fecha || '-'}</span>
+                    {service.signatureData && (
+                      <span className="text-xs bg-green-200 text-green-800 px-2 py-1 rounded-full font-semibold">
+                        ✓ Firmada
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="px-2 py-1 text-sm bg-cyan-500 text-white rounded-lg hover:bg-cyan-600 transition-all"
+                      onClick={() => setSignatureFolioIdx(service.folio || service.id)}
+                      title="Firma de cliente"
+                    >
+                      ✍️ Firmar
+                    </button>
+                  </div>
+                </td>
                 <td className="py-4 px-4">
                   {isTechnician ? (
                     <span className="font-semibold text-primary-600">{service.tecnico || 'Sin asignar'}</span>
@@ -503,6 +560,92 @@ export default function ForeignServices() {
           </tbody>
         </table>
       </div>
+
+      {/* Signature Modal */}
+      {signatureFolioIdx !== null && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-dark mb-4">Firma de Cliente</h3>
+            
+            {/* Name Input */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-dark mb-2">
+                Nombre de quien firma:
+              </label>
+              <input
+                type="text"
+                value={signatureName}
+                onChange={(e) => setSignatureName(e.target.value)}
+                placeholder="Ej: Juan Pérez"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+
+            {/* Signature Pad */}
+            <div className="mb-4 border-2 border-border rounded-lg overflow-hidden bg-gray-50">
+              <SignaturePadCanvas
+                ref={signaturePadRef}
+                width={300}
+                height={150}
+              />
+            </div>
+
+            {/* Clear Button */}
+            <button
+              onClick={() => signaturePadRef.current?.clear()}
+              className="w-full mb-3 px-3 py-2 bg-gray-300 text-dark font-semibold rounded-lg hover:bg-gray-400 transition-all"
+            >
+              Limpiar Firma
+            </button>
+
+            {/* Confirm/Cancel Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setSignatureFolioIdx(null);
+                  setSignatureName('');
+                  signaturePadRef.current?.clear();
+                }}
+                className="flex-1 px-3 py-2 bg-gray-400 text-white font-semibold rounded-lg hover:bg-gray-500 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  if (!signatureName.trim()) {
+                    Swal.fire('Error', 'Por favor ingresa el nombre de quien firma', 'error');
+                    return;
+                  }
+                  if (signaturePadRef.current?.isEmpty?.()) {
+                    Swal.fire('Error', 'Por favor captura la firma', 'error');
+                    return;
+                  }
+                  // Get signature data as base64
+                  const signatureImage = signaturePadRef.current?.toDataURL?.();
+                  
+                  // Find and update the service with signature data
+                  const serviceIndex = services.findIndex(s => (s.folio || s.id) === signatureFolioIdx);
+                  if (serviceIndex !== -1) {
+                    const updatedServices = [...services];
+                    updatedServices[serviceIndex].signatureName = signatureName;
+                    updatedServices[serviceIndex].signatureData = signatureImage;
+                    setServices(updatedServices);
+                  }
+                  
+                  // Close modal
+                  setSignatureFolioIdx(null);
+                  setSignatureName('');
+                  signaturePadRef.current?.clear();
+                  Swal.fire('Éxito', 'Firma capturada correctamente', 'success');
+                }}
+                className="flex-1 px-3 py-2 bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-600 transition-all"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
