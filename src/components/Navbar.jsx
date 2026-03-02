@@ -1,11 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 
 const Navbar = () => {
   const { role, logout } = useAuthStore();
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  
   const normalizedRole = String(role || '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -32,7 +34,8 @@ const Navbar = () => {
       <div className="flex items-center gap-4">
         <span className="text-xl font-bold text-primary-500 tracking-tight select-none">SIEEG</span>
       </div>
-      {/* Links principales */}
+      
+      {/* Links principales (Desktop) */}
       <nav className="hidden md:flex items-center gap-8">
         {navLinks.map(link => (
           <NavLink
@@ -51,10 +54,12 @@ const Navbar = () => {
           </NavLink>
         ))}
       </nav>
-      {/* Botón cerrar sesión */}
+      
+      {/* Botones derecha */}
       <div className="flex items-center gap-4">
+        {/* Botón cerrar sesión (Desktop) */}
         <button
-          className="px-4 py-2 rounded-xl bg-red-500 text-white font-bold shadow-lg hover:bg-red-600 transition-all"
+          className="hidden md:block px-4 py-2 rounded-xl bg-red-500 text-white font-bold shadow-lg hover:bg-red-600 transition-all"
           onClick={() => {
             logout();
             navigate('/login_magic');
@@ -62,7 +67,53 @@ const Navbar = () => {
         >
           Cerrar sesión
         </button>
+        
+        {/* Botón hamburguesa (Mobile) */}
+        <button
+          className="md:hidden flex flex-col gap-1.5 w-8 h-8 items-center justify-center"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Menu"
+        >
+          <span className={`w-6 h-0.5 bg-dark transition-all ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`}></span>
+          <span className={`w-6 h-0.5 bg-dark transition-all ${isMenuOpen ? 'opacity-0' : ''}`}></span>
+          <span className={`w-6 h-0.5 bg-dark transition-all ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}></span>
+        </button>
       </div>
+      
+      {/* Menú móvil */}
+      {isMenuOpen && (
+        <div className="md:hidden absolute top-20 left-0 w-full bg-navbar shadow-lg border-b border-border">
+          <nav className="flex flex-col py-4">
+            {navLinks.map(link => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                {...(link.to === '/admin' ? { end: true } : {})}
+                onClick={() => setIsMenuOpen(false)}
+                className={({ isActive }) =>
+                  `px-8 py-3 text-base font-medium transition-all ${
+                    isActive
+                      ? 'bg-primary-50 text-primary-600 border-l-4 border-primary-500'
+                      : 'text-dark hover:bg-gray-50'
+                  }`
+                }
+              >
+                {link.name}
+              </NavLink>
+            ))}
+            <button
+              className="mx-8 mt-4 px-4 py-2 rounded-xl bg-red-500 text-white font-bold shadow-lg hover:bg-red-600 transition-all"
+              onClick={() => {
+                logout();
+                navigate('/login_magic');
+                setIsMenuOpen(false);
+              }}
+            >
+              Cerrar sesión
+            </button>
+          </nav>
+        </div>
+      )}
     </header>
   );
 };
