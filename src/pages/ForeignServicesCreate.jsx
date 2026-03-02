@@ -355,9 +355,9 @@ function ForeignServicesCreate() {
 
     y += 20;
     
-    // Título sección en azul claro
+    // Título sección en azul oscuro navy
     const sigSectionH = 32;
-    filledRoundRect(mx, y, cw, sigSectionH, 6, '#35def4');
+    filledRoundRect(mx, y, cw, sigSectionH, 6, C.navy);
     doc.setFont('helvetica','bold');
     doc.setFontSize(11);
     setTxt('#FFFFFF');
@@ -369,9 +369,9 @@ function ForeignServicesCreate() {
     const sigBoxH = 100;
     const sigBoxX = mx + (cw - sigBoxW) / 2; // Centrado
     
-    // Fondo blanco con borde redondeado
+    // Fondo blanco con borde redondeado en azul oscuro
     filledRoundRect(sigBoxX, y, sigBoxW, sigBoxH + 40, 8, C.white);
-    setStroke('#35def4');
+    setStroke(C.navy);
     doc.setLineWidth(1.5);
     doc.roundedRect(sigBoxX, y, sigBoxW, sigBoxH + 40, 8, 8, 'S');
 
@@ -403,11 +403,11 @@ function ForeignServicesCreate() {
       doc.line(sigBoxX + 30, sigAreaY + sigBoxH / 2, sigBoxX + sigBoxW - 30, sigAreaY + sigBoxH / 2);
     }
 
-    // Label "FIRMA DEL CLIENTE" en azul claro
+    // Label "FIRMA DEL CLIENTE" en azul oscuro
     const labelY = sigAreaY + sigBoxH + 8;
     doc.setFont('helvetica','bold');
     doc.setFontSize(8);
-    setTxt('#35def4');
+    setTxt(C.navy);
     doc.text('FIRMA DEL CLIENTE', sigBoxX + sigBoxW / 2, labelY, { align: 'center' });
 
     // Nombre de quien recibe debajo
