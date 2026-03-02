@@ -247,10 +247,10 @@ export default function ForeignServices() {
       doc.setFontSize(9);
       setTxt('#000000');
       doc.text('SIEEG', textX, textY + 16);
-      // Recuadro a la derecha
+      // Recuadro a la derecha en azul oscuro
       const boxW = 120, boxH = 28;
       const boxX = W - boxW - 50, boxY = logoY + 6;
-      setStroke('#35def4');
+      setStroke(C.navy);
       doc.setLineWidth(1.2);
       doc.roundedRect(boxX, boxY, boxW, boxH, 7, 7, 'S');
       doc.setFont('helvetica','bold');
