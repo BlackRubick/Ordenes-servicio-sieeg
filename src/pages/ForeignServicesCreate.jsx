@@ -340,35 +340,47 @@ function ForeignServicesCreate() {
       y += rowH;
     });
 
-    // Signature section
-    if (signatureData && nombreRecibe) {
-      y += 12;
-      y = sectionHeader('Firma de Cliente', mx, y, cw);
-      y += 8;
+    // Signature section - ALWAYS SHOW BOTH FIELDS
+    y += 12;
+    y = sectionHeader('Firma de Cliente', mx, y, cw);
+    y += 8;
 
-      // Nombre de quien recibe
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      setTxt(C.bodyText);
-      doc.text('Nombre quien recibe:', mx, y);
-      doc.setFont('helvetica', 'normal');
-      doc.text(nombreRecibe, mx + 70, y);
-      y += 14;
+    // Nombre de quien recibe
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    setTxt(C.bodyText);
+    doc.text('Nombre quien recibe:', mx, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.text(nombreRecibe || '___________________________________', mx + 70, y);
+    y += 20;
 
-      // Firma (imagen)
+    // Firma (imagen o línea para firmar)
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    setTxt(C.bodyText);
+    doc.text('Firma:', mx, y);
+    y += 12;
+
+    if (signatureData) {
       try {
-        const sigImgWidth = 80;
-        const sigImgHeight = 40;
+        const sigImgWidth = 100;
+        const sigImgHeight = 45;
         doc.addImage(signatureData, 'PNG', mx, y, sigImgWidth, sigImgHeight);
-        y += sigImgHeight + 8;
+        y += sigImgHeight + 4;
       } catch (_) {
-        // Si hay error al cargar la firma, solo continuar
+        // Si hay error al cargar la firma, mostrar línea
+        setStroke(C.divider);
+        doc.setLineWidth(0.5);
+        doc.line(mx, y + 45, mx + 100, y + 45);
+        y += 52;
       }
-
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7);
-      setTxt(C.labelText);
-      doc.text('Firma del cliente', mx, y);
+    } else {
+      // Mostrar línea para firmar
+      setStroke(C.divider);
+      doc.setLineWidth(0.5);
+      doc.line(mx, y + 45, mx + 100, y + 45);
+      y += 52;
     }
 
     drawFooter(1);
