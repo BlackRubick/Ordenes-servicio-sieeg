@@ -40,9 +40,9 @@ const Orders = () => {
   const [tecnico, setTecnico] = useState('');
   const [orders, setOrders] = useState([]);
   const [allTechnicians, setAllTechnicians] = useState([]);
-  const [cancelOrderIdx, setCancelOrderIdx] = useState(null);
+  const [cancelOrderFolio, setCancelOrderFolio] = useState(null);
   const [cancelReason, setCancelReason] = useState('');
-  const [entregaOrderIdx, setEntregaOrderIdx] = useState(null);
+  const [entregaOrderFolio, setEntregaOrderFolio] = useState(null);
   const [recipientName, setRecipientName] = useState('');
   const [signatureData, setSignatureData] = useState(null);
   const signaturePadRef = React.useRef();
@@ -403,7 +403,7 @@ const Orders = () => {
                           // Buscar el id del técnico seleccionado
                           const selected = allTechnicians.find(t => (t.nombre || t.name) === newTecnico);
                           if (!selected) return;
-                          setOrders(prev => prev.map((ord, i) => i === idx ? { ...ord, tecnico: newTecnico } : ord));
+                          setOrders(prev => prev.map((ord) => ord.folio === o.folio ? { ...ord, tecnico: newTecnico } : ord));
                           try {
                             await fetch(`/api/orders/${o.folio}/tecnico`, {
                               method: 'PUT',
@@ -437,10 +437,10 @@ const Orders = () => {
                         onChange={async e => {
                           const newEstado = e.target.value;
                           if (newEstado === 'entregada') {
-                            setEntregaOrderIdx(idx);
+                            setEntregaOrderFolio(o.folio);
                           } else {
                             // Actualiza en frontend
-                            setOrders(prev => prev.map((ord, i) => i === idx ? { ...ord, status: newEstado } : ord));
+                            setOrders(prev => prev.map((ord) => ord.folio === o.folio ? { ...ord, status: newEstado, estado: newEstado } : ord));
                             // Actualiza en backend
                             try {
                               await fetch(`/api/orders/${o.folio}/estado`, {
@@ -490,7 +490,7 @@ const Orders = () => {
                     {/* Solo admin puede eliminar/cancelar */}
                     {isAdmin && (
                       <>
-                        {o.estado === 'cancelada' ? (
+                        {(o.status || o.estado) === 'cancelada' ? (
                           <button className="flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-400 hover:text-white transition-all shadow-sm" title="Eliminar" onClick={() => {
                             Swal.fire({
                               title: '¿Estás seguro?',
@@ -501,10 +501,16 @@ const Orders = () => {
                               cancelButtonColor: '#3085d6',
                               confirmButtonText: 'Sí, eliminar',
                               cancelButtonText: 'Cancelar',
-                            }).then((result) => {
+                            }).then(async (result) => {
                               if (result.isConfirmed) {
-                                setOrders(prev => prev.map((ord, i) => i === idx ? { ...ord, estado: 'eliminada' } : ord));
-                                Swal.fire('Eliminada', 'La orden ha sido eliminada.', 'success');
+                                try {
+                                  const res = await fetch(`/api/orders/${o.folio}`, { method: 'DELETE' });
+                                  if (!res.ok) throw new Error('No se pudo eliminar');
+                                  setOrders(prev => prev.filter(ord => ord.folio !== o.folio));
+                                  Swal.fire('Eliminada', 'La orden ha sido eliminada.', 'success');
+                                } catch (err) {
+                                  Swal.fire('Error', 'No se pudo eliminar la orden en el servidor', 'error');
+                                }
                               }
                             });
                           }}>
@@ -513,8 +519,8 @@ const Orders = () => {
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M10 4h4a1 1 0 011 1v2H9V5a1 1 0 011-1z" />
                             </svg>
                           </button>
-                        ) : o.estado === 'eliminada' ? null : (
-                          <button className="flex items-center justify-center w-9 h-9 rounded-full bg-red-100 text-red-600 hover:bg-red-500 hover:text-white transition-all shadow-sm" title="Cancelar" onClick={() => setCancelOrderIdx(idx)}>
+                        ) : (o.status || o.estado) === 'eliminada' ? null : (
+                          <button className="flex items-center justify-center w-9 h-9 rounded-full bg-red-100 text-red-600 hover:bg-red-500 hover:text-white transition-all shadow-sm" title="Cancelar" onClick={() => setCancelOrderFolio(o.folio)}>
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                           </button>
                         )}
@@ -528,7 +534,7 @@ const Orders = () => {
         </table>
       </div>
       {/* Modal para motivo de cancelación */}
-      {cancelOrderIdx !== null && (
+      {cancelOrderFolio !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col gap-4">
             <h3 className="text-xl font-bold text-red-600">Cancelar orden</h3>
@@ -540,11 +546,20 @@ const Orders = () => {
               placeholder="Motivo de cancelación..."
             />
             <div className="flex gap-2 justify-end">
-              <button className="px-4 py-2 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300" onClick={() => { setCancelOrderIdx(null); setCancelReason(''); }}>Cancelar</button>
-              <button className="px-4 py-2 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700" disabled={!cancelReason.trim()} onClick={() => {
-                setOrders(prev => prev.map((ord, i) => i === cancelOrderIdx ? { ...ord, estado: 'cancelada', motivoCancelacion: cancelReason } : ord));
-                setCancelOrderIdx(null);
-                setCancelReason('');
+              <button className="px-4 py-2 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300" onClick={() => { setCancelOrderFolio(null); setCancelReason(''); }}>Cancelar</button>
+              <button className="px-4 py-2 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700" disabled={!cancelReason.trim()} onClick={async () => {
+                try {
+                  await fetch(`/api/orders/${cancelOrderFolio}/estado`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado: 'cancelada' })
+                  });
+                  setOrders(prev => prev.map((ord) => ord.folio === cancelOrderFolio ? { ...ord, status: 'cancelada', estado: 'cancelada', motivoCancelacion: cancelReason } : ord));
+                  setCancelOrderFolio(null);
+                  setCancelReason('');
+                } catch (err) {
+                  Swal.fire('Error', 'No se pudo cancelar la orden en el servidor', 'error');
+                }
               }}>Confirmar</button>
             </div>
           </div>
@@ -552,7 +567,7 @@ const Orders = () => {
       )}
 
       {/* Modal para entrega (nombre y firma) */}
-      {entregaOrderIdx !== null && (
+      {entregaOrderFolio !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col gap-4">
             <h3 className="text-xl font-bold text-blue-600">Entregar orden</h3>
@@ -579,17 +594,26 @@ const Orders = () => {
             </div>
             <div className="flex gap-2 justify-end">
               <button className="px-4 py-2 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300" onClick={() => {
-                setEntregaOrderIdx(null);
+                setEntregaOrderFolio(null);
                 setRecipientName('');
                 setSignatureData(null);
                 if (signaturePadRef.current) signaturePadRef.current.clear();
               }}>Cancelar</button>
-              <button className="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700" disabled={!recipientName.trim() || !signatureData} onClick={() => {
-                setOrders(prev => prev.map((ord, i) => i === entregaOrderIdx ? { ...ord, estado: 'entregada', nombreEntrega: recipientName, firmaEntrega: signatureData } : ord));
-                setEntregaOrderIdx(null);
-                setRecipientName('');
-                setSignatureData(null);
-                if (signaturePadRef.current) signaturePadRef.current.clear();
+              <button className="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700" disabled={!recipientName.trim() || !signatureData} onClick={async () => {
+                try {
+                  await fetch(`/api/orders/${entregaOrderFolio}/estado`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ estado: 'entregada' })
+                  });
+                  setOrders(prev => prev.map((ord) => ord.folio === entregaOrderFolio ? { ...ord, status: 'entregada', estado: 'entregada', nombreEntrega: recipientName, firmaEntrega: signatureData } : ord));
+                  setEntregaOrderFolio(null);
+                  setRecipientName('');
+                  setSignatureData(null);
+                  if (signaturePadRef.current) signaturePadRef.current.clear();
+                } catch (err) {
+                  Swal.fire('Error', 'No se pudo registrar la entrega en el servidor', 'error');
+                }
               }}>Confirmar entrega</button>
             </div>
           </div>
