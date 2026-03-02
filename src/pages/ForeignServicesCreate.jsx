@@ -340,47 +340,73 @@ function ForeignServicesCreate() {
       y += rowH;
     });
 
-    // Signature section - ALWAYS SHOW BOTH FIELDS
-    y += 12;
-    y = sectionHeader('Firma de Cliente', mx, y, cw);
-    y += 8;
+    // ════════════════════════════════════════════════════════════════
+    //  SIGNATURE SECTION
+    // ════════════════════════════════════════════════════════════════
+    
+    // Añadir nueva página si es necesario
+    if (y > H - 200) {
+      drawFooter(1);
+      doc.addPage();
+      drawPageBg();
+      drawHeader();
+      y = 110;
+    }
 
-    // Nombre de quien recibe
+    y += 16;
+    y = sectionHeader('Firma de Cliente', mx, y, cw);
+    y += 12;
+
+    // ──── Nombre de quien recibe ────
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     setTxt(C.bodyText);
-    doc.text('Nombre quien recibe:', mx, y);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.text(nombreRecibe || '___________________________________', mx + 70, y);
+    doc.text('Nombre de quien recibe:', mx, y);
+    
+    // Línea para el nombre o nombre capturado
+    setStroke(C.divider);
+    doc.setLineWidth(0.4);
+    doc.line(mx, y + 8, mx + 300, y + 8);
+    
+    if (nombreRecibe) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      setTxt(C.bodyText);
+      doc.text(nombreRecibe, mx + 5, y + 6);
+    }
     y += 20;
 
-    // Firma (imagen o línea para firmar)
+    // ──── Firma ────
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     setTxt(C.bodyText);
-    doc.text('Firma:', mx, y);
+    doc.text('Firma del cliente:', mx, y);
     y += 12;
 
+    // Contenedor para firma
+    const sigBoxX = mx;
+    const sigBoxY = y;
+    const sigBoxW = 200;
+    const sigBoxH = 60;
+
+    // Borde del contenedor de firma
+    setStroke(C.divider);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(sigBoxX, sigBoxY, sigBoxW, sigBoxH, 3, 3, 'S');
+
+    // Si hay firma, mostrarla, si no mostrar línea punteada
     if (signatureData) {
       try {
-        const sigImgWidth = 100;
-        const sigImgHeight = 45;
-        doc.addImage(signatureData, 'PNG', mx, y, sigImgWidth, sigImgHeight);
-        y += sigImgHeight + 4;
+        doc.addImage(signatureData, 'PNG', sigBoxX + 5, sigBoxY + 5, sigBoxW - 10, sigBoxH - 10);
       } catch (_) {
-        // Si hay error al cargar la firma, mostrar línea
-        setStroke(C.divider);
-        doc.setLineWidth(0.5);
-        doc.line(mx, y + 45, mx + 100, y + 45);
-        y += 52;
+        // Si hay error, mostrar línea
+        doc.setLineWidth(1);
+        doc.line(sigBoxX + 10, sigBoxY + sigBoxH / 2, sigBoxX + sigBoxW - 10, sigBoxY + sigBoxH / 2);
       }
     } else {
-      // Mostrar línea para firmar
-      setStroke(C.divider);
-      doc.setLineWidth(0.5);
-      doc.line(mx, y + 45, mx + 100, y + 45);
-      y += 52;
+      // Línea punteada en el centro para firmar
+      doc.setLineWidth(0.8);
+      doc.line(sigBoxX + 10, sigBoxY + sigBoxH / 2, sigBoxX + sigBoxW - 10, sigBoxY + sigBoxH / 2);
     }
 
     drawFooter(1);

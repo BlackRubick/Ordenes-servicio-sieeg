@@ -25,7 +25,7 @@ const Navbar = () => {
           { name: 'Usuarios', to: '/admin/technicians' },
           { name: 'Servicios Foráneos', to: '/servicios-foraneos' },
           { name: 'Órdenes de Clientes', to: '/ordenes-clientes' },
-          { name: 'Consulta Pública', to: '/consulta-publica' },
+          { name: 'Consulta Pública', to: '/consulta-tu-orden' },
           { name: 'Solicitar Orden de Servicio', to: '/solicitar-orden-cliente' },
         ];
   return (
