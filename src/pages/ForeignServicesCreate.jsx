@@ -341,11 +341,11 @@ function ForeignServicesCreate() {
     });
 
     // ════════════════════════════════════════════════════════════════
-    //  SIGNATURE SECTION
+    //  FIRMAS Y ACEPTACIÓN - Design like Orders.jsx
     // ════════════════════════════════════════════════════════════════
     
     // Añadir nueva página si es necesario
-    if (y > H - 200) {
+    if (y > H - 220) {
       drawFooter(1);
       doc.addPage();
       drawPageBg();
@@ -353,68 +353,69 @@ function ForeignServicesCreate() {
       y = 110;
     }
 
-    y += 16;
-    y = sectionHeader('Firma de Cliente', mx, y, cw);
-    y += 12;
-
-    // ──── Nombre de quien recibe ────
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    setTxt(C.bodyText);
-    doc.text('Nombre de quien recibe:', mx, y);
-    
-    // Línea para el nombre o nombre capturado
-    setStroke(C.divider);
-    doc.setLineWidth(0.4);
-    doc.line(mx, y + 8, mx + 300, y + 8);
-    
-    if (nombreRecibe) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      setTxt(C.bodyText);
-      doc.text(nombreRecibe, mx + 5, y + 6);
-    }
     y += 20;
+    
+    // Título sección en azul claro
+    const sigSectionH = 32;
+    filledRoundRect(mx, y, cw, sigSectionH, 6, '#35def4');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(11);
+    setTxt('#FFFFFF');
+    doc.text('FIRMAS Y ACEPTACIÓN', mx + cw / 2, y + sigSectionH / 2 + 4, { align: 'center' });
+    y += sigSectionH + 14;
 
-    // ──── Firma ────
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    setTxt(C.bodyText);
-    doc.text('Firma del cliente:', mx, y);
-    y += 12;
+    // Contenedor de firma del cliente
+    const sigBoxW = 250;
+    const sigBoxH = 100;
+    const sigBoxX = mx + (cw - sigBoxW) / 2; // Centrado
+    
+    // Fondo blanco con borde redondeado
+    filledRoundRect(sigBoxX, y, sigBoxW, sigBoxH + 40, 8, C.white);
+    setStroke('#35def4');
+    doc.setLineWidth(1.5);
+    doc.roundedRect(sigBoxX, y, sigBoxW, sigBoxH + 40, 8, 8, 'S');
 
-    // Contenedor para firma
-    const sigBoxX = mx;
-    const sigBoxY = y;
-    const sigBoxW = 200;
-    const sigBoxH = 60;
-
-    // Borde del contenedor de firma
+    // Área de firma
+    const sigAreaY = y + 8;
+    filledRoundRect(sigBoxX + 10, sigAreaY, sigBoxW - 20, sigBoxH, 4, '#f0f4f8');
     setStroke(C.divider);
     doc.setLineWidth(0.5);
-    doc.roundedRect(sigBoxX, sigBoxY, sigBoxW, sigBoxH, 3, 3, 'S');
+    doc.roundedRect(sigBoxX + 10, sigAreaY, sigBoxW - 20, sigBoxH, 4, 4, 'S');
 
-    // Si hay firma, mostrarla
+    // Dibujar firma si existe
     if (signatureData) {
       try {
-        // Asegurarse de que es un data URL válido
         let imageData = signatureData;
         if (!imageData.startsWith('data:')) {
           imageData = 'data:image/png;base64,' + imageData;
         }
-        doc.addImage(imageData, 'PNG', sigBoxX + 5, sigBoxY + 5, sigBoxW - 10, sigBoxH - 10);
+        doc.addImage(imageData, 'PNG', sigBoxX + 15, sigAreaY + 5, sigBoxW - 30, sigBoxH - 10);
       } catch (e) {
-        // Si hay error, mostrar línea punteada
+        // Línea para firmar si hay error
         setStroke(C.divider);
-        doc.setLineWidth(0.8);
-        doc.line(sigBoxX + 10, sigBoxY + sigBoxH / 2, sigBoxX + sigBoxW - 10, sigBoxY + sigBoxH / 2);
+        doc.setLineWidth(1);
+        doc.line(sigBoxX + 30, sigAreaY + sigBoxH / 2, sigBoxX + sigBoxW - 30, sigAreaY + sigBoxH / 2);
       }
     } else {
-      // Línea punteada en el centro para firmar
+      // Línea para firmar si no hay firma
       setStroke(C.divider);
-      doc.setLineWidth(0.8);
-      doc.line(sigBoxX + 10, sigBoxY + sigBoxH / 2, sigBoxX + sigBoxW - 10, sigBoxY + sigBoxH / 2);
+      doc.setLineWidth(1);
+      doc.line(sigBoxX + 30, sigAreaY + sigBoxH / 2, sigBoxX + sigBoxW - 30, sigAreaY + sigBoxH / 2);
     }
+
+    // Label "FIRMA DEL CLIENTE" en azul claro
+    const labelY = sigAreaY + sigBoxH + 8;
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8);
+    setTxt('#35def4');
+    doc.text('FIRMA DEL CLIENTE', sigBoxX + sigBoxW / 2, labelY, { align: 'center' });
+
+    // Nombre de quien recibe debajo
+    const nameY = labelY + 12;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8);
+    setTxt(C.bodyText);
+    doc.text(nombreRecibe || '___________________________', sigBoxX + sigBoxW / 2, nameY, { align: 'center' });
 
     drawFooter(1);
 
