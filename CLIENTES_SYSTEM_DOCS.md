@@ -121,7 +121,20 @@ pm2 restart neworders-app
 pm2 status
 ```
 
-### Paso 7: Verificar
+### Paso 7: Configurar Nginx (Importante para Upload)
+```bash
+# Editar configuración de Nginx
+nano /etc/nginx/sites-available/ordenes.sieeg.com.mx
+
+# Agregar dentro del bloque server {}:
+client_max_body_size 50M;
+
+# Guardar y reiniciar Nginx
+nginx -t
+systemctl reload nginx
+```
+
+### Paso 8: Verificar
 - Visita: `http://74.208.164.167/admin/clientes` (debe mostrar página de gestión)
 - Visita: `http://74.208.164.167/solicitar-orden-cliente` (debe mostrar login)
 
@@ -284,3 +297,17 @@ Si hay problemas durante el despliegue:
 2. Verificar logs de PM2: `pm2 logs neworders-app`
 3. Verificar que la migración se ejecutó: `mysql -u cesar -p newordenes_db -e "SHOW TABLES;"`
 4. Verificar que existe tabla Clients: `mysql -u cesar -p newordenes_db -e "DESCRIBE Clients;"`
+
+### Error 413 (Request Entity Too Large) al subir imágenes:
+```bash
+# 1. Verificar límite en Express (ya configurado a 50MB en api/index.js)
+# 2. Configurar Nginx:
+sudo nano /etc/nginx/sites-available/ordenes.sieeg.com.mx
+
+# Agregar o modificar dentro de server {}:
+client_max_body_size 50M;
+
+# Probar configuración y recargar:
+sudo nginx -t
+sudo systemctl reload nginx
+```
