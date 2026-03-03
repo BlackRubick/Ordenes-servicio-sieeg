@@ -19,6 +19,7 @@ import ForeignServicesCreate from '../pages/ForeignServicesCreate';
 import OrdenesClientes from '../pages/OrdenesClientes';
 import SolicitarOrdenCliente from '../pages/SolicitarOrdenCliente';
 import OrdenClienteDetalle from '../pages/OrdenClienteDetalle';
+import ClientesManagement from '../pages/ClientesManagement';
 
 
 const PrivateRoute = ({ element, allowedRoles = [] }) => {
@@ -57,6 +58,7 @@ const AppRoutes = () => (
       <Route path="/admin/orders/:folio" element={<PrivateRoute element={<OrderDetail />} allowedRoles={['Administrador', 'admin']} />} />
       <Route path="/admin/orders/deleted" element={<PrivateRoute element={<DeletedOrders />} allowedRoles={['Administrador', 'admin']} />} />
       <Route path="/admin/technicians" element={<PrivateRoute element={<Technicians />} allowedRoles={['Administrador', 'admin']} />} />
+      <Route path="/admin/clientes" element={<PrivateRoute element={<ClientesManagement />} allowedRoles={['Administrador', 'admin']} />} />
       <Route path="/technician" element={<PrivateRoute element={<TechnicianOrders />} allowedRoles={['Administrador']} />} />
       <Route path="/technician/order/:id" element={<PrivateRoute element={<TechnicianOrderDetail />} allowedRoles={['Administrador']} />} />
       <Route path="/public/create" element={<PrivateRoute element={<PublicOrderCreate />} allowedRoles={['Administrador']} />} />
