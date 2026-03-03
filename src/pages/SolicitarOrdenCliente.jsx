@@ -285,11 +285,37 @@ function SolicitarOrdenCliente() {
           </button>
         </div>
 
+        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+          <p className="text-sm text-gray-700"><strong>Correo:</strong> {clienteData?.correo}</p>
+          <p className="text-sm text-gray-700"><strong>Teléfono:</strong> {clienteData?.telefono}</p>
+        </div>
+
+        <p className="mb-4 text-gray-700">Completa el formulario para generar tu solicitud.</p>
+        
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <input
+            className="px-4 py-3 rounded-xl border border-gray-300 bg-white shadow-sm focus:ring-2 focus:ring-[#1a3a5e] focus:border-transparent"
+            placeholder="Tipo de Equipo/Servicio (Ej: Laptop, Impresora, Red, etc.)"
+            value={tipoEquipo}
+            onChange={e => setTipoEquipo(e.target.value)}
+          />
+          <input
+            className="px-4 py-3 rounded-xl border border-gray-300 bg-white shadow-sm focus:ring-2 focus:ring-[#1a3a5e] focus:border-transparent"
+            placeholder="Dirección"
+            value={direccion}
+            onChange={e => setDireccion(e.target.value)}
+          />
+          <textarea
+            className="px-4 py-3 rounded-xl border border-gray-300 bg-white shadow-sm min-h-[100px] focus:ring-2 focus:ring-[#1a3a5e] focus:border-transparent"
+            placeholder="Descripción del Problema o Servicio Requerido"
+            value={descripcion}
+            onChange={e => setDescripcion(e.target.value)}
+          />
 
           {/* Upload de imágenes */}
           <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Imágenes del Problema (Opcional - Máx. 10)
+              Imágenes del Problema (Opcional - Máx. 2)
             </label>
             <input
               type="file"
@@ -325,32 +351,6 @@ function SolicitarOrdenCliente() {
             </div>
           )}
 
-        <div className="bg-gray-50 rounded-lg p-4 mb-4">
-          <p className="text-sm text-gray-700"><strong>Correo:</strong> {clienteData?.correo}</p>
-          <p className="text-sm text-gray-700"><strong>Teléfono:</strong> {clienteData?.telefono}</p>
-        </div>
-
-        <p className="mb-4 text-gray-700">Completa el formulario para generar tu solicitud.</p>
-        
-        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-          <input
-            className="px-4 py-3 rounded-xl border border-gray-300 bg-white shadow-sm focus:ring-2 focus:ring-[#1a3a5e] focus:border-transparent"
-            placeholder="Tipo de Equipo/Servicio (Ej: Laptop, Impresora, Red, etc.)"
-            value={tipoEquipo}
-            onChange={e => setTipoEquipo(e.target.value)}
-          />
-          <input
-            className="px-4 py-3 rounded-xl border border-gray-300 bg-white shadow-sm focus:ring-2 focus:ring-[#1a3a5e] focus:border-transparent"
-            placeholder="Dirección"
-            value={direccion}
-            onChange={e => setDireccion(e.target.value)}
-          />
-          <textarea
-            className="px-4 py-3 rounded-xl border border-gray-300 bg-white shadow-sm min-h-[100px] focus:ring-2 focus:ring-[#1a3a5e] focus:border-transparent"
-            placeholder="Descripción del Problema o Servicio Requerido"
-            value={descripcion}
-            onChange={e => setDescripcion(e.target.value)}
-          />
           <button
             type="submit"
             className="px-4 py-3 rounded-xl bg-[#1a3a5e] text-white font-bold shadow-lg hover:bg-[#2d5075] transition-all mt-2"
