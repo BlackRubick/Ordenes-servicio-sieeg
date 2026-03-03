@@ -14,6 +14,8 @@ function SolicitarOrdenCliente() {
   const [tipoEquipo, setTipoEquipo] = useState('');
   const [direccion, setDireccion] = useState('');
   const [descripcion, setDescripcion] = useState('');
+  const [selectedImages, setSelectedImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
 
   // Verificar si hay sesión guardada al cargar
   useEffect(() => {
@@ -86,6 +88,37 @@ function SolicitarOrdenCliente() {
     setTipoEquipo('');
     setDireccion('');
     setDescripcion('');
+    setSelectedImages([]);
+    setImagePreviews([]);
+  };
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    
+    if (files.length + selectedImages.length > 10) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Límite de imágenes',
+        text: 'Puedes subir máximo 10 imágenes',
+      });
+      return;
+    }
+
+    setSelectedImages(prev => [...prev, ...files]);
+    
+    // Generar previews
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviews(prev => [...prev, reader.result]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
@@ -101,6 +134,29 @@ function SolicitarOrdenCliente() {
     }
 
     try {
+      let imagenesUrls = [];
+      
+      // Subir imágenes primero si hay alguna
+      if (selectedImages.length > 0) {
+        const formData = new FormData();
+        selectedImages.forEach(image => {
+          formData.append('images', image);
+        });
+
+        const uploadRes = await fetch('/api/orders/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error('Error al subir imágenes');
+        }
+
+        const uploadData = await uploadRes.json();
+        imagenesUrls = uploadData.imagenes;
+      }
+
+      // Crear la orden
       const payload = {
         folio: 'OC' + new Date().toISOString().replace(/[-:T.]/g, '').slice(2, 14),
         fecha: new Date().toISOString().slice(0, 10),
@@ -124,6 +180,7 @@ function SolicitarOrdenCliente() {
         status: 'Pendiente',
         technicianId: null,
         clienteId: clienteData.id,
+        imagenes: imagenesUrls,
       };
 
       const res = await fetch('/api/orders', {
@@ -145,6 +202,8 @@ function SolicitarOrdenCliente() {
       setTipoEquipo('');
       setDireccion('');
       setDescripcion('');
+      setSelectedImages([]);
+      setImagePreviews([]);
     } catch (error) {
       Swal.fire({
         icon: 'error',
@@ -225,6 +284,46 @@ function SolicitarOrdenCliente() {
             Cerrar Sesión
           </button>
         </div>
+
+
+          {/* Upload de imágenes */}
+          <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Imágenes del Problema (Opcional - Máx. 10)
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageChange}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#1a3a5e] file:text-white hover:file:bg-[#2d5075] transition-colors"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Formatos: JPG, PNG, GIF, WEBP. Máximo 5MB por imagen.
+            </p>
+          </div>
+
+          {/* Preview de imágenes */}
+          {imagePreviews.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {imagePreviews.map((preview, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={preview}
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-24 object-cover rounded-lg border-2 border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(index)}
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
         <div className="bg-gray-50 rounded-lg p-4 mb-4">
           <p className="text-sm text-gray-700"><strong>Correo:</strong> {clienteData?.correo}</p>

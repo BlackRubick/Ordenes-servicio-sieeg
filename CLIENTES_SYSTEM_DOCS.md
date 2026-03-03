@@ -17,6 +17,7 @@ Se ha implementado un sistema completo de gestión de usuarios clientes con las 
 ### 📝 Formulario Simplificado
 - **Auto-completado**: Nombre, correo y teléfono se toman del perfil del cliente
 - **Solo 3 campos**: Tipo de Equipo, Dirección, Descripción del Problema
+- **Upload de imágenes**: Los clientes pueden subir hasta 10 imágenes (JPG, PNG, GIF, WEBP, máx 5MB c/u)
 - **Vinculación**: Orden queda asociada al clienteId
 
 ---
@@ -45,6 +46,8 @@ ALTER TABLE Orders ADD CONSTRAINT fk_cliente
   FOREIGN KEY (clienteId) REFERENCES Clients(id) 
   ON DELETE SET NULL 
   ON UPDATE CASCADE;
+
+ALTER TABLE Orders ADD COLUMN imagenes JSON NULL;
 ```
 
 ---
@@ -66,6 +69,7 @@ git pull origin main
 ```bash
 cd newordenes-front/api
 npm install
+npm install multer
 cd ../..
 ```
 
@@ -129,14 +133,19 @@ pm2 status
 - ✅ **Nuevo**: `api/models/Client.js` - Modelo de clientes
 - ✅ **Nuevo**: `api/routes/clients.js` - Endpoints de clientes
 - ✅ **Nuevo**: `api/migrations/20260303-create-clients.js` - Migración
+- ✅ **Nuevo**: `api/migrations/20260303-add-imagenes-to-orders.js` - Migración para imágenes
+- ✅ **Nuevo**: `api/config/multer.js` - Configuración de upload de archivos
 - ✅ **Modificado**: `api/models/index.js` - Exportar Client y relaciones
-- ✅ **Modificado**: `api/models/Order.js` - Agregar campo clienteId
-- ✅ **Modificado**: `api/index.js` - Registrar ruta /api/clients
+- ✅ **Modificado**: `api/models/Order.js` - Agregar campo clienteId e imagenes
+- ✅ **Modificado**: `api/index.js` - Registrar ruta /api/clients y servir uploads
+- ✅ **Modificado**: `api/routes/orders.js` - Endpoint POST /api/orders/upload
 
 ### Frontend
 - ✅ **Nuevo**: `src/pages/ClientesManagement.jsx` - Gestión de clientes (admin)
-- ✅ **Modificado**: `src/pages/SolicitarOrdenCliente.jsx` - Login + formulario
+- ✅ **Modificado**: `src/pages/SolicitarOrdenCliente.jsx` - Login + formulario + upload imágenes
+- ✅ **Modificado**: `src/pages/OrdenClienteDetalle.jsx` - Visualización de imágenes
 - ✅ **Modificado**: `src/components/Sidebar.jsx` - Agregar opción "Clientes"
+- ✅ **Modificado**: `src/components/Navbar.jsx` - Agregar link "Clientes"
 - ✅ **Modificado**: `src/routes/AppRoutes.jsx` - Ruta /admin/clientes
 
 ---
@@ -210,12 +219,15 @@ Admin envía al cliente:
 1. Cliente va a `/solicitar-orden-cliente`
 2. Ve formulario de login
 3. Ingresa usuario y contraseña
-4. Sistema valida y muestra formulario simplificado
+4. Cliente puede subir hasta 10 imágenes (opcional)
+7. Envía la orden (automáticamente incluye sus datos e imágene
 5. Cliente rellena: Tipo de Equipo, Dirección, Descripción
 6. Envía la orden (automáticamente incluye sus datos)
 
 ### 4. Orden queda registrada
 - La orden tiene `clienteId` asociado
+- Imágenes se almacenan en `/api/uploads/` y rutas en campo JSON
+- Admin puede ver todas las imágenes en la vista de detalle de orden
 - Nombre, correo, teléfono vienen del perfil del cliente
 - Aparece en el sistema con status "Pendiente"
 

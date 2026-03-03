@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Order, User } = require('../models');
 const { Op } = require('sequelize');
+const upload = require('../config/multer');
 
 // Actualizar diagnóstico de una orden por folio
 router.put('/:folio/diagnostico', async (req, res) => {
@@ -136,6 +137,8 @@ router.post('/', async (req, res) => {
     technicianId,
     trabajos,
     resumen,
+    clienteId,
+    imagenes,
   } = req.body;
   try {
     const order = await Order.create({
@@ -160,10 +163,27 @@ router.post('/', async (req, res) => {
       technicianId,
       trabajos,
       resumen,
+      clienteId,
+      imagenes,
     });
     res.status(201).json(order);
   } catch (error) {
     console.log('Error al crear orden:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Upload de imágenes para órdenes
+router.post('/upload', upload.array('images', 10), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No se subieron archivos' });
+    }
+    
+    const imagePaths = req.files.map(file => `/uploads/${file.filename}`);
+    res.json({ success: true, imagenes: imagePaths });
+  } catch (error) {
+    console.log('Error al subir imágenes:', error);
     res.status(500).json({ error: error.message });
   }
 });

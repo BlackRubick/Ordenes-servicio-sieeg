@@ -102,6 +102,40 @@ function OrdenClienteDetalle() {
           </div>
         </div>
       </div>
+
+      {/* Imágenes */}
+      {orden.imagenes && orden.imagenes.length > 0 && (
+        <div className="max-w-3xl mx-auto mb-8">
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100 animate-fade-in">
+            <div className="flex items-center gap-2 mb-4">
+              <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+              <span className="font-bold text-blue-700 text-lg">Imágenes del Problema</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {orden.imagenes.map((img, index) => (
+                <a
+                  key={index}
+                  href={`http://74.208.164.167:3001${img}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative overflow-hidden rounded-lg border-2 border-blue-200 hover:border-blue-500 transition-all cursor-pointer"
+                >
+                  <img
+                    src={`http://74.208.164.167:3001${img}`}
+                    alt={`Imagen ${index + 1}`}
+                    className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m-3-3h6"/>
+                    </svg>
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   </>
 
