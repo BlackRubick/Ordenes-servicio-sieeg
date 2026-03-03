@@ -115,13 +115,13 @@ function OrdenClienteDetalle() {
               {orden.imagenes.map((img, index) => (
                 <a
                   key={index}
-                  href={`http://74.208.164.167:3001${img}`}
+                  href={`/api${img}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group relative overflow-hidden rounded-lg border-2 border-blue-200 hover:border-blue-500 transition-all cursor-pointer"
                 >
                   <img
-                    src={`http://74.208.164.167:3001${img}`}
+                    src={`/api${img}`}
                     alt={`Imagen ${index + 1}`}
                     className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-300"
                   />

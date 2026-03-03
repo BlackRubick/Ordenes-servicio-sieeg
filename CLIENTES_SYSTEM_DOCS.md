@@ -124,7 +124,7 @@ pm2 status
 ### Paso 7: Configurar Nginx (Importante para Upload)
 ```bash
 # Editar configuración de Nginx
-nano /etc/nginx/sites-available/ordenes.sieeg.com.mx
+nano /etc/nginx/sites-available/ordenes-servicio-sieeg
 
 # Agregar dentro del bloque server {}:
 client_max_body_size 50M;
@@ -302,7 +302,7 @@ Si hay problemas durante el despliegue:
 ```bash
 # 1. Verificar límite en Express (ya configurado a 50MB en api/index.js)
 # 2. Configurar Nginx:
-sudo nano /etc/nginx/sites-available/ordenes.sieeg.com.mx
+sudo nano /etc/nginx/sites-available/ordenes-servicio-sieeg
 
 # Agregar o modificar dentro de server {}:
 client_max_body_size 50M;
