@@ -196,9 +196,9 @@ const CreateOrder = () => {
 
     // ── Palette ──────────────────────────────────────────────────────────────
     const C = {
-      navy:       '#08c7e1',
-      blue:       '#35def4',
-      blueLight:  '#35def4',
+      navy:       '#1a3a5e',
+      blue:       '#1a3a5e',
+      blueLight:  '#1a3a5e',
       accent:     '#000000',
       bg:         '#F4F6F9',
       white:      '#FFFFFF',
@@ -295,15 +295,13 @@ const CreateOrder = () => {
       doc.setFontSize(9);
       setTxt('#000000');
       doc.text('SIEEG', textX, textY + 16);
-      // Recuadro a la derecha
+      // Recuadro a la derecha en azul oscuro
       const boxW = 120, boxH = 28;
       const boxX = W - boxW - 50, boxY = logoY + 6;
-      setStroke('#35def4');
-      doc.setLineWidth(1.2);
-      doc.roundedRect(boxX, boxY, boxW, boxH, 7, 7, 'S');
+      filledRoundRect(boxX, boxY, boxW, boxH, 7, C.navy);
       doc.setFont('helvetica','bold');
       doc.setFontSize(11);
-      setTxt('#000000');
+      setTxt(C.white);
       doc.text('ORDEN DE SERVICIO', boxX + boxW / 2, boxY + boxH / 2 + 3, { align: 'center' });
     };
 
@@ -332,12 +330,12 @@ const CreateOrder = () => {
       if (signature) {
         doc.addImage(signature, 'PNG', leftX + 10, yStart + 6, bW - 20, 34);
       }
-      setStroke(C.blueLight);
+      setStroke(C.navy);
       doc.setLineWidth(0.6);
       doc.line(leftX + 14, yStart + 46, leftX + bW - 14, yStart + 46);
       doc.setFont('helvetica','bold');
       doc.setFontSize(7);
-      setTxt(C.blue);
+      setTxt(C.navy);
       doc.text('FIRMA DEL CLIENTE', leftX + bW / 2, yStart + 56, { align: 'center' });
       doc.setFont('helvetica','normal');
       doc.setFontSize(7);
@@ -347,11 +345,11 @@ const CreateOrder = () => {
       doc.setLineWidth(0.6);
       setStroke(C.divider);
       doc.roundedRect(rightX, yStart, bW, bH, 4, 4, 'S');
-      setStroke(C.blueLight);
+      setStroke(C.navy);
       doc.line(rightX + 14, yStart + 46, rightX + bW - 14, yStart + 46);
       doc.setFont('helvetica','bold');
       doc.setFontSize(7);
-      setTxt(C.blue);
+      setTxt(C.navy);
       doc.text('FIRMA DEL TÉCNICO', rightX + bW / 2, yStart + 56, { align: 'center' });
       doc.setFont('helvetica','normal');
       doc.setFontSize(7);
@@ -377,7 +375,7 @@ const CreateOrder = () => {
     doc.roundedRect(mx, y, cw, 38, 5, 5, 'S');
     doc.setFont('helvetica','bold'); doc.setFontSize(6.5); setTxt(C.labelText);
     doc.text('FOLIO', mx + 10, y + 11);
-    doc.setFont('helvetica','bold'); doc.setFontSize(10); setTxt(C.blue);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); setTxt(C.navy);
     doc.text(folio, mx + 10, y + 27);
     const fechaFmt = fecha.split('-').reverse().join('/');
     doc.setFont('helvetica','bold'); doc.setFontSize(6.5); setTxt(C.labelText);
@@ -440,7 +438,7 @@ const CreateOrder = () => {
       const lines = doc.splitTextToSize(t, cw - 20);
       const rowH  = lines.length * 11 + 10;
       filledRoundRect(mx, ty, cw, rowH, 3, i % 2 === 0 ? C.bg : C.white);
-      setFill(C.blueLight);
+      setFill(C.navy);
       doc.rect(mx, ty, 3, rowH, 'F');
       doc.setFont('helvetica','normal');
       doc.setFontSize(8);

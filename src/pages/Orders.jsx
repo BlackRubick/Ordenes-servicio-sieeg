@@ -155,29 +155,24 @@ const generateOrderPdfDoc = async (order) => {
   // ── Badge "ORDEN DE SERVICIO" (esquina derecha) ──────────────────
   const tagW = 148, tagH = 64, tagX = W - tagW - 24, tagY = 17;
 
-  // Fondo blanco del badge
-  fillRR(tagX, tagY, tagW, tagH, 5, C.white);
-  setStroke(C.primary); doc.setLineWidth(1.5);
+  // Badge completamente en azul oscuro (estilo unificado)
+  fillRR(tagX, tagY, tagW, tagH, 5, C.primary);
+  setStroke(C.primaryLight); doc.setLineWidth(1.1);
   doc.roundedRect(tagX, tagY, tagW, tagH, 5, 5, 'S');
-
-  // Franja superior azul dentro del badge
-  fillRR(tagX, tagY, tagW, 23, 5, C.primary);
-  // Rectángulo para tapar las esquinas inferiores redondeadas de la franja
-  fillRect(tagX, tagY + 15, tagW, 8, C.primary);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   setTxt(C.white);
   doc.text('ORDEN DE SERVICIO', tagX + tagW / 2, tagY + 15, { align: 'center' });
 
-  // Folio grande en la zona blanca del badge
+  // Folio grande en blanco
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(19);
-  setTxt(C.primary);
+  setTxt(C.white);
   doc.text(String(order.folio || '—'), tagX + tagW / 2, tagY + 50, { align: 'center' });
 
   // Línea decorativa bajo el folio
-  setStroke('#d0dce8'); doc.setLineWidth(0.5);
+  setStroke(C.primaryLight); doc.setLineWidth(0.5);
   doc.line(tagX + 16, tagY + 57, tagX + tagW - 16, tagY + 57);
 
   // ════════════════════════════════════════════════════════════════
