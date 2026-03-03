@@ -196,6 +196,34 @@ router.post('/upload', upload.array('images', 2), async (req, res) => {
   }
 });
 
+// Actualizar orden completa por folio
+router.put('/:folio', async (req, res) => {
+  const { folio } = req.params;
+  try {
+    const order = await Order.findOne({ where: { folio } });
+    if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
+
+    const fields = [
+      'fecha', 'clientName', 'telefono', 'correo', 'tipo', 'marca', 'modelo',
+      'serie', 'accesorios', 'otrosAccesorios', 'seguridad', 'patron',
+      'description', 'diagnostico', 'observaciones', 'firma', 'nombreRecibe',
+      'status', 'technicianId', 'trabajos', 'resumen', 'clienteId', 'imagenes'
+    ];
+
+    fields.forEach((field) => {
+      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+        order[field] = req.body[field];
+      }
+    });
+
+    await order.save();
+    res.json({ success: true, order });
+  } catch (error) {
+    console.log('Error al actualizar orden:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Eliminar orden por folio
 router.delete('/:folio', async (req, res) => {
   const { folio } = req.params;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -38,6 +38,9 @@ const defaultRow = {
 };
 
 function ForeignServicesCreate() {
+  const location = useLocation();
+  const editOrder = location.state?.order || null;
+  const isEditMode = Boolean(editOrder?.folio);
   const [cliente, setCliente] = useState('');
   const [direccion, setDireccion] = useState('');
   const [telefono, setTelefono] = useState('');
@@ -56,8 +59,33 @@ function ForeignServicesCreate() {
     setRows([...rows, { area: '', ...defaultRow }]);
   };
   useEffect(() => {
-    setFecha(getToday());
-  }, []);
+    if (!isEditMode) {
+      setFecha(getToday());
+      return;
+    }
+
+    setCliente(editOrder.clientName || '');
+    setTelefono(editOrder.telefono || '');
+    setFecha(editOrder.fecha || getToday());
+
+    let parsedDireccion = '';
+    let parsedRows = [{ area: '', ...defaultRow }];
+    try {
+      const parsed = typeof editOrder.observaciones === 'string'
+        ? JSON.parse(editOrder.observaciones)
+        : (editOrder.observaciones || {});
+      parsedDireccion = parsed?.direccion || editOrder.direccion || '';
+      if (Array.isArray(parsed?.rows) && parsed.rows.length > 0) {
+        parsedRows = parsed.rows.map((r) => ({ ...defaultRow, ...r }));
+      }
+    } catch (_) {
+      parsedDireccion = editOrder.direccion || '';
+    }
+
+    setDireccion(parsedDireccion);
+    setRows(parsedRows);
+    setShowTable(true);
+  }, [isEditMode, editOrder]);
 
   const marcarTodos = (campo, valor) => {
     setRows(rows.map(r => ({ ...r, [campo]: valor })));
@@ -102,7 +130,7 @@ function ForeignServicesCreate() {
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const W = doc.internal.pageSize.getWidth();   // 595.28
     const H = doc.internal.pageSize.getHeight();  // 841.89
-    const folio = generarFolioForaneo();
+    const folio = isEditMode ? editOrder.folio : generarFolioForaneo();
 
     // ── Palette ──────────────────────────────────────────────────────────────
     const C = {
@@ -370,7 +398,7 @@ function ForeignServicesCreate() {
     }
 
     // Guardar en BD
-    const folio = generarFolioForaneo();
+    const folio = isEditMode ? editOrder.folio : generarFolioForaneo();
     const payload = {
       folio,
       fecha,
@@ -388,21 +416,21 @@ function ForeignServicesCreate() {
       description: 'Servicio foráneo',
       diagnostico: '',
       observaciones: JSON.stringify({ direccion: direccion.trim(), rows }),
-      firma: null,
-      nombreRecibe: null,
-      status: 'pendiente',
-      technicianId: null,
-      trabajos: [],
-      resumen: { total: 0 },
+      firma: isEditMode ? (editOrder.firma ?? null) : null,
+      nombreRecibe: isEditMode ? (editOrder.nombreRecibe ?? null) : null,
+      status: isEditMode ? (editOrder.status || 'pendiente') : 'pendiente',
+      technicianId: isEditMode ? (editOrder.technicianId ?? null) : null,
+      trabajos: isEditMode ? (editOrder.trabajos || []) : [],
+      resumen: isEditMode ? (editOrder.resumen || { total: 0 }) : { total: 0 },
     };
 
     try {
-      const res = await fetch('/api/orders', {
-        method: 'POST',
+      const res = await fetch(isEditMode ? `/api/orders/${folio}` : '/api/orders', {
+        method: isEditMode ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error('No se pudo crear la orden');
+      if (!res.ok) throw new Error('No se pudo guardar la orden');
 
       // Generar PDF y abrir en nueva pestaña
       const blob = await generatePDF();
@@ -411,8 +439,10 @@ function ForeignServicesCreate() {
 
       Swal.fire({
         icon: 'success',
-        title: 'Orden guardada',
-        text: 'La orden se ha guardado en la BD y el PDF se abrió en una nueva pestaña.',
+        title: isEditMode ? 'Orden actualizada' : 'Orden guardada',
+        text: isEditMode
+          ? 'La orden se actualizó en la BD y el PDF se abrió en una nueva pestaña.'
+          : 'La orden se ha guardado en la BD y el PDF se abrió en una nueva pestaña.',
         timer: 1500,
         showConfirmButton: false
       }).then(() => {
@@ -430,7 +460,7 @@ function ForeignServicesCreate() {
   return (
     <DashboardLayout>
       <div className="mb-6 flex flex-col gap-4">
-        <h2 className="text-2xl font-extrabold text-primary-500 tracking-tight">Servicio Foráneo</h2>
+        <h2 className="text-2xl font-extrabold text-primary-500 tracking-tight">{isEditMode ? 'Editar Servicio Foráneo' : 'Servicio Foráneo'}</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input className="px-4 py-3 rounded-xl border border-border bg-white shadow-card" placeholder="Nombre del cliente o Empresa " value={cliente} onChange={e => setCliente(e.target.value)} />
           <input className="px-4 py-3 rounded-xl border border-border bg-white shadow-card" placeholder="Dirección" value={direccion} onChange={e => setDireccion(e.target.value)} />
@@ -583,7 +613,7 @@ function ForeignServicesCreate() {
               className="px-4 py-2 rounded-xl bg-primary-500 text-white font-bold shadow-lg hover:bg-primary-600 transition-all ml-auto"
               onClick={handleGuardarTabla}
             >
-              Generar PDF
+              {isEditMode ? 'Guardar cambios y generar PDF' : 'Generar PDF'}
             </button>
           )}
         </div>

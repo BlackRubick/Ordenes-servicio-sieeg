@@ -599,22 +599,33 @@ export default function ForeignServices() {
                     ))}
                   </select>
                 </td>
-                <td className="py-4 px-4 flex gap-2">
-                  {service.status === 'cancelada' && !isTechnician ? (
-                    <button
-                      className="px-3 py-1 rounded-lg bg-red-500 text-white font-semibold shadow-md hover:bg-red-600 transition-all"
-                      onClick={() => handleDeleteOrder(idx)}
-                    >
-                      Eliminar
-                    </button>
-                  ) : (
+                <td className="py-4 px-4">
+                  <div className="flex gap-2">
                     <button
                       className="px-3 py-1 rounded-lg bg-primary-500 text-white font-semibold shadow-md hover:bg-primary-600 transition-all"
                       onClick={() => handleViewDetail(service)}
                     >
                       Ver detalle
                     </button>
-                  )}
+
+                    {isAdmin && (
+                      <button
+                        className="px-3 py-1 rounded-lg bg-blue-500 text-white font-semibold shadow-md hover:bg-blue-600 transition-all"
+                        onClick={() => navigate('/servicios-foraneos/crear', { state: { order: service } })}
+                      >
+                        Editar
+                      </button>
+                    )}
+
+                    {service.status === 'cancelada' && !isTechnician && (
+                      <button
+                        className="px-3 py-1 rounded-lg bg-red-500 text-white font-semibold shadow-md hover:bg-red-600 transition-all"
+                        onClick={() => handleDeleteOrder(idx)}
+                      >
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
