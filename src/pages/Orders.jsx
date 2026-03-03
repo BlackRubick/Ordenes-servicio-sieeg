@@ -52,6 +52,17 @@ const generateOrderPdfDoc = async (order) => {
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
 
+  const terminos = [
+    '1) SIEEG no se responsabiliza en caso el equipo presente daños por mal uso de terceros o a nivel software y/o hardware antes de su ingreso a reparación.',
+    '2) El cliente acepta pagar todas las piezas y mano de obra al finalizar la reparación.',
+    '3) La fecha estimada de finalización está sujeta a cambios según la disponibilidad de piezas.',
+    '4) El taller de reparación no es responsable de ninguna pérdida de datos en equipos electrónicos.',
+    '5) Si la reparación requiere trabajos y/o piezas que no se hayan especificado anteriormente, SIEEG indicará un presupuesto actualizado.',
+    '6) Una vez notificado, el equipo se almacena sin coste 10 días hábiles. Después, aplica cargo por almacenamiento.',
+    '7) De considerarse abandonado, SIEEG podrá tomar propiedad del equipo en compensación de costos de almacenamiento.',
+    '8) La garantía sobre reparaciones es válida solo en mano de obra a partir de la fecha de finalización.',
+  ];
+
   const statusKey = order.status || order.estado || 'pendiente';
   const statusLabel = ESTADOS[statusKey]?.label || statusKey;
   const details = order.description || order.detalles || order.observaciones || 'No especificado';
@@ -243,6 +254,70 @@ const generateOrderPdfDoc = async (order) => {
     doc.text(lines[0] || '—', fx + 8, fy + 25);
   };
 
+  const drawFooter = (pageNum, totalPages) => {
+    fillRect(0, H - 42, W, 42, C.primary);
+    fillRect(0, H - 42, W, 2, C.primaryLight);
+
+    doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setTxt(C.mutedText);
+    doc.text(
+      'Boulevard Belisario Domínguez #4213 L5, Fracc. La Gloria, Tuxtla Gutiérrez, Chiapas',
+      W / 2, H - 22, { align: 'center' }
+    );
+    doc.text(
+      'Tel: 961 118 0157  ·  WhatsApp: 961 333 6529  ·  SIEEG Ingeniería y Telecomunicaciones',
+      W / 2, H - 10, { align: 'center' }
+    );
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(6.5); setTxt(C.mutedText);
+    doc.text(`Pág. ${pageNum} / ${totalPages}`, W - 28, H - 14, { align: 'right' });
+  };
+
+  const drawSignatures = (yStart) => {
+    const bW = 220, bH = 78;
+    const gapSig = 18;
+    const leftX  = 34;
+    const rightX = leftX + bW + gapSig;
+
+    setStroke(C.border);
+    doc.setLineWidth(0.6);
+
+    // Cliente
+    fillRR(leftX, yStart, bW, bH, 6, C.offWhite);
+    doc.roundedRect(leftX, yStart, bW, bH, 6, 6, 'S');
+    if (order.firma) {
+      try {
+        doc.addImage(order.firma, 'PNG', leftX + 10, yStart + 8, bW - 20, 36);
+      } catch (_) {
+        // noop
+      }
+    }
+    setStroke(C.primary);
+    doc.line(leftX + 12, yStart + 50, leftX + bW - 12, yStart + 50);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(7);
+    setTxt(C.primary);
+    doc.text('FIRMA DEL CLIENTE', leftX + bW / 2, yStart + 60, { align: 'center' });
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(7);
+    setTxt(C.bodyText);
+    doc.text(order.clientName || '', leftX + bW / 2, yStart + 69, { align: 'center' });
+
+    // Técnico
+    fillRR(rightX, yStart, bW, bH, 6, C.offWhite);
+    setStroke(C.border);
+    doc.roundedRect(rightX, yStart, bW, bH, 6, 6, 'S');
+    setStroke(C.primary);
+    doc.line(rightX + 12, yStart + 50, rightX + bW - 12, yStart + 50);
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(7);
+    setTxt(C.primary);
+    doc.text('FIRMA DEL TÉCNICO', rightX + bW / 2, yStart + 60, { align: 'center' });
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(7);
+    setTxt(C.bodyText);
+    doc.text(order.tecnico || '', rightX + bW / 2, yStart + 69, { align: 'center' });
+  };
+
   // ── Información del Cliente ───────────────────────────────────
   y = sectionHeader('Información del Cliente', mx, y, cw); y += 7;
   const col3 = (cw - gap * 2) / 3;
@@ -295,24 +370,49 @@ const generateOrderPdfDoc = async (order) => {
   doc.setFont('helvetica','bold'); doc.setFontSize(14); setTxt(C.white);
   doc.text(total, totX + totW / 2, y + 27, { align: 'center' });
 
-  // ════════════════════════════════════════════════════════════════
-  //  FOOTER ejecutivo
-  // ════════════════════════════════════════════════════════════════
-  fillRect(0, H - 42, W, 42, C.primary);
-  fillRect(0, H - 42, W, 2, C.primaryLight);
+  drawFooter(1, 2);
 
-  doc.setFont('helvetica','normal'); doc.setFontSize(6.5); setTxt(C.mutedText);
-  doc.text(
-    'Boulevard Belisario Domínguez #4213 L5, Fracc. La Gloria, Tuxtla Gutiérrez, Chiapas',
-    W / 2, H - 22, { align: 'center' }
-  );
-  doc.text(
-    'Tel: 961 118 0157  ·  WhatsApp: 961 333 6529  ·  SIEEG Ingeniería y Telecomunicaciones',
-    W / 2, H - 10, { align: 'center' }
-  );
+  // ════════════════════════════════════════════════════════════════
+  //  PAGE 2 — Términos y Firmas
+  // ════════════════════════════════════════════════════════════════
+  doc.addPage();
+  fillRect(0, 0, W, H, C.offWhite);
+  fillRR(20, 20, W - 40, H - 40, 8, C.white);
 
-  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); setTxt(C.mutedText);
-  doc.text('Pág. 1 / 1', W - 28, H - 14, { align: 'right' });
+  let ty = 40;
+  ty = sectionHeader('Términos y Condiciones del Servicio', 34, ty, W - 68);
+  ty += 10;
+
+  doc.setFont('helvetica','italic');
+  doc.setFontSize(8);
+  setTxt(C.labelGray);
+  doc.text('Por favor lea cuidadosamente los siguientes términos antes de firmar la orden de servicio.', 38, ty);
+  ty += 16;
+
+  terminos.forEach((t, i) => {
+    const lines = doc.splitTextToSize(t, W - 100);
+    const rowH = lines.length * 11 + 10;
+    fillRR(34, ty, W - 68, rowH, 3, i % 2 === 0 ? C.offWhite : C.white);
+    setFill(C.primary);
+    doc.rect(34, ty, 3, rowH, 'F');
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8);
+    setTxt(C.bodyText);
+    doc.text(lines, 46, ty + 9);
+    ty += rowH + 4;
+  });
+
+  ty += 14;
+  setStroke(C.border);
+  doc.setLineWidth(0.6);
+  doc.line(34, ty, W - 34, ty);
+  ty += 16;
+
+  ty = sectionHeader('Firmas y Aceptación', 34, ty, W - 68);
+  ty += 12;
+  drawSignatures(ty);
+
+  drawFooter(2, 2);
 
   return doc;
 };
