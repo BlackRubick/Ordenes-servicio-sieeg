@@ -12,6 +12,7 @@ const Navbar = () => {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
+  const isAdmin = normalizedRole === 'admin' || normalizedRole === 'administrador';
   const navLinks =
     normalizedRole === 'tecnico'
       ? [
@@ -23,6 +24,7 @@ const Navbar = () => {
           { name: 'Dashboard', to: '/admin' },
           { name: 'Órdenes', to: '/admin/orders' },
           { name: 'Usuarios', to: '/admin/technicians' },
+          ...(isAdmin ? [{ name: 'Clientes', to: '/admin/clientes' }] : []),
           { name: 'Servicios Foráneos', to: '/servicios-foraneos' },
           { name: 'Órdenes de Clientes', to: '/ordenes-clientes' },
           { name: 'Consulta Pública', to: '/consulta-tu-orden' },

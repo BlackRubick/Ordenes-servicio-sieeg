@@ -38,7 +38,7 @@ function SolicitarOrdenCliente() {
     }
 
     try {
-      const res = await fetch('http://74.208.164.167:3001/api/clients/login', {
+      const res = await fetch('/api/clients/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ usuario, contrasena })
@@ -126,7 +126,7 @@ function SolicitarOrdenCliente() {
         clienteId: clienteData.id,
       };
 
-      const res = await fetch('http://74.208.164.167:3001/api/orders', {
+      const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
+import DashboardLayout from '../layouts/DashboardLayout';
 
 const ClientesManagement = () => {
   const [clientes, setClientes] = useState([]);
@@ -20,7 +21,7 @@ const ClientesManagement = () => {
 
   const fetchClientes = async () => {
     try {
-      const response = await fetch('http://74.208.164.167:3001/api/clients');
+      const response = await fetch('/api/clients');
       const data = await response.json();
       setClientes(data);
     } catch (error) {
@@ -35,8 +36,8 @@ const ClientesManagement = () => {
 
     try {
       const url = editingId
-        ? `http://74.208.164.167:3001/api/clients/${editingId}`
-        : 'http://74.208.164.167:3001/api/clients';
+        ? `/api/clients/${editingId}`
+        : '/api/clients';
       
       const method = editingId ? 'PUT' : 'POST';
 
@@ -90,7 +91,7 @@ const ClientesManagement = () => {
 
     if (result.isConfirmed) {
       try {
-        const response = await fetch(`http://74.208.164.167:3001/api/clients/${id}`, {
+        const response = await fetch(`/api/clients/${id}`, {
           method: 'DELETE',
         });
 
@@ -124,163 +125,157 @@ const ClientesManagement = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">Gestión de Clientes</h1>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-[#1a3a5e] hover:bg-[#2d5075] text-white px-6 py-2 rounded-lg font-semibold transition-colors"
-        >
-          + Nuevo Cliente
-        </button>
-      </div>
+    <DashboardLayout>
+      <div className="p-6">
+        <div className="mb-6 flex justify-between items-center">
+          <h2 className="text-xl font-bold text-dark">Gestión de Clientes</h2>
+          <button
+            onClick={() => setShowModal(true)}
+            className="py-2 px-6 rounded-xl bg-primary-500 text-white font-bold shadow-lg hover:bg-primary-600 transition-all"
+          >
+            Crear Cliente
+          </button>
+        </div>
 
-      {/* Tabla de clientes */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-[#1a3a5e] text-white">
-            <tr>
-              <th className="px-6 py-3 text-left text-sm font-semibold">Nombre</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold">Correo</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold">Teléfono</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold">Usuario</th>
-              <th className="px-6 py-3 text-left text-sm font-semibold">Estado</th>
-              <th className="px-6 py-3 text-center text-sm font-semibold">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {clientes.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
-                  No hay clientes registrados
-                </td>
+        <div className="rounded-2xl bg-gradient-to-tr from-primary-100 to-blue-50 shadow-lg p-1 overflow-x-auto animate-fade-in">
+          <table className="min-w-full text-base border-separate border-spacing-0">
+            <thead>
+              <tr className="text-left text-white font-bold bg-gradient-to-tr from-primary-500 to-secondary-500 rounded-2xl">
+                <th className="py-3 px-4 rounded-tl-2xl">Nombre</th>
+                <th className="py-3 px-4">Correo</th>
+                <th className="py-3 px-4">Teléfono</th>
+                <th className="py-3 px-4">Usuario</th>
+                <th className="py-3 px-4">Estado</th>
+                <th className="py-3 px-4 rounded-tr-2xl">Acciones</th>
               </tr>
-            ) : (
-              clientes.map((cliente) => (
-                <tr key={cliente.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm text-gray-900">{cliente.nombre}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{cliente.correo}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{cliente.telefono}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{cliente.usuario}</td>
-                  <td className="px-6 py-4 text-sm">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        cliente.activo
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {cliente.activo ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-center">
-                    <button
-                      onClick={() => handleEdit(cliente)}
-                      className="text-blue-600 hover:text-blue-800 mr-3 font-semibold"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(cliente.id)}
-                      className="text-red-600 hover:text-red-800 font-semibold"
-                    >
-                      Eliminar
-                    </button>
+            </thead>
+            <tbody>
+              {clientes.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="py-6 px-4 text-center text-gray-600 bg-white rounded-b-2xl">
+                    No hay clientes registrados.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              {editingId ? 'Editar Cliente' : 'Nuevo Cliente'}
-            </h2>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-gray-700 font-semibold mb-2">Nombre Completo</label>
-                <input
-                  type="text"
-                  value={formData.nombre}
-                  onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#1a3a5e] focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-gray-700 font-semibold mb-2">Correo Electrónico</label>
-                <input
-                  type="email"
-                  value={formData.correo}
-                  onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#1a3a5e] focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-gray-700 font-semibold mb-2">Teléfono</label>
-                <input
-                  type="tel"
-                  value={formData.telefono}
-                  onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#1a3a5e] focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-gray-700 font-semibold mb-2">Usuario</label>
-                <input
-                  type="text"
-                  value={formData.usuario}
-                  onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#1a3a5e] focus:border-transparent"
-                  required
-                />
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-gray-700 font-semibold mb-2">
-                  Contraseña {editingId && '(dejar vacío para no cambiar)'}
-                </label>
-                <input
-                  type="password"
-                  value={formData.contrasena}
-                  onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-[#1a3a5e] focus:border-transparent"
-                  required={!editingId}
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors"
-                  disabled={loading}
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-[#1a3a5e] hover:bg-[#2d5075] text-white font-semibold py-2 px-4 rounded-lg transition-colors disabled:opacity-50"
-                  disabled={loading}
-                >
-                  {loading ? 'Guardando...' : editingId ? 'Actualizar' : 'Crear'}
-                </button>
-              </div>
-            </form>
-          </div>
+              ) : (
+                clientes.map((cliente) => (
+                  <tr key={cliente.id} className="transition-all duration-300 group bg-white shadow-card border-b border-border last:border-0 hover:shadow-xl hover:-translate-y-1">
+                    <td className="py-4 px-4 font-semibold text-dark">{cliente.nombre}</td>
+                    <td className="py-4 px-4 text-dark">{cliente.correo}</td>
+                    <td className="py-4 px-4 text-dark">{cliente.telefono}</td>
+                    <td className="py-4 px-4 font-mono text-primary-600">{cliente.usuario}</td>
+                    <td className="py-4 px-4">
+                      <span
+                        className={`px-3 py-1 rounded-full border font-semibold text-xs shadow-sm border-current ${
+                          cliente.activo ? 'bg-state-completed/20 text-state-completed' : 'bg-red-100 text-red-600'
+                        }`}
+                      >
+                        {cliente.activo ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 flex gap-2">
+                      <button
+                        onClick={() => handleEdit(cliente)}
+                        className="px-3 py-1 rounded-xl bg-blue-500 text-white font-bold shadow-lg hover:bg-blue-600 transition-all"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDelete(cliente.id)}
+                        className="px-3 py-1 rounded-xl bg-red-500 text-white font-bold shadow-lg hover:bg-red-600 transition-all"
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
-    </div>
+
+        {showModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col gap-4">
+              <h3 className="text-xl font-bold text-primary-600 mb-1">{editingId ? 'Editar cliente' : 'Crear cliente'}</h3>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                <label className="text-sm font-semibold text-dark">
+                  Nombre
+                  <input
+                    type="text"
+                    value={formData.nombre}
+                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                    className="w-full rounded-xl border border-border p-3 text-base focus:ring-2 focus:ring-primary-200 outline-none mt-1"
+                    required
+                  />
+                </label>
+
+                <label className="text-sm font-semibold text-dark">
+                  Correo
+                  <input
+                    type="email"
+                    value={formData.correo}
+                    onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
+                    className="w-full rounded-xl border border-border p-3 text-base focus:ring-2 focus:ring-primary-200 outline-none mt-1"
+                    required
+                  />
+                </label>
+
+                <label className="text-sm font-semibold text-dark">
+                  Teléfono
+                  <input
+                    type="tel"
+                    value={formData.telefono}
+                    onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
+                    className="w-full rounded-xl border border-border p-3 text-base focus:ring-2 focus:ring-primary-200 outline-none mt-1"
+                    required
+                  />
+                </label>
+
+                <label className="text-sm font-semibold text-dark">
+                  Usuario
+                  <input
+                    type="text"
+                    value={formData.usuario}
+                    onChange={(e) => setFormData({ ...formData, usuario: e.target.value })}
+                    className="w-full rounded-xl border border-border p-3 text-base focus:ring-2 focus:ring-primary-200 outline-none mt-1"
+                    required
+                  />
+                </label>
+
+                <label className="text-sm font-semibold text-dark">
+                  Contraseña {editingId && '(opcional)'}
+                  <input
+                    type="password"
+                    value={formData.contrasena}
+                    onChange={(e) => setFormData({ ...formData, contrasena: e.target.value })}
+                    className="w-full rounded-xl border border-border p-3 text-base focus:ring-2 focus:ring-primary-200 outline-none mt-1"
+                    required={!editingId}
+                  />
+                </label>
+
+                <div className="flex gap-2 justify-end mt-2">
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="px-4 py-2 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300"
+                    disabled={loading}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-primary-600 text-white font-bold hover:bg-primary-700 disabled:opacity-50"
+                    disabled={loading}
+                  >
+                    {loading ? 'Guardando...' : editingId ? 'Guardar cambios' : 'Crear'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+    </DashboardLayout>
   );
 };
 
