@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import SignaturePadCanvas from '../components/SignaturePadCanvas';
 
 const getToday = () => new Date().toISOString().slice(0, 10);
 const generarFolioForaneo = () => `SF${new Date().toISOString().replace(/[-:T.]/g, '').slice(2, 11)}`;
@@ -47,12 +46,7 @@ function ForeignServicesCreate() {
     { area: '', ...defaultRow }
   ]);
   const [showTable, setShowTable] = useState(false);
-  const [nombreRecibe, setNombreRecibe] = useState('');
-  const [signatureData, setSignatureData] = useState('');
-  const [showSignatureModal, setShowSignatureModal] = useState(false);
   const navigate = useNavigate();
-  const pdfRef = useRef();
-  const signaturePadRef = useRef();
 
   const cargarPlantilla = () => {
     setRows(AREAS.map(area => ({ area, ...defaultRow })));
@@ -338,85 +332,6 @@ function ForeignServicesCreate() {
       y += rowH;
     });
 
-    // ════════════════════════════════════════════════════════════════
-    //  FIRMAS Y ACEPTACIÓN - Solo mostrar si hay nombre o firma
-    // ════════════════════════════════════════════════════════════════
-    
-    if (signatureData || nombreRecibe) {
-      // Añadir nueva página si es necesario
-      if (y > H - 220) {
-        drawFooter(1);
-        doc.addPage();
-        drawPageBg();
-        drawHeader();
-        y = 110;
-      }
-
-      y += 20;
-      
-      // Título sección en azul oscuro navy
-      const sigSectionH = 32;
-      filledRoundRect(mx, y, cw, sigSectionH, 6, C.navy);
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(11);
-      setTxt('#FFFFFF');
-      doc.text('FIRMAS Y ACEPTACIÓN', mx + cw / 2, y + sigSectionH / 2 + 4, { align: 'center' });
-      y += sigSectionH + 14;
-
-      // Contenedor de firma del cliente
-      const sigBoxW = 250;
-      const sigBoxH = 100;
-      const sigBoxX = mx + (cw - sigBoxW) / 2; // Centrado
-      
-      // Fondo blanco con borde redondeado en azul oscuro
-      filledRoundRect(sigBoxX, y, sigBoxW, sigBoxH + 40, 8, C.white);
-      setStroke(C.navy);
-      doc.setLineWidth(1.5);
-      doc.roundedRect(sigBoxX, y, sigBoxW, sigBoxH + 40, 8, 8, 'S');
-
-      // Área de firma
-      const sigAreaY = y + 8;
-      filledRoundRect(sigBoxX + 10, sigAreaY, sigBoxW - 20, sigBoxH, 4, '#f0f4f8');
-      setStroke(C.divider);
-      doc.setLineWidth(0.5);
-      doc.roundedRect(sigBoxX + 10, sigAreaY, sigBoxW - 20, sigBoxH, 4, 4, 'S');
-
-      // Dibujar firma si existe
-      if (signatureData) {
-        try {
-          let imageData = signatureData;
-          if (!imageData.startsWith('data:')) {
-            imageData = 'data:image/png;base64,' + imageData;
-          }
-          doc.addImage(imageData, 'PNG', sigBoxX + 15, sigAreaY + 5, sigBoxW - 30, sigBoxH - 10);
-        } catch (e) {
-          // Línea para firmar si hay error
-          setStroke(C.divider);
-          doc.setLineWidth(1);
-          doc.line(sigBoxX + 30, sigAreaY + sigBoxH / 2, sigBoxX + sigBoxW - 30, sigAreaY + sigBoxH / 2);
-        }
-      } else {
-        // Línea para firmar si no hay firma
-        setStroke(C.divider);
-        doc.setLineWidth(1);
-        doc.line(sigBoxX + 30, sigAreaY + sigBoxH / 2, sigBoxX + sigBoxW - 30, sigAreaY + sigBoxH / 2);
-      }
-
-      // Label "FIRMA DEL CLIENTE" en azul oscuro
-      const labelY = sigAreaY + sigBoxH + 8;
-      doc.setFont('helvetica','bold');
-      doc.setFontSize(8);
-      setTxt(C.navy);
-      doc.text('FIRMA DEL CLIENTE', sigBoxX + sigBoxW / 2, labelY, { align: 'center' });
-
-      // Nombre de quien recibe debajo
-      const nameY = labelY + 12;
-      doc.setFont('helvetica','normal');
-      doc.setFontSize(8);
-      setTxt(C.bodyText);
-      doc.text(nombreRecibe || '___________________________', sigBoxX + sigBoxW / 2, nameY, { align: 'center' });
-    }
-
     drawFooter(1);
 
     // Convertir a Blob
@@ -473,8 +388,8 @@ function ForeignServicesCreate() {
       description: 'Servicio foráneo',
       diagnostico: '',
       observaciones: JSON.stringify({ direccion: direccion.trim(), rows }),
-      firma: signatureData || null,
-      nombreRecibe: nombreRecibe.trim() || null,
+      firma: null,
+      nombreRecibe: null,
       status: 'pendiente',
       technicianId: null,
       trabajos: [],
@@ -521,14 +436,6 @@ function ForeignServicesCreate() {
           <input className="px-4 py-3 rounded-xl border border-border bg-white shadow-card" placeholder="Dirección" value={direccion} onChange={e => setDireccion(e.target.value)} />
           <input className="px-4 py-3 rounded-xl border border-border bg-white shadow-card" placeholder="Teléfono" value={telefono} onChange={e => setTelefono(e.target.value)} maxLength={10} />
           <input className="px-4 py-3 rounded-xl border border-border bg-white shadow-card" placeholder="Fecha de mantenimiento" value={fecha} onChange={e => setFecha(e.target.value)} type="date" />
-          <input className="px-4 py-3 rounded-xl border border-border bg-white shadow-card" placeholder="Nombre de quien recibe (opcional)" value={nombreRecibe} onChange={e => setNombreRecibe(e.target.value)} />
-          <button
-            className={`px-4 py-3 rounded-xl font-bold shadow-card transition-all ${signatureData ? 'bg-green-500 text-white hover:bg-green-600' : 'bg-cyan-500 text-white hover:bg-cyan-600'}`}
-            onClick={() => setShowSignatureModal(true)}
-            title="Capturar firma (opcional)"
-          >
-            {signatureData ? '✓ Firma Capturada' : 'Capturar Firma'}
-          </button>
         </div>
         <div className="flex gap-2 mb-4 justify-end">
           {showTable && (
@@ -682,66 +589,6 @@ function ForeignServicesCreate() {
         </div>
       </div>
 
-      {/* Signature Modal */}
-      {showSignatureModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold text-dark mb-4">Capturar Firma del Cliente</h3>
-            
-            {/* Signature Pad */}
-            <div className="mb-4 border-2 border-border rounded-lg overflow-hidden bg-gray-50">
-              <SignaturePadCanvas
-                ref={signaturePadRef}
-                width={300}
-                height={150}
-              />
-            </div>
-
-            {/* Clear Button */}
-            <button
-              onClick={() => signaturePadRef.current?.clear()}
-              className="w-full mb-3 px-3 py-2 bg-gray-300 text-dark font-semibold rounded-lg hover:bg-gray-400 transition-all"
-            >
-              Limpiar Firma
-            </button>
-
-            {/* Confirm/Cancel Buttons */}
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowSignatureModal(false);
-                  signaturePadRef.current?.clear();
-                }}
-                className="flex-1 px-3 py-2 bg-gray-400 text-white font-semibold rounded-lg hover:bg-gray-500 transition-all"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => {
-                  if (signaturePadRef.current?.isEmpty?.()) {
-                    Swal.fire('Error', 'Por favor captura la firma', 'error');
-                    return;
-                  }
-                  // Get signature data using getTrimmedCanvas for better quality
-                  try {
-                    const canvas = signaturePadRef.current?.getTrimmedCanvas?.() || signaturePadRef.current?.toDataURL?.();
-                    const signatureImage = typeof canvas === 'string' ? canvas : canvas?.toDataURL?.();
-                    setSignatureData(signatureImage);
-                    setShowSignatureModal(false);
-                    signaturePadRef.current?.clear();
-                    Swal.fire('Éxito', 'Firma capturada correctamente', 'success');
-                  } catch (e) {
-                    Swal.fire('Error', 'No se pudo capturar la firma', 'error');
-                  }
-                }}
-                className="flex-1 px-3 py-2 bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-600 transition-all"
-              >
-                Confirmar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </DashboardLayout>
   );
 }

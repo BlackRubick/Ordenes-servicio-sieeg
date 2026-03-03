@@ -315,7 +315,7 @@ function SolicitarOrdenCliente() {
           {/* Upload de imágenes */}
           <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Imágenes del Problema (Opcional - Máx. 2)
+              Evidencia Fotografica máximo 2 Archivos
             </label>
             <input
               type="file"

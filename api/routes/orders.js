@@ -41,11 +41,17 @@ router.put('/:folio/tecnico', async (req, res) => {
 // Actualizar estado de una orden por folio
 router.put('/:folio/estado', async (req, res) => {
   const { folio } = req.params;
-  const { estado } = req.body;
+  const { estado, firma, nombreRecibe } = req.body;
   try {
     const order = await Order.findOne({ where: { folio } });
     if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
     order.status = estado;
+    if (Object.prototype.hasOwnProperty.call(req.body, 'firma')) {
+      order.firma = firma || null;
+    }
+    if (Object.prototype.hasOwnProperty.call(req.body, 'nombreRecibe')) {
+      order.nombreRecibe = (nombreRecibe || '').trim() || null;
+    }
     await order.save();
     res.json({ success: true });
   } catch (error) {
@@ -133,6 +139,7 @@ router.post('/', async (req, res) => {
     diagnostico,
     observaciones,
     firma,
+    nombreRecibe,
     status,
     technicianId,
     trabajos,
@@ -159,6 +166,7 @@ router.post('/', async (req, res) => {
       diagnostico,
       observaciones,
       firma,
+      nombreRecibe,
       status,
       technicianId,
       trabajos,

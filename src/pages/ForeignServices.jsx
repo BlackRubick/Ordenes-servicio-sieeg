@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
 import { useAuthStore } from '../store/authStore';
+import SignaturePadCanvas from '../components/SignaturePadCanvas';
 
 const STATUS_OPTIONS = [
   { value: 'pendiente', label: 'Pendiente' },
@@ -52,6 +53,10 @@ export default function ForeignServices() {
   const currentUserName = user?.nombre || user?.name || '';
   const [services, setServices] = useState([]);
   const [technicians, setTechnicians] = useState([]);
+  const [showReceiveModal, setShowReceiveModal] = useState(false);
+  const [pendingReceive, setPendingReceive] = useState(null);
+  const [nombreRecibe, setNombreRecibe] = useState('');
+  const signaturePadRef = useRef();
 
   useEffect(() => {
     fetch('/api/orders?foraneo=true')
@@ -99,19 +104,55 @@ export default function ForeignServices() {
     }
   };
 
-  const handleEstadoChange = async (idx, newEstado) => {
+  const updateStatusWithReceipt = async (idx, newEstado, receiptData = {}) => {
     const service = services[idx];
-    setServices(prev => prev.map((s, i) => (i === idx ? { ...s, status: newEstado } : s)));
+    const previous = service.status;
+
+    setServices(prev => prev.map((s, i) => (i === idx ? { ...s, status: newEstado, ...receiptData } : s)));
 
     try {
-      await fetch(`/api/orders/${service.folio}/estado`, {
+      const res = await fetch(`/api/orders/${service.folio}/estado`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: newEstado }),
+        body: JSON.stringify({ estado: newEstado, ...receiptData }),
       });
+      if (!res.ok) throw new Error('No se pudo actualizar el estado');
     } catch (_) {
+      setServices(prev => prev.map((s, i) => (i === idx ? { ...s, status: previous } : s)));
       Swal.fire('Error', 'No se pudo actualizar el estado', 'error');
     }
+  };
+
+  const handleEstadoChange = async (idx, newEstado) => {
+    const service = services[idx];
+
+    if (newEstado === 'lista') {
+      const decision = await Swal.fire({
+        title: '¿Van a firmar de recibido?',
+        text: 'Si firmas de recibido, se agregará nombre y firma en el PDF.',
+        icon: 'question',
+        showCancelButton: true,
+        showDenyButton: true,
+        confirmButtonText: 'Sí, firmar',
+        denyButtonText: 'No, sin firma',
+        cancelButtonText: 'Cancelar',
+      });
+
+      if (decision.isConfirmed) {
+        setPendingReceive({ idx, newEstado });
+        setNombreRecibe(service.nombreRecibe || '');
+        setShowReceiveModal(true);
+        setTimeout(() => signaturePadRef.current?.clear?.(), 0);
+        return;
+      }
+
+      if (decision.isDenied) {
+        await updateStatusWithReceipt(idx, newEstado, { firma: null, nombreRecibe: null });
+      }
+      return;
+    }
+
+    await updateStatusWithReceipt(idx, newEstado);
   };
 
   const handleDeleteOrder = async (idx) => {
@@ -580,6 +621,86 @@ export default function ForeignServices() {
           </tbody>
         </table>
       </div>
+
+      {showReceiveModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-lg w-full mx-4">
+            <h3 className="text-xl font-extrabold text-primary-500 mb-2">Firma de recibido</h3>
+            <p className="text-sm text-gray-600 mb-4">Captura el nombre de quien recibe y su firma para incluirlo en el PDF.</p>
+
+            <input
+              className="w-full px-4 py-3 rounded-xl border border-border bg-white shadow-sm mb-4"
+              placeholder="Nombre de quien recibe"
+              value={nombreRecibe}
+              onChange={e => setNombreRecibe(e.target.value)}
+            />
+
+            <div className="mb-4 border-2 border-border rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
+              <SignaturePadCanvas ref={signaturePadRef} width={420} height={170} />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => signaturePadRef.current?.clear?.()}
+              className="w-full mb-3 px-3 py-2 bg-gray-200 text-dark font-semibold rounded-lg hover:bg-gray-300 transition-all"
+            >
+              Limpiar firma
+            </button>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowReceiveModal(false);
+                  setPendingReceive(null);
+                  setNombreRecibe('');
+                  signaturePadRef.current?.clear?.();
+                }}
+                className="flex-1 px-4 py-2 bg-gray-400 text-white font-semibold rounded-lg hover:bg-gray-500 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!nombreRecibe.trim()) {
+                    Swal.fire('Campo obligatorio', 'Captura el nombre de quien recibe.', 'warning');
+                    return;
+                  }
+                  if (signaturePadRef.current?.isEmpty?.()) {
+                    Swal.fire('Firma requerida', 'Captura la firma para continuar.', 'warning');
+                    return;
+                  }
+
+                  try {
+                    const canvas = signaturePadRef.current?.getTrimmedCanvas?.() || signaturePadRef.current?.toDataURL?.();
+                    const signatureImage = typeof canvas === 'string' ? canvas : canvas?.toDataURL?.();
+                    if (!signatureImage) throw new Error('Firma inválida');
+
+                    const current = pendingReceive;
+                    setShowReceiveModal(false);
+                    setPendingReceive(null);
+                    signaturePadRef.current?.clear?.();
+
+                    if (current) {
+                      await updateStatusWithReceipt(current.idx, current.newEstado, {
+                        nombreRecibe: nombreRecibe.trim(),
+                        firma: signatureImage,
+                      });
+                    }
+                    setNombreRecibe('');
+                  } catch (_) {
+                    Swal.fire('Error', 'No se pudo capturar la firma.', 'error');
+                  }
+                }}
+                className="flex-1 px-4 py-2 bg-primary-500 text-white font-semibold rounded-lg hover:bg-primary-600 transition-all"
+              >
+                Guardar recibido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
