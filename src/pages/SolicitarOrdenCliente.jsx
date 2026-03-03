@@ -95,11 +95,11 @@ function SolicitarOrdenCliente() {
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     
-    if (files.length + selectedImages.length > 10) {
+    if (files.length + selectedImages.length > 2) {
       Swal.fire({
         icon: 'warning',
         title: 'Límite de imágenes',
-        text: 'Puedes subir máximo 10 imágenes',
+        text: 'Puedes subir máximo 2 imágenes',
       });
       return;
     }

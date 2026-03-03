@@ -29,6 +29,7 @@ function OrdenesClientes() {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
+  const isAdmin = normalizedRole === 'admin' || normalizedRole === 'administrador';
   const isTechnician = normalizedRole === 'tecnico';
   const currentUserName = user?.nombre || user?.name || '';
   const [ordenes, setOrdenes] = useState([]);
@@ -111,6 +112,29 @@ function OrdenesClientes() {
     navigate(`/ordenes-clientes/${orden.folio}`, { state: { orden } });
   };
 
+  const handleDelete = async (orden) => {
+    const result = await Swal.fire({
+      title: '¿Eliminar orden?',
+      text: `Se eliminará la orden ${orden.folio} de forma permanente.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const res = await fetch(`/api/orders/${orden.folio}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('No se pudo eliminar');
+      setOrdenes(prev => prev.filter(o => o.folio !== orden.folio));
+      Swal.fire('Eliminada', 'La orden fue eliminada correctamente.', 'success');
+    } catch (_) {
+      Swal.fire('Error', 'No se pudo eliminar la orden en el servidor', 'error');
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="mb-6 flex flex-col gap-4">
@@ -172,12 +196,22 @@ function OrdenesClientes() {
                     </select>
                   </td>
                   <td className="py-4 px-4">
-                    <button
-                      className="px-4 py-2 rounded-xl bg-primary-500 text-white font-bold shadow-lg hover:bg-primary-600 transition-all"
-                      onClick={() => handleVer(orden)}
-                    >
-                      Ver
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="px-4 py-2 rounded-xl bg-primary-500 text-white font-bold shadow-lg hover:bg-primary-600 transition-all"
+                        onClick={() => handleVer(orden)}
+                      >
+                        Ver
+                      </button>
+                      {isAdmin && (
+                        <button
+                          className="px-4 py-2 rounded-xl bg-red-500 text-white font-bold shadow-lg hover:bg-red-600 transition-all"
+                          onClick={() => handleDelete(orden)}
+                        >
+                          Eliminar
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

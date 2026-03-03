@@ -17,7 +17,7 @@ Se ha implementado un sistema completo de gestión de usuarios clientes con las 
 ### 📝 Formulario Simplificado
 - **Auto-completado**: Nombre, correo y teléfono se toman del perfil del cliente
 - **Solo 3 campos**: Tipo de Equipo, Dirección, Descripción del Problema
-- **Upload de imágenes**: Los clientes pueden subir hasta 10 imágenes (JPG, PNG, GIF, WEBP, máx 5MB c/u)
+- **Upload de imágenes**: Los clientes pueden subir hasta 2 imágenes (JPG, PNG, GIF, WEBP, máx 5MB c/u)
 - **Vinculación**: Orden queda asociada al clienteId
 
 ---
@@ -129,6 +129,16 @@ nano /etc/nginx/sites-available/ordenes-servicio-sieeg
 # Agregar dentro del bloque server {}:
 client_max_body_size 50M;
 
+# Y agregar este bloque location después de /api/:
+location /uploads/ {
+    proxy_pass http://127.0.0.1:3001/uploads/;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+}
+
 # Guardar y reiniciar Nginx
 nginx -t
 systemctl reload nginx
@@ -232,7 +242,7 @@ Admin envía al cliente:
 1. Cliente va a `/solicitar-orden-cliente`
 2. Ve formulario de login
 3. Ingresa usuario y contraseña
-4. Cliente puede subir hasta 10 imágenes (opcional)
+4. Cliente puede subir hasta 2 imágenes (opcional)
 7. Envía la orden (automáticamente incluye sus datos e imágene
 5. Cliente rellena: Tipo de Equipo, Dirección, Descripción
 6. Envía la orden (automáticamente incluye sus datos)

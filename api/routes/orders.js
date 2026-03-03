@@ -174,7 +174,7 @@ router.post('/', async (req, res) => {
 });
 
 // Upload de imágenes para órdenes
-router.post('/upload', upload.array('images', 10), async (req, res) => {
+router.post('/upload', upload.array('images', 2), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ error: 'No se subieron archivos' });
