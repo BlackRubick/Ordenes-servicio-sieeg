@@ -3,7 +3,7 @@ import React  from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
 
-const ROLES = ['Técnico', 'Administrador'];
+const ROLES = ['Técnico', 'Administrador', 'Mostrador'];
 const ESTADOS = ['Activo', 'Inactivo'];
 
 const Technicians = () => {

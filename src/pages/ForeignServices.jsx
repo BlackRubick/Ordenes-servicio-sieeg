@@ -126,6 +126,24 @@ export default function ForeignServices() {
   const handleEstadoChange = async (idx, newEstado) => {
     const service = services[idx];
 
+    const hasTechnicianAssigned = Boolean(
+      String(service.tecnico || '').trim() || service.technicianId
+    );
+
+    if (!hasTechnicianAssigned && newEstado !== 'pendiente') {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Asigna un técnico primero',
+        text: 'Debes asignar un técnico para poder cambiar el estado de la orden.',
+        confirmButtonText: 'Entendido',
+      });
+
+      setServices(prev => prev.map((s, i) => (
+        i === idx ? { ...s, status: 'pendiente' } : s
+      )));
+      return;
+    }
+
     if (newEstado === 'lista') {
       const decision = await Swal.fire({
         title: '¿Van a firmar de recibido?',

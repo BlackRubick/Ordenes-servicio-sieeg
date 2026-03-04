@@ -46,11 +46,17 @@ const Login = () => {
           setError('');
           loginStore.login(data.user, data.user.rol);
           console.log('Usuario logueado:', data.user);
-          const rol = data.user.rol?.toLowerCase();
+          const rol = String(data.user.rol || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
           if (rol === 'admin' || rol === 'administrador') {
             console.log('Navegando a /admin/dashboard');
             navigate('/admin/dashboard');
-          } else if (rol === 'technician' || rol === 'técnico') {
+          } else if (rol === 'technician' || rol === 'tecnico') {
+            console.log('Navegando a /admin/orders');
+            navigate('/admin/orders');
+          } else if (rol === 'mostrador') {
             console.log('Navegando a /admin/orders');
             navigate('/admin/orders');
           }

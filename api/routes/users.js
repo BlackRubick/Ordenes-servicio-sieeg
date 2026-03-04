@@ -3,11 +3,24 @@ const router = express.Router();
 const { User } = require('../models');
 const bcrypt = require('bcrypt');
 
+const ROLES_VALIDOS = ['administrador', 'admin', 'tecnico', 'técnico', 'mostrador'];
+
+const normalizarRol = (rol) => String(rol || '')
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .trim();
+
+const validarRol = (rol) => ROLES_VALIDOS.includes(normalizarRol(rol));
+
 // Editar usuario
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { nombre, correo, contrasena, rol, estado } = req.body;
   try {
+    if (rol && !validarRol(rol)) {
+      return res.status(400).json({ error: 'Rol inválido' });
+    }
     const user = await User.findByPk(id);
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
     let updateData = { nombre, correo, rol, estado };
@@ -48,6 +61,9 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const { nombre, correo, contrasena, rol, estado } = req.body;
   try {
+    if (!validarRol(rol)) {
+      return res.status(400).json({ error: 'Rol inválido' });
+    }
     const hashedPassword = await bcrypt.hash(contrasena, 10);
     const user = await User.create({ nombre, correo, contrasena: hashedPassword, rol, estado });
     res.json(user);

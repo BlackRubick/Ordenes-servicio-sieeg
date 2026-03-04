@@ -34,6 +34,7 @@ const Orders = () => {
     .toLowerCase();
   const isTechnician = normalizedRole === 'tecnico';
   const isAdmin = normalizedRole === 'administrador' || normalizedRole === 'admin';
+  const isMostrador = normalizedRole === 'mostrador';
   const currentUserName = user?.nombre || user?.name || '';
   const [search, setSearch] = useState('');
   const [estado, setEstado] = useState('');
@@ -515,7 +516,7 @@ const generateOrderPdfDoc = async (order) => {
               ))}
             </select>
           )}
-          {isAdmin && (
+          {(isAdmin || isMostrador) && (
             <button
               className="px-6 py-3 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300"
               onClick={() => navigate('/admin/orders/create')}
@@ -559,7 +560,7 @@ const generateOrderPdfDoc = async (order) => {
                   <td className="py-4 px-4 align-middle"><span className="font-bold text-dark">{o.clientName}</span></td>
                   <td className="py-4 px-4 align-middle"><span className="font-semibold text-dark lowercase">{[o.marca, o.modelo, o.serie].filter(Boolean).join(' ')}</span></td>
                   <td className="py-4 px-4 align-middle">
-                    {isTechnician || ['cancelada', 'eliminada'].includes(o.status || o.estado) ? (
+                    {!isAdmin || ['cancelada', 'eliminada'].includes(o.status || o.estado) ? (
                       <span className="text-primary-500 font-semibold">{o.tecnico}</span>
                     ) : (
                       <select
@@ -589,7 +590,15 @@ const generateOrderPdfDoc = async (order) => {
                     )}
                   </td>
                   <td className="py-4 px-4 align-middle">
-                    {['cancelada', 'eliminada'].includes(o.status || o.estado) ?
+                    {!isAdmin ? (
+                      ESTADOS[o.status || o.estado] ? (
+                        <span className={`px-4 py-1 rounded-full border font-semibold text-xs shadow-sm ${ESTADOS[o.status || o.estado].bg} ${ESTADOS[o.status || o.estado].text} border-current`}>
+                          {ESTADOS[o.status || o.estado].label}
+                        </span>
+                      ) : (
+                        <span className="px-4 py-1 rounded-full border font-semibold text-xs shadow-sm bg-gray-200 text-gray-500 border-current">Estado desconocido</span>
+                      )
+                    ) : ['cancelada', 'eliminada'].includes(o.status || o.estado) ?
                       (ESTADOS[o.status || o.estado] ? (
                         <span className={`px-4 py-1 rounded-full border font-semibold text-xs shadow-sm ${ESTADOS[o.status || o.estado].bg} ${ESTADOS[o.status || o.estado].text} border-current`}>
                           {ESTADOS[o.status || o.estado].label}

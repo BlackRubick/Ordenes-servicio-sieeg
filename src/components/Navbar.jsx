@@ -13,12 +13,18 @@ const Navbar = () => {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
   const isAdmin = normalizedRole === 'admin' || normalizedRole === 'administrador';
+  const isMostrador = normalizedRole === 'mostrador';
   const navLinks =
     normalizedRole === 'tecnico'
       ? [
           { name: 'Mis Órdenes', to: '/admin/orders' },
           { name: 'Servicios Foráneos', to: '/servicios-foraneos' },
           { name: 'Órdenes de Clientes', to: '/ordenes-clientes' },
+        ]
+      : isMostrador
+      ? [
+          { name: 'Órdenes', to: '/admin/orders' },
+          { name: 'Crear Orden', to: '/admin/orders/create' },
         ]
       : [
           { name: 'Dashboard', to: '/admin' },
