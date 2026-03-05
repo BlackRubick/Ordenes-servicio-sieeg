@@ -31,6 +31,7 @@ function OrdenesClientes() {
     .toLowerCase();
   const isAdmin = normalizedRole === 'admin' || normalizedRole === 'administrador';
   const isTechnician = normalizedRole === 'tecnico';
+  const isMostrador = normalizedRole === 'mostrador';
   const currentUserName = user?.nombre || user?.name || '';
   const [ordenes, setOrdenes] = useState([]);
   const [technicians, setTechnicians] = useState([]);
@@ -167,7 +168,7 @@ function OrdenesClientes() {
                   <td className="py-4 px-4">{orden.direccion}</td>
                   <td className="py-4 px-4">{orden.fecha || '-'}</td>
                   <td className="py-4 px-4">
-                    {isTechnician ? (
+                    {isTechnician || isMostrador ? (
                       <span className="font-semibold text-primary-600">{orden.tecnico || 'Sin asignar'}</span>
                     ) : (
                       <select
@@ -184,16 +185,23 @@ function OrdenesClientes() {
                     )}
                   </td>
                   <td className="py-4 px-4">
-                    <select
-                      className={`rounded-xl border border-border px-2 py-1 w-32 font-semibold 
-                        ${orden.estado === 'Pendiente' ? 'bg-yellow-100 text-yellow-700' : orden.estado === 'Completada' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}
-                      value={orden.estado}
-                      onChange={e => handleEstadoChange(idx, e.target.value)}
-                    >
-                      {ESTADOS.map(e => (
-                        <option key={e} value={e}>{e}</option>
-                      ))}
-                    </select>
+                    {isMostrador ? (
+                      <span className={`font-semibold ${
+                        orden.estado === 'Pendiente' ? 'text-yellow-700' : orden.estado === 'Completada' ? 'text-green-700' : 'text-blue-700'}`}>
+                        {orden.estado}
+                      </span>
+                    ) : (
+                      <select
+                        className={`rounded-xl border border-border px-2 py-1 w-32 font-semibold 
+                          ${orden.estado === 'Pendiente' ? 'bg-yellow-100 text-yellow-700' : orden.estado === 'Completada' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}
+                        value={orden.estado}
+                        onChange={e => handleEstadoChange(idx, e.target.value)}
+                      >
+                        {ESTADOS.map(e => (
+                          <option key={e} value={e}>{e}</option>
+                        ))}
+                      </select>
+                    )}
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-2">

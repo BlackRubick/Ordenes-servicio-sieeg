@@ -50,6 +50,7 @@ export default function ForeignServices() {
     .toLowerCase();
   const isTechnician = normalizedRole === 'tecnico';
   const isAdmin = normalizedRole === 'administrador' || normalizedRole === 'admin';
+  const isMostrador = normalizedRole === 'mostrador';
   const currentUserName = user?.nombre || user?.name || '';
   const [services, setServices] = useState([]);
   const [technicians, setTechnicians] = useState([]);
@@ -587,7 +588,7 @@ export default function ForeignServices() {
                 <td className="py-4 px-4">{service.direccion}</td>
                 <td className="py-4 px-4">{service.fecha || '-'}</td>
                 <td className="py-4 px-4">
-                  {isTechnician ? (
+                  {isTechnician || isMostrador ? (
                     <span className="font-semibold text-primary-600">{service.tecnico || 'Sin asignar'}</span>
                   ) : (
                     <select
@@ -607,15 +608,19 @@ export default function ForeignServices() {
                   )}
                 </td>
                 <td className="py-4 px-4">
-                  <select
-                    value={service.status}
-                    onChange={e => handleEstadoChange(idx, e.target.value)}
-                    className="rounded-xl border border-border px-2 py-1 font-bold"
-                  >
-                    {STATUS_OPTIONS.map(option => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
+                  {isMostrador ? (
+                    <span className="font-semibold text-primary-600">{STATUS_OPTIONS.find(o => o.value === service.status)?.label || service.status}</span>
+                  ) : (
+                    <select
+                      value={service.status}
+                      onChange={e => handleEstadoChange(idx, e.target.value)}
+                      className="rounded-xl border border-border px-2 py-1 font-bold"
+                    >
+                      {STATUS_OPTIONS.map(option => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  )}
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex gap-2">
