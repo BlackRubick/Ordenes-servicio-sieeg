@@ -77,7 +77,7 @@ export default function ForeignServices() {
         setServices(mapped);
       })
       .catch(() => {
-        Swal.fire('Error', 'No se pudieron cargar los servicios foráneos', 'error');
+        Swal.fire('Error', 'No se pudieron cargar los servicios externos', 'error');
         setServices([]);
       });
 
@@ -547,11 +547,11 @@ export default function ForeignServices() {
   return (
     <DashboardLayout>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Servicios Foráneos</h2>
+        <h2 className="text-2xl font-bold">Servicios Externos</h2>
         {isAdmin && (
           <button
             className="bg-primary text-white px-4 py-2 rounded-xl font-semibold shadow-md hover:bg-primary-dark transition"
-            onClick={() => navigate('/servicios-foraneos/crear')}
+            onClick={() => navigate('/servicios-externos/crear')}
           >
             Crear orden foránea
           </button>
@@ -574,7 +574,7 @@ export default function ForeignServices() {
             {services.length === 0 && (
               <tr>
                 <td colSpan={7} className="text-center text-muted py-8 bg-white rounded-b-2xl">
-                  No hay servicios foráneos registrados.
+                  No hay servicios externos registrados.
                 </td>
               </tr>
             )}
@@ -634,7 +634,7 @@ export default function ForeignServices() {
                     {isAdmin && (
                       <button
                         className="px-3 py-1 rounded-lg bg-blue-500 text-white font-semibold shadow-md hover:bg-blue-600 transition-all"
-                        onClick={() => navigate('/servicios-foraneos/crear', { state: { order: service } })}
+                        onClick={() => navigate('/servicios-externos/crear', { state: { order: service } })}
                       >
                         Editar
                       </button>

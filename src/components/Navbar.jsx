@@ -18,15 +18,15 @@ const Navbar = () => {
     normalizedRole === 'tecnico'
       ? [
           { name: 'Mis Órdenes', to: '/admin/orders' },
-          { name: 'Servicios Foráneos', to: '/servicios-foraneos' },
+          { name: 'Servicios Externos', to: '/servicios-externos' },
           { name: 'Órdenes de Clientes', to: '/ordenes-clientes' },
         ]
       : isMostrador
       ? [
           { name: 'Órdenes', to: '/admin/orders' },
           { name: 'Crear Orden', to: '/admin/orders/create' },
-          { name: 'Servicios Foráneos', to: '/servicios-foraneos' },
-          { name: 'Crear Foráneo', to: '/servicios-foraneos/crear' },
+          { name: 'Servicios Externos', to: '/servicios-externos' },
+          { name: 'Crear Externo', to: '/servicios-externos/crear' },
           { name: 'Órdenes de Clientes', to: '/ordenes-clientes' },
         ]
       : [
@@ -34,7 +34,7 @@ const Navbar = () => {
           { name: 'Órdenes', to: '/admin/orders' },
           { name: 'Usuarios', to: '/admin/technicians' },
           ...(isAdmin ? [{ name: 'Clientes', to: '/admin/clientes' }] : []),
-          { name: 'Servicios Foráneos', to: '/servicios-foraneos' },
+          { name: 'Servicios Externos', to: '/servicios-externos' },
           { name: 'Órdenes de Clientes', to: '/ordenes-clientes' },
           { name: 'Consulta Pública', to: '/consulta-tu-orden' },
           { name: 'Solicitar Orden de Servicio', to: '/solicitar-orden-cliente' },

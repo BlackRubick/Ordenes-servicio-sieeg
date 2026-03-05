@@ -21,7 +21,7 @@ export default function ExternalOrders() {
         <h2 className="text-2xl font-bold">Órdenes de Servicio Externas</h2>
         <button
           className="bg-primary text-white px-4 py-2 rounded-xl font-semibold shadow-md hover:bg-primary-dark transition"
-          onClick={() => navigate('/servicios-foraneos')}
+          onClick={() => navigate('/servicios-externos')}
         >
           Crear orden externa
         </button>

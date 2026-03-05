@@ -467,7 +467,10 @@ const generateOrderPdfDoc = async (order) => {
           }
           return { ...o, resumen };
         });
-        let filtered = parsed.filter(o => String(o.tipo || '').toLowerCase() !== 'foraneo');
+        let filtered = parsed.filter(o => {
+          const tipo = String(o.tipo || '').toLowerCase();
+          return tipo !== 'foraneo' && tipo !== 'cliente';
+        });
         // Si es técnico, solo mostrar sus órdenes asignadas
         if (normalizedRole === 'tecnico' && currentUserName) {
           filtered = filtered.filter(o => o.tecnico === currentUserName);

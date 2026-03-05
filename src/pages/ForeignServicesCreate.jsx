@@ -446,7 +446,7 @@ function ForeignServicesCreate() {
         timer: 1500,
         showConfirmButton: false
       }).then(() => {
-        navigate('/servicios-foraneos');
+        navigate('/servicios-externos');
       });
     } catch (_) {
       Swal.fire({
