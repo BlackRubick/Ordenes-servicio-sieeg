@@ -31,7 +31,6 @@ function OrdenesClientes() {
     .toLowerCase();
   const isAdmin = normalizedRole === 'admin' || normalizedRole === 'administrador';
   const isTechnician = normalizedRole === 'tecnico';
-  const isMostrador = normalizedRole === 'mostrador';
   const currentUserName = user?.nombre || user?.name || '';
   const [ordenes, setOrdenes] = useState([]);
   const [technicians, setTechnicians] = useState([]);
@@ -59,10 +58,6 @@ function OrdenesClientes() {
         // Si es técnico, solo mostrar sus órdenes asignadas
         if (normalizedRole === 'tecnico' && currentUserName) {
           clienteOrders = clienteOrders.filter(order => order.tecnico === currentUserName);
-        }
-        // Si es mostrador, solo mostrar sus órdenes creadas
-        if (normalizedRole === 'mostrador' && currentUserName) {
-          clienteOrders = clienteOrders.filter(order => order.usuarioCreador === currentUserName || !order.usuarioCreador);
         }
         setOrdenes(clienteOrders);
       })

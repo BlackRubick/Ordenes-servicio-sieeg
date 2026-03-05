@@ -4,7 +4,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { useAuthStore } from '../store/authStore';
 
 const getToday = () => new Date().toISOString().slice(0, 10);
 const generarFolioForaneo = () => `SF${new Date().toISOString().replace(/[-:T.]/g, '').slice(2, 11)}`;
@@ -39,7 +38,6 @@ const defaultRow = {
 };
 
 function ForeignServicesCreate() {
-  const { user } = useAuthStore();
   const location = useLocation();
   const editOrder = location.state?.order || null;
   const isEditMode = Boolean(editOrder?.folio);
@@ -424,7 +422,6 @@ function ForeignServicesCreate() {
       technicianId: isEditMode ? (editOrder.technicianId ?? null) : null,
       trabajos: isEditMode ? (editOrder.trabajos || []) : [],
       resumen: isEditMode ? (editOrder.resumen || { total: 0 }) : { total: 0 },
-      ...(isEditMode ? {} : { usuarioCreador: user?.nombre || user?.name || 'Sistema' }),
     };
 
     try {

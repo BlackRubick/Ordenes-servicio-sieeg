@@ -7,8 +7,18 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetch('/api/orders')
       .then(res => res.json())
-      .then(data => setOrders(data))
-      .catch(() => setOrders([]));
+      .then(data => {
+        if (Array.isArray(data)) {
+          setOrders(data);
+        } else {
+          console.error('Data is not an array:', data);
+          setOrders([]);
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching orders:', err);
+        setOrders([]);
+      });
   }, []);
 
   // Estadísticas

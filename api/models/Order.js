@@ -27,7 +27,6 @@ const Order = sequelize.define('Order', {
   resumen: { type: DataTypes.JSON, allowNull: true },
   clienteId: { type: DataTypes.INTEGER, allowNull: true },
   imagenes: { type: DataTypes.JSON, allowNull: true },
-  usuarioCreador: { type: DataTypes.STRING, allowNull: true },
 });
 
 module.exports = Order;
