@@ -25,6 +25,9 @@ const Navbar = () => {
       ? [
           { name: 'Órdenes', to: '/admin/orders' },
           { name: 'Crear Orden', to: '/admin/orders/create' },
+          { name: 'Servicios Foráneos', to: '/servicios-foraneos' },
+          { name: 'Crear Foráneo', to: '/servicios-foraneos/crear' },
+          { name: 'Órdenes de Clientes', to: '/ordenes-clientes' },
         ]
       : [
           { name: 'Dashboard', to: '/admin' },
