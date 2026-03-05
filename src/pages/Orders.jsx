@@ -16,18 +16,33 @@ const ESTADOS = {
   pendiente: { label: 'Pendiente', bg: 'bg-state-pending/30', text: 'text-state-pending' },
   'Pendiente': { label: 'Pendiente', bg: 'bg-state-pending/30', text: 'text-state-pending' },
   revision: { label: 'En revisión', bg: 'bg-state-review/30', text: 'text-state-review' },
+  'Revision': { label: 'En revisión', bg: 'bg-state-review/30', text: 'text-state-review' },
   diagnostico: { label: 'Diagnóstico generado', bg: 'bg-blue-200/20', text: 'text-blue-800' },
+  'Diagnostico': { label: 'Diagnóstico generado', bg: 'bg-blue-200/20', text: 'text-blue-800' },
   espera_aprobacion: { label: 'En espera de aprobación', bg: 'bg-yellow-100/20', text: 'text-yellow-700' },
+  'Espera_Aprobacion': { label: 'En espera de aprobación', bg: 'bg-yellow-100/20', text: 'text-yellow-700' },
   reparacion: { label: 'En reparación', bg: 'bg-state-repair/30', text: 'text-state-repair' },
+  'Reparacion': { label: 'En reparación', bg: 'bg-state-repair/30', text: 'text-state-repair' },
   lista: { label: 'Lista', bg: 'bg-green-500/20', text: 'text-green-600' },
+  'Lista': { label: 'Lista', bg: 'bg-green-500/20', text: 'text-green-600' },
   entregada: { label: 'Entregada', bg: 'bg-blue-400/20', text: 'text-blue-500' },
+  'Entregada': { label: 'Entregada', bg: 'bg-blue-400/20', text: 'text-blue-500' },
   cancelada: { label: 'Cancelada', bg: 'bg-state-cancelled/30', text: 'text-state-cancelled' },
+  'Cancelada': { label: 'Cancelada', bg: 'bg-state-cancelled/30', text: 'text-state-cancelled' },
   eliminada: { label: 'Eliminada', bg: 'bg-gray-300/30', text: 'text-gray-500' },
+  'Eliminada': { label: 'Eliminada', bg: 'bg-gray-300/30', text: 'text-gray-500' },
 };
 
 const getEstado = (status) => {
-  const estadoValue = status || 'pendiente';
-  return ESTADOS[estadoValue] || ESTADOS[estadoValue.toLowerCase()] || null;
+  if (!status) return ESTADOS.pendiente;
+  const lower = String(status).toLowerCase().trim();
+  // Buscar en minúsculas en las claves
+  for (const [key, value] of Object.entries(ESTADOS)) {
+    if (key.toLowerCase() === lower) {
+      return value;
+    }
+  }
+  return null;
 };
 
 
@@ -71,7 +86,7 @@ const generateOrderPdfDoc = async (order) => {
   ];
 
   const statusKey = order.status || order.estado || 'pendiente';
-  const statusLabel = ESTADOS[statusKey]?.label || statusKey;
+  const statusLabel = getEstado(statusKey)?.label || statusKey;
   const details = order.description || order.detalles || order.observaciones || 'No especificado';
   const total = typeof order.resumen?.total === 'number' ? `$${order.resumen.total.toFixed(2)}` : '$0.00';
 
