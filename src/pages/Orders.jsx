@@ -451,6 +451,10 @@ const generateOrderPdfDoc = async (order) => {
         if (normalizedRole === 'tecnico' && currentUserName) {
           filtered = filtered.filter(o => o.tecnico === currentUserName);
         }
+        // Si es mostrador, solo mostrar sus órdenes creadas
+        if (normalizedRole === 'mostrador' && currentUserName) {
+          filtered = filtered.filter(o => o.usuarioCreador === currentUserName || o.createdBy === currentUserName || !o.usuarioCreador);
+        }
         setOrders(filtered);
       })
       .catch(() => Swal.fire('Error', 'No se pudieron cargar las órdenes', 'error'));

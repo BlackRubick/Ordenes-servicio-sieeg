@@ -49,6 +49,7 @@ export default function ForeignServices() {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
   const isTechnician = normalizedRole === 'tecnico';
+  const isMostrador = normalizedRole === 'mostrador';
   const isAdmin = normalizedRole === 'administrador' || normalizedRole === 'admin';
   const currentUserName = user?.nombre || user?.name || '';
   const [services, setServices] = useState([]);
@@ -72,6 +73,10 @@ export default function ForeignServices() {
         // Si es técnico, solo mostrar sus servicios asignados
         if (normalizedRole === 'tecnico' && currentUserName) {
           mapped = mapped.filter(order => order.tecnico === currentUserName);
+        }
+        // Si es mostrador, solo mostrar sus servicios creados
+        if (normalizedRole === 'mostrador' && currentUserName) {
+          mapped = mapped.filter(order => order.usuarioCreador === currentUserName || !order.usuarioCreador);
         }
         setServices(mapped);
       })

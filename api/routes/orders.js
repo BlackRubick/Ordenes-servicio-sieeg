@@ -146,6 +146,7 @@ router.post('/', async (req, res) => {
     resumen,
     clienteId,
     imagenes,
+    usuarioCreador,
   } = req.body;
   try {
     const order = await Order.create({
@@ -173,6 +174,7 @@ router.post('/', async (req, res) => {
       resumen,
       clienteId,
       imagenes,
+      usuarioCreador,
     });
     res.status(201).json(order);
   } catch (error) {

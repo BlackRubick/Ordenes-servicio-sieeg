@@ -5,6 +5,7 @@ import SignaturePadCanvas from '../components/SignaturePadCanvas';
 import PatternLock from '../components/PatternLock';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { useEffect } from 'react';
+import { useAuthStore } from '../store/authStore';
 
 const accesoriosList = ['Cargador', 'SIM Card', 'Bandeja SIM', 'Memoria SD', 'Funda', 'Cable'];
 
@@ -29,6 +30,7 @@ const initialState = {
 };
 
 const CreateOrder = () => {
+  const { user } = useAuthStore();
   const [form, setForm] = useState(initialState);
   const [touched, setTouched] = useState({});
   const [error, setError] = useState('');
@@ -147,6 +149,7 @@ const CreateOrder = () => {
       firma: signature,
       status: 'Pendiente',
       technicianId: form.tecnico ? parseInt(form.tecnico) : null,
+      usuarioCreador: user?.nombre || user?.name || 'Sistema',
     };
     try {
       const res = await fetch('/api/orders', {
