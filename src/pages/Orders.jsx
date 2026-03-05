@@ -14,6 +14,7 @@ import jsPDF from 'jspdf';
 
 const ESTADOS = {
   pendiente: { label: 'Pendiente', bg: 'bg-state-pending/30', text: 'text-state-pending' },
+  'Pendiente': { label: 'Pendiente', bg: 'bg-state-pending/30', text: 'text-state-pending' },
   revision: { label: 'En revisión', bg: 'bg-state-review/30', text: 'text-state-review' },
   diagnostico: { label: 'Diagnóstico generado', bg: 'bg-blue-200/20', text: 'text-blue-800' },
   espera_aprobacion: { label: 'En espera de aprobación', bg: 'bg-yellow-100/20', text: 'text-yellow-700' },
@@ -22,6 +23,11 @@ const ESTADOS = {
   entregada: { label: 'Entregada', bg: 'bg-blue-400/20', text: 'text-blue-500' },
   cancelada: { label: 'Cancelada', bg: 'bg-state-cancelled/30', text: 'text-state-cancelled' },
   eliminada: { label: 'Eliminada', bg: 'bg-gray-300/30', text: 'text-gray-500' },
+};
+
+const getEstado = (status) => {
+  const estadoValue = status || 'pendiente';
+  return ESTADOS[estadoValue] || ESTADOS[estadoValue.toLowerCase()] || null;
 };
 
 
@@ -592,24 +598,24 @@ const generateOrderPdfDoc = async (order) => {
                   </td>
                   <td className="py-4 px-4 align-middle">
                     {!isAdmin ? (
-                      ESTADOS[o.status || o.estado] ? (
-                        <span className={`px-4 py-1 rounded-full border font-semibold text-xs shadow-sm ${ESTADOS[o.status || o.estado].bg} ${ESTADOS[o.status || o.estado].text} border-current`}>
-                          {ESTADOS[o.status || o.estado].label}
+                      getEstado(o.status || o.estado) ? (
+                        <span className={`px-4 py-1 rounded-full border font-semibold text-xs shadow-sm ${getEstado(o.status || o.estado).bg} ${getEstado(o.status || o.estado).text} border-current`}>
+                          {getEstado(o.status || o.estado).label}
                         </span>
                       ) : (
                         <span className="px-4 py-1 rounded-full border font-semibold text-xs shadow-sm bg-gray-200 text-gray-500 border-current">Estado desconocido</span>
                       )
                     ) : ['cancelada', 'eliminada'].includes(o.status || o.estado) ?
-                      (ESTADOS[o.status || o.estado] ? (
-                        <span className={`px-4 py-1 rounded-full border font-semibold text-xs shadow-sm ${ESTADOS[o.status || o.estado].bg} ${ESTADOS[o.status || o.estado].text} border-current`}>
-                          {ESTADOS[o.status || o.estado].label}
+                      (getEstado(o.status || o.estado) ? (
+                        <span className={`px-4 py-1 rounded-full border font-semibold text-xs shadow-sm ${getEstado(o.status || o.estado).bg} ${getEstado(o.status || o.estado).text} border-current`}>
+                          {getEstado(o.status || o.estado).label}
                         </span>
                       ) : (
                         <span className="px-4 py-1 rounded-full border font-semibold text-xs shadow-sm bg-gray-200 text-gray-500 border-current">Estado desconocido</span>
                       ))
                       : (
                       <select
-                        className={`px-4 py-1 rounded-full border font-semibold text-xs shadow-sm ${(ESTADOS[o.status || o.estado]?.bg || 'bg-gray-200')} ${(ESTADOS[o.status || o.estado]?.text || 'text-gray-500')} border-current focus:outline-none focus:ring-2 focus:ring-primary-200`}
+                        className={`px-4 py-1 rounded-full border font-semibold text-xs shadow-sm ${(getEstado(o.status || o.estado)?.bg || 'bg-gray-200')} ${(getEstado(o.status || o.estado)?.text || 'text-gray-500')} border-current focus:outline-none focus:ring-2 focus:ring-primary-200`}
                         value={o.status || o.estado}
                         onChange={async e => {
                           const newEstado = e.target.value;
