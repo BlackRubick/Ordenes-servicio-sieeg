@@ -525,9 +525,11 @@ const generateOrderPdfDoc = async (order) => {
             onChange={e => setEstado(e.target.value)}
           >
             <option value="">Todos los estados</option>
-            {Object.entries(ESTADOS).map(([key, val]) => (
-              <option key={key} value={key}>{val.label}</option>
-            ))}
+            {Object.entries(ESTADOS)
+              .filter(([key]) => key === key.toLowerCase())
+              .map(([key, val]) => (
+                <option key={key} value={key}>{val.label}</option>
+              ))}
           </select>
           {!isTechnician && (
             <select
@@ -656,6 +658,7 @@ const generateOrderPdfDoc = async (order) => {
                         }}
                       >
                         {Object.entries(ESTADOS)
+                          .filter(([key]) => key === key.toLowerCase())
                           .filter(([key]) => key !== 'cancelada' && key !== 'eliminada')
                           .map(([key, val]) => (
                             <option key={key} value={key}>{val.label}</option>
