@@ -84,9 +84,10 @@ router.put('/:folio/trabajos', async (req, res) => {
 });
 // Obtener todas las órdenes
 router.get('/', async (req, res) => {
-  const { folio, tipo, foraneo, external, excludeForeign } = req.query;
+  const { folio, tipo, foraneo, external, excludeForeign, clienteId } = req.query;
   let where = {};
   if (folio) where.folio = folio;
+  if (clienteId) where.clienteId = clienteId;
   if (tipo) {
     where.tipo = tipo;
   } else if (foraneo === 'true' || external === 'true') {

@@ -16,6 +16,7 @@ function SolicitarOrdenCliente() {
   const [descripcion, setDescripcion] = useState('');
   const [selectedImages, setSelectedImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [clienteOrdenes, setClienteOrdenes] = useState([]);
 
   // Verificar si hay sesión guardada al cargar
   useEffect(() => {
@@ -53,6 +54,15 @@ function SolicitarOrdenCliente() {
         setClienteData(data.client);
         setIsAuthenticated(true);
         localStorage.setItem('clienteData', JSON.stringify(data.client));
+        
+        // Cargar órdenes del cliente
+        try {
+          const ordenesRes = await fetch(`/api/orders?clienteId=${data.client.id}`);
+          const ordenesData = await ordenesRes.json();
+          setClienteOrdenes(Array.isArray(ordenesData) ? ordenesData : []);
+        } catch (err) {
+          console.error('Error cargando órdenes:', err);
+        }
         
         Swal.fire({
           icon: 'success',
@@ -198,6 +208,15 @@ function SolicitarOrdenCliente() {
         timer: 2000,
         showConfirmButton: false
       });
+
+      // Recargar órdenes del cliente
+      try {
+        const ordenesRes = await fetch(`/api/orders?clienteId=${clienteData.id}`);
+        const ordenesData = await ordenesRes.json();
+        setClienteOrdenes(Array.isArray(ordenesData) ? ordenesData : []);
+      } catch (err) {
+        console.error('Error recargando órdenes:', err);
+      }
 
       setTipoEquipo('');
       setDireccion('');
@@ -358,6 +377,46 @@ function SolicitarOrdenCliente() {
             Enviar Solicitud
           </button>
         </form>
+
+        {/* Tabla de Órdenes del Cliente */}
+        {clienteOrdenes.length > 0 && (
+          <div className="mt-8 pt-8 border-t border-gray-200">
+            <h3 className="text-xl font-bold text-[#1a3a5e] mb-4">Mis Órdenes</h3>
+            <div className="overflow-x-auto shadow-sm rounded-lg">
+              <table className="w-full text-sm">
+                <thead className="bg-[#1a3a5e] text-white">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Folio</th>
+                    <th className="px-4 py-3 text-left">Fecha</th>
+                    <th className="px-4 py-3 text-left">Equipo</th>
+                    <th className="px-4 py-3 text-left">Estado</th>
+                    <th className="px-4 py-3 text-left">Dirección</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {clienteOrdenes.map((orden) => (
+                    <tr key={orden.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 font-semibold text-[#1a3a5e]">{orden.folio || '-'}</td>
+                      <td className="px-4 py-3">{orden.fecha ? new Date(orden.fecha).toLocaleDateString() : '-'}</td>
+                      <td className="px-4 py-3">{orden.tipo || '-'}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          orden.status === 'Pendiente' ? 'bg-yellow-100 text-yellow-700' :
+                          orden.status === 'Entregada' ? 'bg-green-100 text-green-700' :
+                          orden.status === 'Cancelada' ? 'bg-red-100 text-red-700' :
+                          'bg-blue-100 text-blue-700'
+                        }`}>
+                          {orden.status || 'Pendiente'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">{orden.clientName || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
