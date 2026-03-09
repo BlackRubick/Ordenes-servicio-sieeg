@@ -45,6 +45,19 @@ const getEstado = (status) => {
   return null;
 };
 
+const parseImagenes = (imagenes) => {
+  if (Array.isArray(imagenes)) return imagenes;
+  if (typeof imagenes === 'string') {
+    try {
+      const parsed = JSON.parse(imagenes);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_) {
+      return [];
+    }
+  }
+  return [];
+};
+
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -67,7 +80,106 @@ const Orders = () => {
   const [entregaOrderFolio, setEntregaOrderFolio] = useState(null);
   const [recipientName, setRecipientName] = useState('');
   const [signatureData, setSignatureData] = useState(null);
+  const [imageOrder, setImageOrder] = useState(null);
+  const [existingImages, setExistingImages] = useState([]);
+  const [newImageFiles, setNewImageFiles] = useState([]);
+  const [newImagePreviews, setNewImagePreviews] = useState([]);
+  const [savingImages, setSavingImages] = useState(false);
   const signaturePadRef = React.useRef();
+
+  const openImagesModal = (order) => {
+    setImageOrder(order);
+    setExistingImages(parseImagenes(order.imagenes));
+    setNewImageFiles([]);
+    setNewImagePreviews([]);
+  };
+
+  const closeImagesModal = () => {
+    setImageOrder(null);
+    setExistingImages([]);
+    setNewImageFiles([]);
+    setNewImagePreviews([]);
+    setSavingImages(false);
+  };
+
+  const handleAddImages = (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    const usedSlots = existingImages.length + newImageFiles.length;
+    const remaining = Math.max(0, 2 - usedSlots);
+
+    if (remaining <= 0) {
+      Swal.fire('Límite alcanzado', 'Solo puedes guardar máximo 2 imágenes por orden.', 'warning');
+      event.target.value = '';
+      return;
+    }
+
+    const accepted = files.slice(0, remaining);
+    if (files.length > remaining) {
+      Swal.fire('Límite de imágenes', `Solo se agregaron ${remaining} imagen(es). Máximo 2 por orden.`, 'warning');
+    }
+
+    setNewImageFiles(prev => [...prev, ...accepted]);
+    accepted.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewImagePreviews(prev => [...prev, reader.result]);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    event.target.value = '';
+  };
+
+  const removeExistingImage = (idx) => {
+    setExistingImages(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const removeNewImage = (idx) => {
+    setNewImageFiles(prev => prev.filter((_, i) => i !== idx));
+    setNewImagePreviews(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleSaveImages = async () => {
+    if (!imageOrder) return;
+    setSavingImages(true);
+    try {
+      let uploadedPaths = [];
+
+      if (newImageFiles.length > 0) {
+        const formData = new FormData();
+        newImageFiles.forEach((file) => formData.append('images', file));
+        const uploadRes = await fetch('/api/orders/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        if (!uploadRes.ok) throw new Error('No se pudieron subir las imágenes');
+        const uploadData = await uploadRes.json();
+        uploadedPaths = Array.isArray(uploadData.imagenes) ? uploadData.imagenes : [];
+      }
+
+      const finalImages = [...existingImages, ...uploadedPaths].slice(0, 2);
+
+      const saveRes = await fetch(`/api/orders/${imageOrder.folio}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imagenes: finalImages }),
+      });
+      if (!saveRes.ok) throw new Error('No se pudieron guardar las imágenes en la orden');
+
+      setOrders(prev => prev.map(ord => (
+        ord.folio === imageOrder.folio ? { ...ord, imagenes: finalImages } : ord
+      )));
+
+      Swal.fire('Guardado', 'Las imágenes se guardaron correctamente.', 'success');
+      closeImagesModal();
+    } catch (error) {
+      Swal.fire('Error', error.message || 'No se pudieron guardar las imágenes.', 'error');
+    } finally {
+      setSavingImages(false);
+    }
+  };
 
 const generateOrderPdfDoc = async (order) => {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
@@ -465,7 +577,7 @@ const generateOrderPdfDoc = async (order) => {
               resumen = {};
             }
           }
-          return { ...o, resumen };
+          return { ...o, resumen, imagenes: parseImagenes(o.imagenes) };
         });
         let filtered = parsed.filter(o => {
           const tipo = String(o.tipo || '').toLowerCase();
@@ -691,6 +803,16 @@ const generateOrderPdfDoc = async (order) => {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v12" />
                       </svg>
                     </button>
+                    <button
+                      className="flex items-center justify-center w-9 h-9 rounded-full bg-green-100 text-green-700 hover:bg-green-500 hover:text-white transition-all shadow-sm"
+                      title="Subir/Tomar imágenes"
+                      onClick={() => openImagesModal(o)}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7a2 2 0 012-2h3l1.2-1.4A2 2 0 0110.7 3h2.6a2 2 0 011.5.6L16 5h3a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                        <circle cx="12" cy="13" r="4" />
+                      </svg>
+                    </button>
                     {/* Solo admin puede eliminar/cancelar */}
                     {isAdmin && (
                       <>
@@ -819,6 +941,95 @@ const generateOrderPdfDoc = async (order) => {
                   Swal.fire('Error', 'No se pudo registrar la entrega en el servidor', 'error');
                 }
               }}>Confirmar entrega</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {imageOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-2xl mx-4">
+            <h3 className="text-xl font-bold text-green-700 mb-2">Evidencia fotográfica - Orden {imageOrder.folio}</h3>
+            <p className="text-sm text-gray-600 mb-4">Puedes subir o tomar fotos con cámara. Máximo 2 imágenes por orden.</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+              <label className="px-4 py-3 rounded-xl border border-border bg-gray-50 text-sm font-semibold cursor-pointer hover:bg-gray-100 text-center">
+                Subir desde galería
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleAddImages}
+                  className="hidden"
+                />
+              </label>
+
+              <label className="px-4 py-3 rounded-xl border border-border bg-gray-50 text-sm font-semibold cursor-pointer hover:bg-gray-100 text-center">
+                Tomar foto con cámara
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleAddImages}
+                  className="hidden"
+                />
+              </label>
+            </div>
+
+            {(existingImages.length > 0 || newImagePreviews.length > 0) && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                {existingImages.map((img, idx) => (
+                  <div key={`old-${idx}`} className="relative group">
+                    <img
+                      src={img}
+                      alt={`Evidencia ${idx + 1}`}
+                      className="w-full h-24 object-cover rounded-lg border"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeExistingImage(idx)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 opacity-0 group-hover:opacity-100"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                {newImagePreviews.map((preview, idx) => (
+                  <div key={`new-${idx}`} className="relative group">
+                    <img
+                      src={preview}
+                      alt={`Nueva evidencia ${idx + 1}`}
+                      className="w-full h-24 object-cover rounded-lg border border-green-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeNewImage(idx)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 opacity-0 group-hover:opacity-100"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeImagesModal}
+                className="px-4 py-2 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300"
+                disabled={savingImages}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveImages}
+                className="px-4 py-2 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700 disabled:opacity-60"
+                disabled={savingImages}
+              >
+                {savingImages ? 'Guardando...' : 'Guardar imágenes'}
+              </button>
             </div>
           </div>
         </div>
