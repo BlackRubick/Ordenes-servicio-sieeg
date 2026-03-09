@@ -188,9 +188,20 @@ export default function OrderDetail() {
       .then(res => res.json())
       .then(data => {
         if (data && data.length > 0) {
-          setOrder(data[0]);
-          setEstadoTecnico(data[0].status || '');
-          let trabajosData = data[0].trabajos;
+          const orderData = { ...data[0] };
+          let imagenesData = orderData.imagenes;
+          if (typeof imagenesData === 'string') {
+            try {
+              imagenesData = JSON.parse(imagenesData);
+            } catch (e) {
+              imagenesData = [];
+            }
+          }
+          orderData.imagenes = Array.isArray(imagenesData) ? imagenesData : [];
+
+          setOrder(orderData);
+          setEstadoTecnico(orderData.status || '');
+          let trabajosData = orderData.trabajos;
           if (typeof trabajosData === 'string') {
             try {
               trabajosData = JSON.parse(trabajosData);
@@ -199,8 +210,8 @@ export default function OrderDetail() {
             }
           }
           setTrabajos(Array.isArray(trabajosData) ? trabajosData : []);
-          setDiagnostico(data[0].diagnostico || '');
-          setDiagnosticoGuardado(data[0].diagnostico || '');
+          setDiagnostico(orderData.diagnostico || '');
+          setDiagnosticoGuardado(orderData.diagnostico || '');
           setEditandoDiagnostico(false);
           // Calcular total de trabajos
           const totalTrabajos = Array.isArray(trabajosData) ? trabajosData.reduce((acc, t) => acc + (typeof t.costo === 'number' ? t.costo : 0), 0) : 0;
@@ -355,6 +366,26 @@ export default function OrderDetail() {
             </select>
           </div>
         </div>
+
+        {Array.isArray(order?.imagenes) && order.imagenes.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100 mb-8 animate-fade-in">
+            <div className="flex items-center gap-2 mb-4">
+              <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
+              <span className="font-bold text-blue-700 text-lg">Evidencia fotográfica</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {order.imagenes.map((img, idx) => (
+                <a key={`img-${idx}`} href={img} target="_blank" rel="noreferrer" className="group block">
+                  <img
+                    src={img}
+                    alt={`Evidencia ${idx + 1}`}
+                    className="w-full h-32 object-cover rounded-xl border border-blue-100 shadow-sm group-hover:shadow-md transition-all"
+                  />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Render blocks based on estadoTecnico */}
         {(order?.status === 'diagnostico' || order?.status === 'lista') && (
