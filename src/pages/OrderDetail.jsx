@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
 
 
 const ESTADOS_TECNICO = [
@@ -27,6 +28,7 @@ export default function OrderDetail() {
   // Hooks
   const navigate = useNavigate();
   const { folio } = useParams();
+  const { role } = useAuthStore();
   const [order, setOrder] = useState(null);
   const [estadoTecnico, setEstadoTecnico] = useState('');
   const [trabajos, setTrabajos] = useState([]);
@@ -181,6 +183,45 @@ export default function OrderDetail() {
 
   const handleEditarDiagnostico = () => {
     setEditandoDiagnostico(true);
+  };
+
+  const handleEliminarImagen = async (imageUrl) => {
+    const result = await Swal.fire({
+      title: '¿Eliminar foto?',
+      text: 'Esta imagen se eliminará de la orden.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const response = await fetch(`/api/orders/${order.folio}/images`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': role || '',
+        },
+        body: JSON.stringify({ imageUrl }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || 'No se pudo eliminar la imagen');
+      }
+
+      setOrder(prev => ({
+        ...prev,
+        imagenes: Array.isArray(data?.imagenes) ? data.imagenes : [],
+      }));
+
+      Swal.fire('Eliminada', 'La foto se eliminó correctamente.', 'success');
+    } catch (error) {
+      Swal.fire('Error', error.message || 'No se pudo eliminar la foto', 'error');
+    }
   };
 
   React.useEffect(() => {
@@ -375,13 +416,22 @@ export default function OrderDetail() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {order.imagenes.map((img, idx) => (
-                <a key={`img-${idx}`} href={img} target="_blank" rel="noreferrer" className="group block">
-                  <img
-                    src={img}
-                    alt={`Evidencia ${idx + 1}`}
-                    className="w-full h-32 object-cover rounded-xl border border-blue-100 shadow-sm group-hover:shadow-md transition-all"
-                  />
-                </a>
+                <div key={`img-${idx}`} className="relative group">
+                  <a href={img} target="_blank" rel="noreferrer" className="block">
+                    <img
+                      src={img}
+                      alt={`Evidencia ${idx + 1}`}
+                      className="w-full h-32 object-cover rounded-xl border border-blue-100 shadow-sm group-hover:shadow-md transition-all"
+                    />
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => handleEliminarImagen(img)}
+                    className="absolute top-2 right-2 px-2 py-1 text-xs font-bold rounded-lg bg-red-600 text-white shadow hover:bg-red-700"
+                  >
+                    Eliminar
+                  </button>
+                </div>
               ))}
             </div>
           </div>

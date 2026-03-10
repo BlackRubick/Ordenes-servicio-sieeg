@@ -1,11 +1,63 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 import Navbar from '../components/Navbar';
+import { useAuthStore } from '../store/authStore';
 
 function OrdenClienteDetalle() {
   const location = useLocation();
   const navigate = useNavigate();
-  const orden = location.state?.orden;
+  const { role } = useAuthStore();
+  const [orden, setOrden] = useState(location.state?.orden || null);
+
+  const isAdmin = useMemo(() => {
+    const normalizedRole = String(role || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+    return normalizedRole === 'admin' || normalizedRole === 'administrador';
+  }, [role]);
+
+  const handleEliminarImagen = async (imageUrl) => {
+    if (!orden?.folio) return;
+
+    const result = await Swal.fire({
+      title: '¿Eliminar foto?',
+      text: 'Esta imagen se eliminará de la orden.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const response = await fetch(`/api/orders/${orden.folio}/images`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': role || '',
+        },
+        body: JSON.stringify({ imageUrl }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || 'No se pudo eliminar la imagen');
+      }
+
+      setOrden((prev) => ({
+        ...prev,
+        imagenes: Array.isArray(data?.imagenes) ? data.imagenes : [],
+      }));
+
+      Swal.fire('Eliminada', 'La foto se eliminó correctamente.', 'success');
+    } catch (error) {
+      Swal.fire('Error', error.message || 'No se pudo eliminar la foto', 'error');
+    }
+  };
 
   if (!orden) {
     return (
@@ -113,24 +165,37 @@ function OrdenClienteDetalle() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {orden.imagenes.map((img, index) => (
-                <a
+                <div
                   key={index}
-                  href={img}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative overflow-hidden rounded-lg border-2 border-blue-200 hover:border-blue-500 transition-all cursor-pointer"
+                  className="group relative overflow-hidden rounded-lg border-2 border-blue-200 hover:border-blue-500 transition-all"
                 >
-                  <img
-                    src={img}
-                    alt={`Imagen ${index + 1}`}
-                    className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m-3-3h6"/>
-                    </svg>
-                  </div>
-                </a>
+                  <a
+                    href={img}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block cursor-pointer"
+                  >
+                    <img
+                      src={img}
+                      alt={`Imagen ${index + 1}`}
+                      className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m-3-3h6"/>
+                      </svg>
+                    </div>
+                  </a>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => handleEliminarImagen(img)}
+                      className="absolute top-2 right-2 px-2 py-1 text-xs font-bold rounded-lg bg-red-600 text-white shadow hover:bg-red-700"
+                    >
+                      Eliminar
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           </div>

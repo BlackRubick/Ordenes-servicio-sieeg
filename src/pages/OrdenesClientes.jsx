@@ -23,6 +23,19 @@ const getDataFromObservaciones = (observaciones) => {
   }
 };
 
+const parseImagenes = (imagenes) => {
+  if (Array.isArray(imagenes)) return imagenes;
+  if (typeof imagenes === 'string') {
+    try {
+      const parsed = JSON.parse(imagenes);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_) {
+      return [];
+    }
+  }
+  return [];
+};
+
 function OrdenesClientes() {
   const { role, user } = useAuthStore();
   const normalizedRole = String(role || '')
@@ -54,6 +67,7 @@ function OrdenesClientes() {
               tecnico: order.tecnico || '',
               estado: order.status || 'Pendiente',
               descripcion: order.description || order.descripcion || '',
+              imagenes: parseImagenes(order.imagenes),
             };
           });
         // Si es técnico, solo mostrar sus órdenes asignadas

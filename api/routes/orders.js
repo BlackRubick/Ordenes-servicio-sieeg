@@ -3,6 +3,19 @@ const router = express.Router();
 const { Order, User } = require('../models');
 const { Op } = require('sequelize');
 const upload = require('../config/multer');
+const path = require('path');
+const fs = require('fs');
+
+const normalizeRole = (role) => String(role || '')
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .trim();
+
+const isAdminRole = (role) => {
+  const normalized = normalizeRole(role);
+  return normalized === 'admin' || normalized === 'administrador';
+};
 
 // Actualizar diagnóstico de una orden por folio
 router.put('/:folio/diagnostico', async (req, res) => {
@@ -221,6 +234,48 @@ router.put('/:folio', async (req, res) => {
     res.json({ success: true, order });
   } catch (error) {
     console.log('Error al actualizar orden:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Eliminar una imagen de una orden por folio
+router.delete('/:folio/images', async (req, res) => {
+  const { folio } = req.params;
+  const { imageUrl } = req.body;
+  const requesterRole = req.headers['x-user-role'] || req.body?.role;
+
+  if (!isAdminRole(requesterRole)) {
+    return res.status(403).json({ error: 'Solo un administrador puede eliminar imágenes' });
+  }
+
+  if (!imageUrl) return res.status(400).json({ error: 'imageUrl es requerido' });
+  try {
+    const order = await Order.findOne({ where: { folio } });
+    if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
+
+    let imagenes = order.imagenes;
+    if (typeof imagenes === 'string') {
+      try { imagenes = JSON.parse(imagenes); } catch (e) { imagenes = []; }
+    }
+    if (!Array.isArray(imagenes)) imagenes = [];
+
+    const nuevasImagenes = imagenes.filter(img => img !== imageUrl);
+    order.imagenes = nuevasImagenes;
+    await order.save();
+
+    // Borrar el archivo físico del servidor si existe
+    const relativePath = String(imageUrl).replace(/^\/+/, '');
+    const uploadsRoot = path.resolve(__dirname, '..', 'uploads');
+    const filePath = path.resolve(__dirname, '..', relativePath);
+    const isInsideUploads = filePath.startsWith(uploadsRoot + path.sep) || filePath === uploadsRoot;
+
+    if (isInsideUploads && fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    res.json({ success: true, imagenes: nuevasImagenes });
+  } catch (error) {
+    console.log('Error al eliminar imagen:', error);
     res.status(500).json({ error: error.message });
   }
 });
