@@ -27,6 +27,10 @@ const Order = sequelize.define('Order', {
   resumen: { type: DataTypes.JSON, allowNull: true },
   clienteId: { type: DataTypes.INTEGER, allowNull: true },
   imagenes: { type: DataTypes.JSON, allowNull: true },
+  presupuestoCliente: { type: DataTypes.FLOAT, allowNull: true },
+  presupuestoAdmin: { type: DataTypes.FLOAT, allowNull: true },
+  estadoPresupuesto: { type: DataTypes.STRING, allowNull: true, defaultValue: 'sin_presupuesto' },
+  notaPresupuesto: { type: DataTypes.TEXT, allowNull: true },
 });
 
 module.exports = Order;

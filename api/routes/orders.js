@@ -160,6 +160,10 @@ router.post('/', async (req, res) => {
     resumen,
     clienteId,
     imagenes,
+    presupuestoCliente,
+    presupuestoAdmin,
+    estadoPresupuesto,
+    notaPresupuesto,
   } = req.body;
   try {
     const order = await Order.create({
@@ -187,6 +191,10 @@ router.post('/', async (req, res) => {
       resumen,
       clienteId,
       imagenes,
+      presupuestoCliente,
+      presupuestoAdmin,
+      estadoPresupuesto,
+      notaPresupuesto,
     });
     res.status(201).json(order);
   } catch (error) {
@@ -221,7 +229,8 @@ router.put('/:folio', async (req, res) => {
       'fecha', 'clientName', 'telefono', 'correo', 'tipo', 'marca', 'modelo',
       'serie', 'accesorios', 'otrosAccesorios', 'seguridad', 'patron',
       'description', 'diagnostico', 'observaciones', 'firma', 'nombreRecibe',
-      'status', 'technicianId', 'trabajos', 'resumen', 'clienteId', 'imagenes'
+      'status', 'technicianId', 'trabajos', 'resumen', 'clienteId', 'imagenes',
+      'presupuestoCliente', 'presupuestoAdmin', 'estadoPresupuesto', 'notaPresupuesto'
     ];
 
     fields.forEach((field) => {
@@ -276,6 +285,65 @@ router.delete('/:folio/images', async (req, res) => {
     res.json({ success: true, imagenes: nuevasImagenes });
   } catch (error) {
     console.log('Error al eliminar imagen:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin propone un nuevo presupuesto para una orden
+router.put('/:folio/presupuesto-admin', async (req, res) => {
+  const { folio } = req.params;
+  const { presupuestoAdmin, notaPresupuesto } = req.body;
+  try {
+    const order = await Order.findOne({ where: { folio } });
+    if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
+    order.presupuestoAdmin = presupuestoAdmin;
+    if (notaPresupuesto !== undefined) order.notaPresupuesto = notaPresupuesto;
+    order.estadoPresupuesto = 'pendiente_aprobacion';
+    await order.save();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin acepta el presupuesto del cliente
+router.put('/:folio/presupuesto-aceptar', async (req, res) => {
+  const { folio } = req.params;
+  try {
+    const order = await Order.findOne({ where: { folio } });
+    if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
+    order.estadoPresupuesto = 'aceptado';
+    await order.save();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Cliente acepta el presupuesto propuesto por admin
+router.put('/:folio/presupuesto-cliente-acepta', async (req, res) => {
+  const { folio } = req.params;
+  try {
+    const order = await Order.findOne({ where: { folio } });
+    if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
+    order.estadoPresupuesto = 'aceptado';
+    await order.save();
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Cliente rechaza el presupuesto propuesto por admin
+router.put('/:folio/presupuesto-cliente-rechaza', async (req, res) => {
+  const { folio } = req.params;
+  try {
+    const order = await Order.findOne({ where: { folio } });
+    if (!order) return res.status(404).json({ error: 'Orden no encontrada' });
+    order.estadoPresupuesto = 'rechazado';
+    await order.save();
+    res.json({ success: true });
+  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });

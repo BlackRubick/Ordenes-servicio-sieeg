@@ -24,7 +24,7 @@ app.get('/', (req, res) => {
   res.send('API NEWORDERS funcionando');
 });
 
-sequelize.sync().then(() => {
+sequelize.sync({ alter: true }).then(() => {
   app.listen(PORT, () => {
     console.log(`Servidor API escuchando en puerto ${PORT}`);
   });

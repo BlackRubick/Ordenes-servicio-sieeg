@@ -9,6 +9,8 @@ function OrdenClienteDetalle() {
   const navigate = useNavigate();
   const { role } = useAuthStore();
   const [orden, setOrden] = useState(location.state?.orden || null);
+  const [presupuestoAdmin, setPresupuestoAdmin] = useState('');
+  const [notaPresupuesto, setNotaPresupuesto] = useState('');
 
   const isAdmin = useMemo(() => {
     const normalizedRole = String(role || '')
@@ -56,6 +58,61 @@ function OrdenClienteDetalle() {
       Swal.fire('Eliminada', 'La foto se eliminó correctamente.', 'success');
     } catch (error) {
       Swal.fire('Error', error.message || 'No se pudo eliminar la foto', 'error');
+    }
+  };
+
+  const handleAceptarPresupuestoCliente = async () => {
+    if (!orden?.folio) return;
+    try {
+      const response = await fetch(`/api/orders/${orden.folio}/presupuesto-aceptar`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': role || '',
+        },
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || 'No se pudo aceptar el presupuesto');
+      }
+      setOrden((prev) => ({ ...prev, estadoPresupuesto: 'aceptado' }));
+      Swal.fire('Aceptado', 'Presupuesto del cliente aceptado correctamente.', 'success');
+    } catch (error) {
+      Swal.fire('Error', error.message || 'No se pudo aceptar el presupuesto', 'error');
+    }
+  };
+
+  const handleProponerPresupuesto = async () => {
+    if (!orden?.folio) return;
+    if (!presupuestoAdmin || Number(presupuestoAdmin) <= 0) {
+      Swal.fire('Campo requerido', 'Ingresa un presupuesto válido.', 'warning');
+      return;
+    }
+    try {
+      const response = await fetch(`/api/orders/${orden.folio}/presupuesto-admin`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': role || '',
+        },
+        body: JSON.stringify({
+          presupuestoAdmin: Number(presupuestoAdmin),
+          notaPresupuesto: notaPresupuesto?.trim() || null,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || 'No se pudo enviar la propuesta');
+      }
+      setOrden((prev) => ({
+        ...prev,
+        presupuestoAdmin: Number(presupuestoAdmin),
+        notaPresupuesto: notaPresupuesto?.trim() || null,
+        estadoPresupuesto: 'pendiente_aprobacion',
+      }));
+      Swal.fire('Enviado', 'El nuevo presupuesto fue enviado al cliente.', 'success');
+    } catch (error) {
+      Swal.fire('Error', error.message || 'No se pudo enviar la propuesta', 'error');
     }
   };
 
@@ -152,6 +209,82 @@ function OrdenClienteDetalle() {
           <div className="text-gray-700 text-base font-semibold mt-2">
             {orden.descripcion || orden.description || 'No se ha proporcionado una descripción del problema o servicio requerido.'}
           </div>
+        </div>
+      </div>
+
+      {/* Card Presupuesto */}
+      <div className="max-w-3xl mx-auto mb-8">
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100 animate-fade-in">
+          <div className="flex items-center gap-2 mb-2">
+            <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 8c-2.5 0-4 1.2-4 2.7S9.5 13.4 12 13.4s4 1.2 4 2.7-1.5 2.7-4 2.7-4-1.2-4-2.7M12 5v14"/></svg>
+            <span className="font-bold text-blue-700 text-lg">Presupuesto</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="bg-blue-50 rounded-xl p-3">
+              <div className="text-xs text-gray-500 font-semibold mb-1">Presupuesto del cliente</div>
+              <div className="font-bold text-blue-700 text-lg">
+                {orden.presupuestoCliente ? `$${Number(orden.presupuestoCliente).toFixed(2)}` : 'No definido'}
+              </div>
+            </div>
+            <div className="bg-indigo-50 rounded-xl p-3">
+              <div className="text-xs text-gray-500 font-semibold mb-1">Presupuesto propuesto por admin</div>
+              <div className="font-bold text-indigo-700 text-lg">
+                {orden.presupuestoAdmin ? `$${Number(orden.presupuestoAdmin).toFixed(2)}` : 'Sin propuesta'}
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-3">
+            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+              orden.estadoPresupuesto === 'aceptado' ? 'bg-green-100 text-green-700' :
+              orden.estadoPresupuesto === 'rechazado' ? 'bg-red-100 text-red-700' :
+              orden.estadoPresupuesto === 'pendiente_aprobacion' ? 'bg-yellow-100 text-yellow-700' :
+              'bg-gray-100 text-gray-700'
+            }`}>
+              Estado: {orden.estadoPresupuesto || 'sin_presupuesto'}
+            </span>
+          </div>
+
+          {isAdmin && (
+            <div className="border-t border-blue-100 pt-4 mt-2">
+              {orden.presupuestoCliente && orden.estadoPresupuesto !== 'aceptado' && (
+                <button
+                  type="button"
+                  onClick={handleAceptarPresupuestoCliente}
+                  className="px-4 py-2 rounded-xl bg-green-600 text-white font-bold shadow hover:bg-green-700 transition-all mr-2"
+                >
+                  Aceptar presupuesto del cliente
+                </button>
+              )}
+
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={presupuestoAdmin}
+                  onChange={(e) => setPresupuestoAdmin(e.target.value)}
+                  className="w-full px-4 py-2 rounded-xl border border-blue-200 bg-white"
+                  placeholder="Nuevo presupuesto admin"
+                />
+                <input
+                  type="text"
+                  value={notaPresupuesto}
+                  onChange={(e) => setNotaPresupuesto(e.target.value)}
+                  className="w-full px-4 py-2 rounded-xl border border-blue-200 bg-white"
+                  placeholder="Nota para el cliente (opcional)"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleProponerPresupuesto}
+                className="mt-3 px-4 py-2 rounded-xl bg-blue-600 text-white font-bold shadow hover:bg-blue-700 transition-all"
+              >
+                Enviar nuevo presupuesto al cliente
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
