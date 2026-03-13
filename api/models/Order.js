@@ -18,7 +18,7 @@ const Order = sequelize.define('Order', {
   patron: { type: DataTypes.STRING, allowNull: true },
   description: { type: DataTypes.STRING, allowNull: false },
   diagnostico: { type: DataTypes.TEXT, allowNull: true },
-  observaciones: { type: DataTypes.STRING, allowNull: true },
+  observaciones: { type: DataTypes.TEXT, allowNull: true },
   firma: { type: DataTypes.TEXT, allowNull: true },
   nombreRecibe: { type: DataTypes.STRING, allowNull: true },
   status: { type: DataTypes.STRING, allowNull: false },

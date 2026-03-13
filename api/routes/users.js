@@ -82,10 +82,7 @@ router.post('/login', async (req, res) => {
     }
     const user = await User.findOne({ where: { correo } });
     if (!user) return res.json({ success: false });
-    console.log('contrasena recibida:', contrasena);
-    console.log('hash en BD:', user.contrasena);
     const valid = await bcrypt.compare(contrasena, user.contrasena);
-    console.log('Resultado bcrypt.compare:', valid);
     if (!valid) return res.json({ success: false });
     res.json({ success: true, user });
   } catch (error) {
