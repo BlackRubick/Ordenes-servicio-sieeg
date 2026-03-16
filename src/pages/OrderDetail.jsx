@@ -393,28 +393,18 @@ export default function OrderDetail() {
                   {ESTADOS_TECNICO.find(e => e.key === order.status)?.label}
                 </span>
               )}
-              {/* Badge Estado Financiero - solo mostrar si NO es "sin_cotizacion" */}
-              {order && order.estadoFinanciero !== 'sin_cotizacion' && (
-                <span className={`px-4 py-1 rounded-full font-bold text-sm shadow-sm border border-current transition-all ${ESTADOS_FINANCIERO.find(e => e.key === order.estadoFinanciero)?.color || ''}`}> 
-                  {ESTADOS_FINANCIERO.find(e => e.key === order.estadoFinanciero)?.label}
-                </span>
-              )}
             </div>
           </div>
           <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
             {/* Mostrar total solo si estado financiero = cotizacion_aprobada */}
-            {order && order.estadoFinanciero === 'cotizacion_aprobada' ? (
+            {order && order.estadoFinanciero === 'cotizacion_aprobada' && (
               <div className="text-2xl font-bold text-green-600 bg-green-100 px-6 py-2 rounded-2xl shadow-sm animate-fade-in flex items-center gap-2">
                 <span>Total:</span>
                 <span className="font-mono">
                   {order && order.resumen && typeof order.resumen.total === 'number' ? `$${order.resumen.total.toFixed(2)}` : '$0.00'}
                 </span>
               </div>
-            ) : (order && ['pendiente', 'revision'].includes(order.status) && (
-              <div className="text-base text-gray-500 bg-gray-100 px-4 py-2 rounded-2xl shadow-sm animate-fade-in">
-                Diagnóstico en proceso. El costo aún no está definido.
-              </div>
-            ))}
+            )}
             <button
               className="px-6 py-2 rounded-xl bg-[#1976F3] text-white font-bold shadow-lg hover:bg-blue-700 transition-all"
               onClick={() => navigate(-1)}
