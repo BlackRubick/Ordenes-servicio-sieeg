@@ -25,6 +25,14 @@ const ESTADOS_FINANCIERO = [
   { key: 'cotizacion_rechazada', label: 'Cotización rechazada', color: 'bg-red-100 text-red-700' },
 ];
 
+const STATUS_ALIASES = {
+  pending: 'pendiente',
+  in_review: 'revision',
+  delivered: 'entregada',
+  canceled: 'cancelada',
+  cancelled: 'cancelada',
+};
+
 export default function OrderDetail() {
   // Hooks
   const navigate = useNavigate();
@@ -361,6 +369,11 @@ export default function OrderDetail() {
       </DashboardLayout>
     );
   }
+
+  const rawStatus = (order?.status || '').toString().trim().toLowerCase();
+  const normalizedStatus = STATUS_ALIASES[rawStatus] || rawStatus;
+  const estadoTecnicoActual = ESTADOS_TECNICO.find(e => e.key === normalizedStatus);
+
   return (
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-b from-[#f6fbff] to-[#eaf3fa] p-0 md:p-8 animate-fade-in">
@@ -389,8 +402,8 @@ export default function OrderDetail() {
             <div className="flex gap-2 items-center">
               {/* Badge Estado Técnico */}
               {order && (
-                <span className={`px-4 py-1 rounded-full font-bold text-sm shadow-sm border border-current transition-all ${ESTADOS_TECNICO.find(e => e.key === order.status)?.color || ''}`}> 
-                  {ESTADOS_TECNICO.find(e => e.key === order.status)?.label}
+                <span className={`px-4 py-1 rounded-full font-bold text-sm shadow-sm border border-current transition-all ${estadoTecnicoActual?.color || 'bg-gray-200 text-gray-700'}`}> 
+                  {estadoTecnicoActual?.label || (normalizedStatus ? normalizedStatus.replace(/_/g, ' ') : 'Pendiente')}
                 </span>
               )}
             </div>
