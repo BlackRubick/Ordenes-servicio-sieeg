@@ -196,6 +196,33 @@ export default function OrderDetail() {
     }
   };
 
+  const handleGuardarCambios = async () => {
+    const total = trabajos.reduce((acc, t) => acc + (typeof t.costo === 'number' ? t.costo : 0), 0);
+    try {
+      await fetch(`/api/orders/${order.folio}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: estadoTecnico,
+          diagnostico,
+          trabajos,
+          resumen: { ...(order.resumen || {}), total }
+        })
+      });
+      setDiagnosticoGuardado(diagnostico);
+      setOrder(prev => ({ ...prev, status: estadoTecnico, diagnostico, trabajos, resumen: { ...(prev?.resumen || {}), total } }));
+      Swal.fire({
+        icon: 'success',
+        title: 'Cambios guardados',
+        text: 'Los cambios de la orden se guardaron correctamente.',
+        timer: 1500,
+        showConfirmButton: false
+      });
+    } catch (err) {
+      Swal.fire('Error', 'No se pudieron guardar los cambios', 'error');
+    }
+  };
+
   const handleEditarDiagnostico = () => {
     setEditandoDiagnostico(true);
   };
@@ -715,7 +742,7 @@ export default function OrderDetail() {
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 justify-start md:justify-between items-center mt-8 animate-fade-in">
               {!isReadOnly && (
-                <button className="px-6 py-3 rounded-xl bg-blue-500 text-white font-bold shadow-lg hover:bg-blue-600 transition-all flex items-center gap-2">
+                <button onClick={handleGuardarCambios} className="px-6 py-3 rounded-xl bg-blue-500 text-white font-bold shadow-lg hover:bg-blue-600 transition-all flex items-center gap-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" /></svg>
                   Guardar cambios
                 </button>
