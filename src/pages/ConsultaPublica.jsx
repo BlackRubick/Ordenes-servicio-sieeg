@@ -142,14 +142,14 @@ export default function ConsultaPublica() {
               <div className="flex items-center gap-3 bg-purple-50 rounded-xl p-4 shadow-sm">
                 <svg className="w-7 h-7 text-purple-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4" /><path d="M5.5 21h13a2 2 0 002-2v-2a7 7 0 00-14 0v2a2 2 0 002 2z" /></svg>
                 <div>
-                  <div className="text-xs text-gray-500 font-semibold">TÉCNICO ASIGNADO</div>
+                  <div className="text-xs text-gray-500 font-semibold">TÉCNICO SIEEG</div>
                   <div className="font-bold text-gray-700">{order.tecnico}</div>
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-orange-50 rounded-xl p-4 shadow-sm">
                 <svg className="w-7 h-7 text-orange-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M16 3v4M8 3v4" /></svg>
                 <div>
-                  <div className="text-xs text-gray-500 font-semibold">EQUIPO/SERVICIO</div>
+                  <div className="text-xs text-gray-500 font-semibold">QUIEN</div>
                   <div className="font-bold text-gray-700">{order.equipo}</div>
                 </div>
               </div>
@@ -166,7 +166,7 @@ export default function ConsultaPublica() {
             <div className="flex items-center gap-3 bg-red-50 rounded-xl p-4 shadow-sm mb-4">
               <svg className="w-7 h-7 text-red-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M12 8v4" /><circle cx="12" cy="16" r="1" /></svg>
               <div>
-                <div className="text-xs text-gray-500 font-semibold">PROBLEMA/SERVICIO REPORTADO</div>
+                <div className="text-xs text-gray-500 font-semibold">SERVICIO</div>
                 <div className="font-bold text-gray-700">{order.detalles}</div>
               </div>
             </div>
