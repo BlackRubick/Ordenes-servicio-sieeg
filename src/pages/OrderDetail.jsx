@@ -388,13 +388,17 @@ export default function OrderDetail() {
             </div>
             <div className="flex gap-2 items-center">
               {/* Badge Estado Técnico */}
-              <span className={`px-4 py-1 rounded-full font-bold text-sm shadow-sm border border-current transition-all ${order ? (ESTADOS_TECNICO.find(e => e.key === order.status)?.color || '') : ''}`}> 
-                {order ? (ESTADOS_TECNICO.find(e => e.key === order.status)?.label) : ''}
-              </span>
-              {/* Badge Estado Financiero */}
-              <span className={`px-4 py-1 rounded-full font-bold text-sm shadow-sm border border-current transition-all ${order ? (ESTADOS_FINANCIERO.find(e => e.key === order.estadoFinanciero)?.color || '') : ''}`}> 
-                {order ? (ESTADOS_FINANCIERO.find(e => e.key === order.estadoFinanciero)?.label) : ''}
-              </span>
+              {order && (
+                <span className={`px-4 py-1 rounded-full font-bold text-sm shadow-sm border border-current transition-all ${ESTADOS_TECNICO.find(e => e.key === order.status)?.color || ''}`}> 
+                  {ESTADOS_TECNICO.find(e => e.key === order.status)?.label}
+                </span>
+              )}
+              {/* Badge Estado Financiero - solo mostrar si NO es "sin_cotizacion" */}
+              {order && order.estadoFinanciero !== 'sin_cotizacion' && (
+                <span className={`px-4 py-1 rounded-full font-bold text-sm shadow-sm border border-current transition-all ${ESTADOS_FINANCIERO.find(e => e.key === order.estadoFinanciero)?.color || ''}`}> 
+                  {ESTADOS_FINANCIERO.find(e => e.key === order.estadoFinanciero)?.label}
+                </span>
+              )}
             </div>
           </div>
           <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
