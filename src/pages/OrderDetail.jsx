@@ -693,11 +693,11 @@ export default function OrderDetail() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" /></svg>
                 Guardar cambios
               </button>
-              <button onClick={handleGenerarPDF} className="px-6 py-3 rounded-xl bg-white text-blue-500 font-bold shadow-lg border border-blue-500 hover:bg-blue-50 transition-all flex items-center gap-2">
+              <button onClick={handleGenerarPDF} className="px-6 py-3 rounded-xl bg-blue-500 text-white font-bold shadow-lg hover:bg-blue-600 transition-all flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 19V6" /><path d="M5 12l7 7 7-7" /></svg>
                 Generar PDF
               </button>
-              <button onClick={handleImprimirTicket} className="px-6 py-3 rounded-xl bg-white text-gray-700 font-bold shadow-lg border border-gray-300 hover:bg-gray-100 transition-all flex items-center gap-2">
+              <button onClick={handleImprimirTicket} className="px-6 py-3 rounded-xl bg-slate-600 text-white font-bold shadow-lg hover:bg-slate-700 transition-all flex items-center gap-2">
                 {/* Material Icons printer */}
                 <svg className="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 9V4h12v5" stroke="currentColor" strokeWidth="2"/><rect x="6" y="16" width="12" height="4" fill="currentColor"/><rect x="4" y="9" width="16" height="7" rx="2" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
                 Imprimir ticket
