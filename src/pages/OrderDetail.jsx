@@ -3,6 +3,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import { jsPDF } from 'jspdf';
 
 
 const ESTADOS_TECNICO = [
@@ -183,6 +184,139 @@ export default function OrderDetail() {
 
   const handleEditarDiagnostico = () => {
     setEditandoDiagnostico(true);
+  };
+
+  const calcularTotal = () => {
+    if (order && order.resumen && typeof order.resumen.total === 'number') {
+      return order.resumen.total;
+    }
+    return trabajos.reduce((acc, t) => acc + (typeof t.costo === 'number' ? t.costo : 0), 0);
+  };
+
+  const handleGenerarPDF = () => {
+    if (!order) return;
+    try {
+      const doc = new jsPDF();
+      const total = calcularTotal();
+      let y = 15;
+
+      doc.setFontSize(16);
+      doc.text('Orden de Servicio', 14, y);
+      y += 10;
+
+      doc.setFontSize(11);
+      doc.text(`Folio: ${order.folio || '-'}`, 14, y); y += 7;
+      doc.text(`Fecha: ${order.fecha || '-'}`, 14, y); y += 7;
+      doc.text(`Cliente: ${order.clientName || '-'}`, 14, y); y += 7;
+      doc.text(`Teléfono: ${order.telefono || '-'}`, 14, y); y += 7;
+      doc.text(`Correo: ${order.correo || '-'}`, 14, y); y += 7;
+      doc.text(`Equipo: ${[order.tipo, order.marca, order.modelo].filter(Boolean).join(' ') || '-'}`, 14, y); y += 7;
+      doc.text(`Serie: ${order.serie || '-'}`, 14, y); y += 7;
+      doc.text(`Estado: ${order.status || '-'}`, 14, y); y += 10;
+
+      doc.setFontSize(12);
+      doc.text('Descripción / Problema', 14, y);
+      y += 6;
+      doc.setFontSize(10);
+      const descriptionLines = doc.splitTextToSize(order.description || 'Sin descripción', 180);
+      doc.text(descriptionLines, 14, y);
+      y += (descriptionLines.length * 5) + 6;
+
+      doc.setFontSize(12);
+      doc.text('Diagnóstico', 14, y);
+      y += 6;
+      doc.setFontSize(10);
+      const diagLines = doc.splitTextToSize(diagnosticoGuardado || diagnostico || 'Sin diagnóstico', 180);
+      doc.text(diagLines, 14, y);
+      y += (diagLines.length * 5) + 8;
+
+      doc.setFontSize(12);
+      doc.text('Trabajos realizados', 14, y);
+      y += 6;
+      doc.setFontSize(10);
+
+      if (trabajos.length === 0) {
+        doc.text('- Sin trabajos registrados', 14, y);
+        y += 6;
+      } else {
+        trabajos.forEach((t) => {
+          const line = `- ${t.descripcion || 'Trabajo'}: $${Number(t.costo || 0).toFixed(2)}`;
+          const wrapped = doc.splitTextToSize(line, 180);
+          doc.text(wrapped, 14, y);
+          y += wrapped.length * 5;
+        });
+      }
+
+      y += 4;
+      doc.setFontSize(12);
+      doc.text(`Total: $${Number(total).toFixed(2)}`, 14, y);
+
+      doc.save(`orden-${order.folio || 'sin-folio'}.pdf`);
+    } catch (error) {
+      Swal.fire('Error', 'No se pudo generar el PDF', 'error');
+    }
+  };
+
+  const handleImprimirTicket = () => {
+    if (!order) return;
+
+    const total = calcularTotal();
+    const trabajosHtml = trabajos.length
+      ? trabajos
+          .map((t) => `<div class="line"><span>${t.descripcion || 'Trabajo'}</span><span>$${Number(t.costo || 0).toFixed(2)}</span></div>`)
+          .join('')
+      : '<div class="line"><span>Sin trabajos</span><span>$0.00</span></div>';
+
+    const ticketHtml = `
+      <!doctype html>
+      <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Ticket ${order.folio || ''}</title>
+        <style>
+          @page { size: 80mm auto; margin: 4mm; }
+          body { font-family: Arial, sans-serif; width: 72mm; margin: 0 auto; color: #000; }
+          .center { text-align: center; }
+          .title { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+          .small { font-size: 11px; }
+          .sep { border-top: 1px dashed #000; margin: 6px 0; }
+          .line { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; margin: 2px 0; }
+          .line span:first-child { flex: 1; }
+          .total { font-weight: 700; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="center title">SIEEG - Ticket de Servicio</div>
+        <div class="small">Folio: ${order.folio || '-'}</div>
+        <div class="small">Fecha: ${order.fecha || '-'}</div>
+        <div class="small">Cliente: ${order.clientName || '-'}</div>
+        <div class="small">Equipo: ${[order.tipo, order.marca, order.modelo].filter(Boolean).join(' ') || '-'}</div>
+        <div class="small">Estado: ${order.status || '-'}</div>
+        <div class="sep"></div>
+        <div class="small"><strong>Trabajos</strong></div>
+        ${trabajosHtml}
+        <div class="sep"></div>
+        <div class="line total"><span>TOTAL</span><span>$${Number(total).toFixed(2)}</span></div>
+        <div class="sep"></div>
+        <div class="center small">Gracias por su preferencia</div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank', 'width=420,height=800');
+    if (!printWindow) {
+      Swal.fire('Bloqueado', 'El navegador bloqueó la ventana de impresión. Permite popups para este sitio.', 'warning');
+      return;
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(ticketHtml);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 300);
   };
 
   const handleEliminarImagen = async (imageUrl) => {
@@ -601,11 +735,11 @@ export default function OrderDetail() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" /></svg>
                 Guardar cambios
               </button>
-              <button className="px-6 py-3 rounded-xl bg-white text-blue-500 font-bold shadow-lg border border-blue-500 hover:bg-blue-50 transition-all flex items-center gap-2">
+              <button onClick={handleGenerarPDF} className="px-6 py-3 rounded-xl bg-white text-blue-500 font-bold shadow-lg border border-blue-500 hover:bg-blue-50 transition-all flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 19V6" /><path d="M5 12l7 7 7-7" /></svg>
                 Generar PDF
               </button>
-              <button className="px-6 py-3 rounded-xl bg-white text-gray-700 font-bold shadow-lg border border-gray-300 hover:bg-gray-100 transition-all flex items-center gap-2">
+              <button onClick={handleImprimirTicket} className="px-6 py-3 rounded-xl bg-white text-gray-700 font-bold shadow-lg border border-gray-300 hover:bg-gray-100 transition-all flex items-center gap-2">
                 {/* Material Icons printer */}
                 <svg className="w-5 h-5" fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M6 9V4h12v5" stroke="currentColor" strokeWidth="2"/><rect x="6" y="16" width="12" height="4" fill="currentColor"/><rect x="4" y="9" width="16" height="7" rx="2" stroke="currentColor" strokeWidth="2" fill="none"/></svg>
                 Imprimir ticket
