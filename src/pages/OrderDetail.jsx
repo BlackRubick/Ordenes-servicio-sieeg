@@ -38,6 +38,12 @@ export default function OrderDetail() {
   const navigate = useNavigate();
   const { folio } = useParams();
   const { role } = useAuthStore();
+  const normalizedRole = String(role || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+  const isMostrador = normalizedRole === 'mostrador';
+  const isReadOnly = isMostrador;
   const [order, setOrder] = useState(null);
   const [estadoTecnico, setEstadoTecnico] = useState('');
   const [trabajos, setTrabajos] = useState([]);
@@ -484,7 +490,7 @@ export default function OrderDetail() {
             <select
               className="w-full px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 font-bold shadow-inner focus:ring-2 focus:ring-blue-200 outline-none transition-all"
               value={estadoTecnico}
-              disabled={estadoTecnico === 'cancelada' || estadoTecnico === 'entregada'}
+              disabled={isReadOnly || estadoTecnico === 'cancelada' || estadoTecnico === 'entregada'}
               onChange={async e => {
                 const newEstado = e.target.value;
                 setEstadoTecnico(newEstado);
@@ -523,13 +529,15 @@ export default function OrderDetail() {
                       className="w-full h-32 object-cover rounded-xl border border-blue-100 shadow-sm group-hover:shadow-md transition-all"
                     />
                   </a>
-                  <button
-                    type="button"
-                    onClick={() => handleEliminarImagen(img)}
-                    className="absolute top-2 right-2 px-2 py-1 text-xs font-bold rounded-lg bg-red-600 text-white shadow hover:bg-red-700"
-                  >
-                    Eliminar
-                  </button>
+                  {!isReadOnly && (
+                    <button
+                      type="button"
+                      onClick={() => handleEliminarImagen(img)}
+                      className="absolute top-2 right-2 px-2 py-1 text-xs font-bold rounded-lg bg-red-600 text-white shadow hover:bg-red-700"
+                    >
+                      Eliminar
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -543,7 +551,11 @@ export default function OrderDetail() {
               <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M16 3v4M8 3v4" /></svg>
               <span className="font-bold text-blue-700 text-lg">Diagnóstico</span>
             </div>
-            {editandoDiagnostico ? (
+            {isReadOnly ? (
+              <div className="w-full min-h-[80px] rounded-xl border border-blue-200 p-3 text-base bg-blue-50 text-blue-700 mb-4">
+                {diagnosticoGuardado || <span className="text-gray-400 italic">Sin diagnóstico guardado</span>}
+              </div>
+            ) : editandoDiagnostico ? (
               <>
                 <textarea
                   className="w-full min-h-[80px] rounded-xl border border-blue-200 p-3 text-base focus:ring-2 focus:ring-blue-200 outline-none mb-4"
@@ -591,7 +603,7 @@ export default function OrderDetail() {
                 <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z" /></svg>
                 <span className="font-bold text-blue-700 text-lg">Trabajos realizados</span>
               </div>
-              {agregandoTrabajo ? (
+              {!isReadOnly && agregandoTrabajo ? (
                 <div className="mb-4 flex flex-col md:flex-row gap-4 items-center">
                   <input
                     type="text"
@@ -620,14 +632,16 @@ export default function OrderDetail() {
                     <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2" /></svg>
                     {trabajos.length === 0 ? 'No hay trabajos registrados' : ''}
                   </span>
-                  <button className="px-4 py-2 rounded-xl bg-blue-500 text-white font-bold shadow-lg hover:bg-blue-600 transition-all" onClick={handleAgregarTrabajo}>+ Agregar</button>
+                  {!isReadOnly && (
+                    <button className="px-4 py-2 rounded-xl bg-blue-500 text-white font-bold shadow-lg hover:bg-blue-600 transition-all" onClick={handleAgregarTrabajo}>+ Agregar</button>
+                  )}
                 </div>
               )}
               {trabajos.length > 0 && (
                 <ul className="divide-y divide-blue-100 mt-2">
                   {trabajos.map((t, idx) => (
                     <li key={idx} className="py-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                      {editIndex === idx ? (
+                      {!isReadOnly && editIndex === idx ? (
                         <>
                           <div className="flex-1 flex flex-col md:flex-row gap-2 items-center">
                             <input
@@ -660,14 +674,18 @@ export default function OrderDetail() {
                             <span className="text-blue-700 font-semibold">{t.descripcion}</span>
                             <span className="font-mono text-blue-700">${t.costo.toFixed(2)}</span>
                           </div>
-                          <button
-                            className="px-3 py-1 rounded-xl bg-yellow-500 text-white font-bold shadow-lg hover:bg-yellow-600 transition-all"
-                            onClick={() => handleEditarTrabajo(idx)}
-                          >Editar</button>
-                          <button
-                            className="px-3 py-1 rounded-xl bg-red-500 text-white font-bold shadow-lg hover:bg-red-600 transition-all"
-                            onClick={() => handleEliminarTrabajo(idx)}
-                          >Eliminar</button>
+                          {!isReadOnly && (
+                            <>
+                              <button
+                                className="px-3 py-1 rounded-xl bg-yellow-500 text-white font-bold shadow-lg hover:bg-yellow-600 transition-all"
+                                onClick={() => handleEditarTrabajo(idx)}
+                              >Editar</button>
+                              <button
+                                className="px-3 py-1 rounded-xl bg-red-500 text-white font-bold shadow-lg hover:bg-red-600 transition-all"
+                                onClick={() => handleEliminarTrabajo(idx)}
+                              >Eliminar</button>
+                            </>
+                          )}
                         </>
                       )}
                     </li>
@@ -696,10 +714,12 @@ export default function OrderDetail() {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-2 justify-start md:justify-between items-center mt-8 animate-fade-in">
-              <button className="px-6 py-3 rounded-xl bg-blue-500 text-white font-bold shadow-lg hover:bg-blue-600 transition-all flex items-center gap-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" /></svg>
-                Guardar cambios
-              </button>
+              {!isReadOnly && (
+                <button className="px-6 py-3 rounded-xl bg-blue-500 text-white font-bold shadow-lg hover:bg-blue-600 transition-all flex items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7" /></svg>
+                  Guardar cambios
+                </button>
+              )}
               <button onClick={handleGenerarPDF} className="px-6 py-3 rounded-xl bg-blue-500 text-white font-bold shadow-lg hover:bg-blue-600 transition-all flex items-center gap-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 19V6" /><path d="M5 12l7 7 7-7" /></svg>
                 Generar PDF
