@@ -365,17 +365,17 @@ export default function OrderDetail() {
     <DashboardLayout>
       <div className="min-h-screen bg-gradient-to-b from-[#f6fbff] to-[#eaf3fa] p-0 md:p-8 animate-fade-in">
         {/* Show recipient name if delivered */}
-        {estadoTecnico === 'entregada' && order.entrega.recibe && (
+        {estadoTecnico === 'entregada' && order?.entrega?.recibe && (
           <div className="bg-white rounded-2xl shadow-lg p-6 border border-blue-100 mb-8 animate-fade-in flex items-center gap-6">
             <div className="flex items-center gap-4">
               <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z" /></svg>
               <span className="font-bold text-blue-700 text-lg">Recibió:</span>
-              <span className="text-blue-700 text-lg">{order.entrega.recibe}</span>
+              <span className="text-blue-700 text-lg">{order?.entrega?.recibe}</span>
             </div>
-            {order.entrega.firma && (
+            {order?.entrega?.firma && (
               <div className="flex flex-col items-center">
                 <span className="font-bold text-blue-700 text-lg mb-2">Firma:</span>
-                <img src={order.entrega.firma} alt="Firma de quien recibió" className="border rounded-xl bg-white shadow p-2 max-w-xs" style={{height: '80px'}} />
+                <img src={order?.entrega?.firma} alt="Firma de quien recibió" className="border rounded-xl bg-white shadow p-2 max-w-xs" style={{height: '80px'}} />
               </div>
             )}
           </div>
