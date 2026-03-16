@@ -3,7 +3,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { jsPDF } from 'jspdf';
+import { generateOrderPdfDoc } from '../utils/orderPdf';
 
 
 const ESTADOS_TECNICO = [
@@ -195,66 +195,24 @@ export default function OrderDetail() {
 
   const handleGenerarPDF = () => {
     if (!order) return;
-    try {
-      const doc = new jsPDF();
-      const total = calcularTotal();
-      let y = 15;
-
-      doc.setFontSize(16);
-      doc.text('Orden de Servicio', 14, y);
-      y += 10;
-
-      doc.setFontSize(11);
-      doc.text(`Folio: ${order.folio || '-'}`, 14, y); y += 7;
-      doc.text(`Fecha: ${order.fecha || '-'}`, 14, y); y += 7;
-      doc.text(`Cliente: ${order.clientName || '-'}`, 14, y); y += 7;
-      doc.text(`Teléfono: ${order.telefono || '-'}`, 14, y); y += 7;
-      doc.text(`Correo: ${order.correo || '-'}`, 14, y); y += 7;
-      doc.text(`Equipo: ${[order.tipo, order.marca, order.modelo].filter(Boolean).join(' ') || '-'}`, 14, y); y += 7;
-      doc.text(`Serie: ${order.serie || '-'}`, 14, y); y += 7;
-      doc.text(`Estado: ${order.status || '-'}`, 14, y); y += 10;
-
-      doc.setFontSize(12);
-      doc.text('Descripción / Problema', 14, y);
-      y += 6;
-      doc.setFontSize(10);
-      const descriptionLines = doc.splitTextToSize(order.description || 'Sin descripción', 180);
-      doc.text(descriptionLines, 14, y);
-      y += (descriptionLines.length * 5) + 6;
-
-      doc.setFontSize(12);
-      doc.text('Diagnóstico', 14, y);
-      y += 6;
-      doc.setFontSize(10);
-      const diagLines = doc.splitTextToSize(diagnosticoGuardado || diagnostico || 'Sin diagnóstico', 180);
-      doc.text(diagLines, 14, y);
-      y += (diagLines.length * 5) + 8;
-
-      doc.setFontSize(12);
-      doc.text('Trabajos realizados', 14, y);
-      y += 6;
-      doc.setFontSize(10);
-
-      if (trabajos.length === 0) {
-        doc.text('- Sin trabajos registrados', 14, y);
-        y += 6;
-      } else {
-        trabajos.forEach((t) => {
-          const line = `- ${t.descripcion || 'Trabajo'}: $${Number(t.costo || 0).toFixed(2)}`;
-          const wrapped = doc.splitTextToSize(line, 180);
-          doc.text(wrapped, 14, y);
-          y += wrapped.length * 5;
-        });
+    (async () => {
+      try {
+        const pdfOrder = {
+          ...order,
+          status: order.status || estadoTecnico,
+          diagnostico: diagnosticoGuardado || diagnostico || order.diagnostico,
+          resumen: {
+            ...(order.resumen || {}),
+            total: calcularTotal(),
+          },
+          trabajos,
+        };
+        const doc = await generateOrderPdfDoc(pdfOrder);
+        doc.save(`Orden_${order.folio || 'servicio'}.pdf`);
+      } catch (error) {
+        Swal.fire('Error', 'No se pudo generar el PDF', 'error');
       }
-
-      y += 4;
-      doc.setFontSize(12);
-      doc.text(`Total: $${Number(total).toFixed(2)}`, 14, y);
-
-      doc.save(`orden-${order.folio || 'sin-folio'}.pdf`);
-    } catch (error) {
-      Swal.fire('Error', 'No se pudo generar el PDF', 'error');
-    }
+    })();
   };
 
   const handleImprimirTicket = () => {
