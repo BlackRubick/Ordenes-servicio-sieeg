@@ -50,8 +50,7 @@ function OrdenesClientes() {
   const [ordenes, setOrdenes] = useState([]);
   const [technicians, setTechnicians] = useState([]);
   const [searchCliente, setSearchCliente] = useState('');
-  const [fechaInicio, setFechaInicio] = useState('');
-  const [fechaFin, setFechaFin] = useState('');
+  const [fechaExacta, setFechaExacta] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -157,13 +156,7 @@ function OrdenesClientes() {
   // Filtro de órdenes por nombre de cliente y fechas
   const ordenesFiltradas = ordenes.filter(o => {
     const clienteMatch = searchCliente.trim() === '' || (o.cliente || '').toLowerCase().includes(searchCliente.trim().toLowerCase());
-    let fechaMatch = true;
-    if (fechaInicio) {
-      fechaMatch = fechaMatch && o.fecha && o.fecha >= fechaInicio;
-    }
-    if (fechaFin) {
-      fechaMatch = fechaMatch && o.fecha && o.fecha <= fechaFin;
-    }
+    const fechaMatch = !fechaExacta || (o.fecha && o.fecha === fechaExacta);
     return clienteMatch && fechaMatch;
   });
 
@@ -184,23 +177,12 @@ function OrdenesClientes() {
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-primary-700 mb-1">Fecha inicio</label>
+            <label className="block text-sm font-bold text-primary-700 mb-1">Fecha exacta</label>
             <input
               type="date"
               className="rounded-xl border border-blue-200 px-3 py-2 w-44 focus:ring-2 focus:ring-primary-200 outline-none"
-              value={fechaInicio}
-              onChange={e => setFechaInicio(e.target.value)}
-              max={fechaFin || undefined}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-primary-700 mb-1">Fecha fin</label>
-            <input
-              type="date"
-              className="rounded-xl border border-blue-200 px-3 py-2 w-44 focus:ring-2 focus:ring-primary-200 outline-none"
-              value={fechaFin}
-              onChange={e => setFechaFin(e.target.value)}
-              min={fechaInicio || undefined}
+              value={fechaExacta}
+              onChange={e => setFechaExacta(e.target.value)}
             />
           </div>
         </div>
