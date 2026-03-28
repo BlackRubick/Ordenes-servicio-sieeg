@@ -10,6 +10,7 @@ function SolicitarOrdenCliente() {
   const [direccion, setDireccion] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [presupuesto, setPresupuesto] = useState('');
+  const [mostrarPresupuesto, setMostrarPresupuesto] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [clienteOrdenes, setClienteOrdenes] = useState([]);
@@ -247,18 +248,32 @@ function SolicitarOrdenCliente() {
           />
 
           <div>
-            <label className="block text-gray-700 font-semibold mb-1 text-sm">
-              Presupuesto estimado <span className="text-gray-400 font-normal">(opcional)</span>
-            </label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
+            <label className="inline-flex items-center gap-2 cursor-pointer select-none">
               <input
-                type="number" min="0" step="0.01"
-                className="w-full pl-7 pr-4 py-3 rounded-xl border border-gray-300 bg-white shadow-sm focus:ring-2 focus:ring-[#1a3a5e] focus:border-transparent"
-                placeholder="Ej: 500.00" value={presupuesto} onChange={e => setPresupuesto(e.target.value)}
+                type="checkbox"
+                checked={mostrarPresupuesto}
+                onChange={e => {
+                  setMostrarPresupuesto(e.target.checked);
+                  if (!e.target.checked) setPresupuesto('');
+                }}
+                className="form-checkbox h-5 w-5 text-primary-600 rounded focus:ring-primary-500 border-gray-300"
               />
-            </div>
-            <p className="text-xs text-gray-400 mt-1">Indica cuánto tienes disponible. El administrador puede ajustarlo.</p>
+              <span className="text-gray-700 font-semibold text-sm">¿Tienes presupuesto estimado?</span>
+            </label>
+            {mostrarPresupuesto && (
+              <div className="mt-2">
+                <label className="block text-gray-700 font-semibold mb-1 text-sm">Presupuesto estimado</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
+                  <input
+                    type="number" min="0" step="0.01"
+                    className="w-full pl-7 pr-4 py-3 rounded-xl border border-gray-300 bg-white shadow-sm focus:ring-2 focus:ring-[#1a3a5e] focus:border-transparent"
+                    placeholder="Ej: 500.00" value={presupuesto} onChange={e => setPresupuesto(e.target.value)}
+                  />
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Indica cuánto tienes disponible. El administrador puede ajustarlo.</p>
+              </div>
+            )}
           </div>
 
           <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 bg-gray-50">

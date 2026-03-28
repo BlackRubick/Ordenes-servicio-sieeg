@@ -177,7 +177,7 @@ function OrdenesClientes() {
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-primary-700 mb-1">Fecha exacta</label>
+            <label className="block text-sm font-bold text-primary-700 mb-1">Fecha</label>
             <input
               type="date"
               className="rounded-xl border border-blue-200 px-3 py-2 w-44 focus:ring-2 focus:ring-primary-200 outline-none"
