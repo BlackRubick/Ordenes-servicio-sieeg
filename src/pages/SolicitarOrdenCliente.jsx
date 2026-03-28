@@ -101,6 +101,60 @@ function SolicitarOrdenCliente() {
     }
   };
 
+  // Función para manejar el cambio de imágenes
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files).slice(0, 2);
+    setSelectedImages(files);
+    setImagePreviews(files.map(file => URL.createObjectURL(file)));
+  };
+
+  // Función para eliminar una imagen seleccionada
+  const removeImage = (index) => {
+    const newImages = [...selectedImages];
+    const newPreviews = [...imagePreviews];
+    newImages.splice(index, 1);
+    newPreviews.splice(index, 1);
+    setSelectedImages(newImages);
+    setImagePreviews(newPreviews);
+  };
+
+  // Función para aceptar presupuesto
+  const handlePresupuestoClienteAcepta = async (folio) => {
+    const result = await Swal.fire({
+      title: '¿Aceptar presupuesto?',
+      text: 'Confirmas que aceptas el presupuesto propuesto por el administrador.',
+      icon: 'question', showCancelButton: true,
+      confirmButtonText: 'Sí, aceptar', cancelButtonText: 'Cancelar', confirmButtonColor: '#16a34a',
+    });
+    if (!result.isConfirmed) return;
+    try {
+      await fetch(`/api/orders/${folio}/presupuesto-cliente-acepta`, { method: 'PUT', headers: { 'Content-Type': 'application/json' } });
+      setClienteOrdenes(prev => prev.map(o => o.folio === folio ? { ...o, estadoPresupuesto: 'aceptado' } : o));
+      Swal.fire({ icon: 'success', title: 'Presupuesto aceptado', timer: 1500, showConfirmButton: false });
+    } catch { Swal.fire('Error', 'No se pudo procesar la respuesta', 'error'); }
+  };
+
+  // Función para rechazar presupuesto
+  const handlePresupuestoClienteRechaza = (folio) => {
+    Swal.fire({
+      text: 'Se le notificará al administrador que rechazas el presupuesto propuesto.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, rechazar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc2626',
+    }).then(async (result) => {
+      if (!result.isConfirmed) return;
+      try {
+        await fetch(`/api/orders/${folio}/presupuesto-cliente-rechaza`, { method: 'PUT', headers: { 'Content-Type': 'application/json' } });
+        setClienteOrdenes(prev => prev.map(o => o.folio === folio ? { ...o, estadoPresupuesto: 'rechazado' } : o));
+        Swal.fire({ icon: 'info', title: 'Presupuesto rechazado', timer: 1500, showConfirmButton: false });
+      } catch {
+        Swal.fire('Error', 'No se pudo procesar la respuesta', 'error');
+      }
+    });
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#f6fbff] to-[#eaf3fa] px-2 py-8">
