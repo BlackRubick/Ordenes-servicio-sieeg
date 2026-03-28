@@ -228,7 +228,7 @@ function OrdenClienteDetalle() {
               </div>
             </div>
             <div className="bg-indigo-50 rounded-xl p-3">
-              <div className="text-xs text-gray-500 font-semibold mb-1">Presupuesto propuesto por admin</div>
+              <div className="text-xs text-gray-500 font-semibold mb-1">Costo</div>
               <div className="font-bold text-indigo-700 text-lg">
                 {orden.presupuestoAdmin ? `$${Number(orden.presupuestoAdmin).toFixed(2)}` : 'Sin propuesta'}
               </div>
@@ -281,7 +281,7 @@ function OrdenClienteDetalle() {
                 onClick={handleProponerPresupuesto}
                 className="mt-3 px-4 py-2 rounded-xl bg-blue-600 text-white font-bold shadow hover:bg-blue-700 transition-all"
               >
-                Enviar nuevo presupuesto al cliente
+                Enviar Costo
               </button>
             </div>
           )}
