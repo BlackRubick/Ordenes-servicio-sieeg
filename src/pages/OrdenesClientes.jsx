@@ -36,6 +36,7 @@ const parseImagenes = (imagenes) => {
   return [];
 };
 
+
 function OrdenesClientes() {
   const { role, user } = useAuthStore();
   const normalizedRole = String(role || '')
@@ -48,6 +49,9 @@ function OrdenesClientes() {
   const currentUserName = user?.nombre || user?.name || '';
   const [ordenes, setOrdenes] = useState([]);
   const [technicians, setTechnicians] = useState([]);
+  const [searchCliente, setSearchCliente] = useState('');
+  const [fechaInicio, setFechaInicio] = useState('');
+  const [fechaFin, setFechaFin] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -150,11 +154,57 @@ function OrdenesClientes() {
     }
   };
 
+  // Filtro de órdenes por nombre de cliente y fechas
+  const ordenesFiltradas = ordenes.filter(o => {
+    const clienteMatch = searchCliente.trim() === '' || (o.cliente || '').toLowerCase().includes(searchCliente.trim().toLowerCase());
+    let fechaMatch = true;
+    if (fechaInicio) {
+      fechaMatch = fechaMatch && o.fecha && o.fecha >= fechaInicio;
+    }
+    if (fechaFin) {
+      fechaMatch = fechaMatch && o.fecha && o.fecha <= fechaFin;
+    }
+    return clienteMatch && fechaMatch;
+  });
+
   return (
     <DashboardLayout>
       <div className="mb-6 flex flex-col gap-4">
         <h2 className="text-2xl font-extrabold text-primary-500 tracking-tight">Órdenes de Clientes</h2>
-        <div className="mt-6 rounded-2xl bg-gradient-to-tr from-primary-100 to-blue-50 shadow-lg p-1 overflow-x-auto animate-fade-in">
+        {/* Filtros */}
+        <div className="flex flex-wrap gap-4 items-end mb-2">
+          <div>
+            <label className="block text-sm font-bold text-primary-700 mb-1">Buscar por cliente</label>
+            <input
+              type="text"
+              className="rounded-xl border border-blue-200 px-3 py-2 w-56 focus:ring-2 focus:ring-primary-200 outline-none"
+              placeholder="Nombre del cliente..."
+              value={searchCliente}
+              onChange={e => setSearchCliente(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-primary-700 mb-1">Fecha inicio</label>
+            <input
+              type="date"
+              className="rounded-xl border border-blue-200 px-3 py-2 w-44 focus:ring-2 focus:ring-primary-200 outline-none"
+              value={fechaInicio}
+              onChange={e => setFechaInicio(e.target.value)}
+              max={fechaFin || undefined}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-primary-700 mb-1">Fecha fin</label>
+            <input
+              type="date"
+              className="rounded-xl border border-blue-200 px-3 py-2 w-44 focus:ring-2 focus:ring-primary-200 outline-none"
+              value={fechaFin}
+              onChange={e => setFechaFin(e.target.value)}
+              min={fechaInicio || undefined}
+            />
+          </div>
+        </div>
+        <div className="mt-2 rounded-2xl bg-gradient-to-tr from-primary-100 to-blue-50 shadow-lg p-1 overflow-x-auto animate-fade-in">
           <table className="min-w-full text-base border-separate border-spacing-0">
             <thead>
               <tr className="text-left text-white font-bold bg-gradient-to-tr from-primary-500 to-secondary-500 rounded-2xl">
@@ -168,14 +218,14 @@ function OrdenesClientes() {
               </tr>
             </thead>
             <tbody>
-              {ordenes.length === 0 && (
+              {ordenesFiltradas.length === 0 && (
                 <tr>
                   <td colSpan={7} className="text-center text-gray-500 py-8 bg-white rounded-b-2xl">
                     No hay órdenes de clientes registradas.
                   </td>
                 </tr>
               )}
-              {ordenes.map((orden, idx) => (
+              {ordenesFiltradas.map((orden, idx) => (
                 <tr key={orden.folio || orden.id} className="bg-white border-b border-border last:border-0 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 hover:bg-primary-50">
                   <td className="py-4 px-4 font-bold text-dark">{orden.folio || '-'}</td>
                   <td className="py-4 px-4">{orden.cliente}</td>
