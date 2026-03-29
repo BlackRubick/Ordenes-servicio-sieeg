@@ -37,6 +37,7 @@ const AdminDashboard = () => {
 
   // Utilidad: función para obtener el total real de una orden
   function getTotalOrden(o) {
+    if (o.resumen && typeof o.resumen.total === 'number' && o.resumen.total > 0) return o.resumen.total;
     if (o.total && Number(o.total) > 0) return Number(o.total);
     if (o.presupuestoAdmin && Number(o.presupuestoAdmin) > 0) return Number(o.presupuestoAdmin);
     if (o.presupuestoCliente && Number(o.presupuestoCliente) > 0) return Number(o.presupuestoCliente);

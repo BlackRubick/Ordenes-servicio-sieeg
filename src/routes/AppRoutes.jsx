@@ -50,7 +50,6 @@ const AppRoutes = () => (
       <Route path="/login_magic" element={<Login />} />
       <Route path="/consulta-tu-orden" element={<ConsultaPublica />} />
       <Route path="/solicitar-orden-cliente" element={<SolicitarOrdenCliente />} />
-
       <Route path="/admin" element={<PrivateRoute element={<AdminDashboard />} allowedRoles={['Administrador', 'admin']} />} />
       <Route path="/admin/dashboard" element={<PrivateRoute element={<AdminDashboard />} allowedRoles={['Administrador', 'admin']} />} />
       <Route path="/admin/orders" element={<PrivateRoute element={<Orders />} allowedRoles={['Administrador', 'admin', 'Técnico', 'tecnico', 'Mostrador', 'mostrador']} />} />
