@@ -46,11 +46,11 @@ const AdminDashboard = () => {
   // Estadísticas
   const estados = ['pendiente', 'revision', 'reparacion', 'lista', 'entregada', 'cancelada'];
   const stats = estados.reduce((acc, estado) => {
-    acc[estado] = orders.filter(o => o.status === estado).length;
+    acc[estado] = orders.filter(o => (o.status || '').toLowerCase() === estado).length;
     return acc;
   }, {});
-  // Ingresos: suma de todas las órdenes entregadas usando getTotalOrden
-  const ingresos = orders.filter(o => o.status === 'entregada').reduce((sum, o) => sum + getTotalOrden(o), 0);
+  // Ingresos: suma de todas las órdenes entregadas usando getTotalOrden, insensible a mayúsculas
+  const ingresos = orders.filter(o => (o.status || '').toLowerCase() === 'entregada').reduce((sum, o) => sum + getTotalOrden(o), 0);
 
   // Últimas órdenes
   const ultimas = orders.slice(-5).reverse();
