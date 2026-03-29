@@ -1,8 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
+import { Bar } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+} from 'chart.js';
+import { useNavigate } from 'react-router-dom';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch('/api/orders')
@@ -31,6 +45,36 @@ const AdminDashboard = () => {
 
   // Últimas órdenes
   const ultimas = orders.slice(-5).reverse();
+
+  // Datos para la gráfica de estados
+  const chartData = {
+    labels: estados.map(e => e.charAt(0).toUpperCase() + e.slice(1)),
+    datasets: [
+      {
+        label: 'Órdenes',
+        data: estados.map(e => stats[e]),
+        backgroundColor: [
+          '#fbbf24', // pendiente
+          '#60a5fa', // revision
+          '#f87171', // reparacion
+          '#34d399', // lista
+          '#6366f1', // entregada
+          '#f87171', // cancelada
+        ],
+        borderRadius: 8,
+      },
+    ],
+  };
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      title: { display: true, text: 'Órdenes por Estado' },
+    },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1 } },
+    },
+  };
 
   return (
     <DashboardLayout>
@@ -124,7 +168,9 @@ const AdminDashboard = () => {
             </div>
           </div>
           <div className="flex-1 flex items-center justify-center">
-            <span className="text-text-secondary">[Gráfica de estadísticas]</span>
+            <div className="w-full h-64">
+              <Bar data={chartData} options={chartOptions} />
+            </div>
           </div>
         </div>
         <div className="rounded-2xl bg-white shadow-card p-6 min-h-[300px] animate-fade-in border border-border flex flex-col">
@@ -140,17 +186,24 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody>
-              {ultimas.map((o, idx) => (
-                <tr key={o.id || idx} className="hover:bg-background transition-colors">
-                  <td className="py-2 px-3 font-mono">{o.folio || o.id}</td>
-                  <td className="py-2 px-3">{o.clientName || o.cliente}</td>
-                  <td className="py-2 px-3"><span className="px-3 py-1 rounded-xl bg-state-review/30 text-state-review text-xs font-semibold">{o.status}</span></td>
-                  <td className="py-2 px-3">${(o.total || 0).toFixed(2)}</td>
-                  <td className="py-2 px-3">
-                    <button className="px-3 py-1 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-semibold shadow-soft hover:from-primary-600 hover:to-blue-400 transition-all">Ver</button>
-                  </td>
-                </tr>
-              ))}
+              {ultimas.map((o, idx) => {
+                // Mostrar el total correcto
+                const total = o.total ?? o.presupuestoAdmin ?? o.presupuestoCliente ?? 0;
+                return (
+                  <tr key={o.id || idx} className="hover:bg-background transition-colors">
+                    <td className="py-2 px-3 font-mono">{o.folio || o.id}</td>
+                    <td className="py-2 px-3">{o.clientName || o.cliente}</td>
+                    <td className="py-2 px-3"><span className="px-3 py-1 rounded-xl bg-state-review/30 text-state-review text-xs font-semibold">{o.status}</span></td>
+                    <td className="py-2 px-3">${Number(total).toFixed(2)}</td>
+                    <td className="py-2 px-3">
+                      <button
+                        className="px-3 py-1 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-semibold shadow-soft hover:from-primary-600 hover:to-blue-400 transition-all"
+                        onClick={() => navigate(`/ordenes/${o.folio || o.id}`)}
+                      >Ver</button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
