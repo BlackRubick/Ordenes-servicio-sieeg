@@ -50,7 +50,9 @@ const AdminDashboard = () => {
     return acc;
   }, {});
   // Ingresos: suma de todas las órdenes entregadas usando getTotalOrden, insensible a mayúsculas
-  const ingresos = orders.filter(o => (o.status || '').toLowerCase() === 'entregada').reduce((sum, o) => sum + getTotalOrden(o), 0);
+  const entregadasDebug = orders.filter(o => (o.status || '').toLowerCase() === 'entregada');
+  console.log('Órdenes entregadas para ingresos:', entregadasDebug.map(o => ({folio: o.folio, status: o.status, total: getTotalOrden(o)})));
+  const ingresos = entregadasDebug.reduce((sum, o) => sum + getTotalOrden(o), 0);
 
   // Últimas órdenes
   const ultimas = orders.slice(-5).reverse();
