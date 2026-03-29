@@ -35,13 +35,22 @@ const AdminDashboard = () => {
       });
   }, []);
 
+  // Utilidad: función para obtener el total real de una orden
+  function getTotalOrden(o) {
+    if (o.total && Number(o.total) > 0) return Number(o.total);
+    if (o.presupuestoAdmin && Number(o.presupuestoAdmin) > 0) return Number(o.presupuestoAdmin);
+    if (o.presupuestoCliente && Number(o.presupuestoCliente) > 0) return Number(o.presupuestoCliente);
+    return 0;
+  }
+
   // Estadísticas
   const estados = ['pendiente', 'revision', 'reparacion', 'lista', 'entregada', 'cancelada'];
   const stats = estados.reduce((acc, estado) => {
     acc[estado] = orders.filter(o => o.status === estado).length;
     return acc;
   }, {});
-  const ingresos = orders.filter(o => o.status === 'entregada').reduce((sum, o) => sum + (o.total || 0), 0);
+  // Ingresos: suma de todas las órdenes entregadas usando getTotalOrden
+  const ingresos = orders.filter(o => o.status === 'entregada').reduce((sum, o) => sum + getTotalOrden(o), 0);
 
   // Últimas órdenes
   const ultimas = orders.slice(-5).reverse();
@@ -187,14 +196,13 @@ const AdminDashboard = () => {
             </thead>
             <tbody>
               {ultimas.map((o, idx) => {
-                // Mostrar el total correcto
-                const total = o.total ?? o.presupuestoAdmin ?? o.presupuestoCliente ?? 0;
+                const total = getTotalOrden(o);
                 return (
                   <tr key={o.id || idx} className="hover:bg-background transition-colors">
                     <td className="py-2 px-3 font-mono">{o.folio || o.id}</td>
                     <td className="py-2 px-3">{o.clientName || o.cliente}</td>
                     <td className="py-2 px-3"><span className="px-3 py-1 rounded-xl bg-state-review/30 text-state-review text-xs font-semibold">{o.status}</span></td>
-                    <td className="py-2 px-3">${Number(total).toFixed(2)}</td>
+                    <td className="py-2 px-3">${total.toFixed(2)}</td>
                     <td className="py-2 px-3">
                       <button
                         className="px-3 py-1 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-semibold shadow-soft hover:from-primary-600 hover:to-blue-400 transition-all"
