@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import Navbar from '../components/Navbar';
 import { useAuthStore } from '../store/authStore';
@@ -25,6 +25,7 @@ const formatMoney = (value) => {
 function OrdenClienteDetalle() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { id } = useParams();
   const { role } = useAuthStore();
   const [orden, setOrden] = useState(location.state?.orden ? {
     ...location.state.orden,
@@ -46,6 +47,34 @@ function OrdenClienteDetalle() {
       .toLowerCase();
     return normalizedRole === 'admin' || normalizedRole === 'administrador';
   }, [role]);
+
+  useEffect(() => {
+    if (orden || !id) return;
+
+    const cargarOrden = async () => {
+      try {
+        const response = await fetch(`/api/orders?folio=${encodeURIComponent(id)}`);
+        const data = await response.json();
+        const ordenEncontrada = Array.isArray(data) ? data[0] : data;
+        if (ordenEncontrada) {
+          setOrden({
+            ...ordenEncontrada,
+            imagenes: parseImagenes(ordenEncontrada.imagenes),
+            presupuestoCliente: ordenEncontrada.presupuestoCliente !== null && ordenEncontrada.presupuestoCliente !== undefined && ordenEncontrada.presupuestoCliente !== ''
+              ? Number(ordenEncontrada.presupuestoCliente)
+              : null,
+            presupuestoAdmin: ordenEncontrada.presupuestoAdmin !== null && ordenEncontrada.presupuestoAdmin !== undefined && ordenEncontrada.presupuestoAdmin !== ''
+              ? Number(ordenEncontrada.presupuestoAdmin)
+              : null,
+          });
+        }
+      } catch (_) {
+        // keep fallback UI
+      }
+    };
+
+    cargarOrden();
+  }, [id, orden]);
 
   const handleEliminarImagen = async (imageUrl) => {
     if (!orden?.folio) return;
