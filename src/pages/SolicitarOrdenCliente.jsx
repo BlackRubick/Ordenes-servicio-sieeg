@@ -261,8 +261,8 @@ function SolicitarOrdenCliente() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#f6fbff] to-[#eaf3fa] px-2 py-8">
-      <div className="max-w-xl w-full mx-auto bg-white rounded-2xl shadow-lg p-8 animate-fade-in mt-8">
+    <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-b from-[#f6fbff] to-[#eaf3fa] px-3 md:px-6 py-6 md:py-8">
+      <div className={`w-full mx-auto bg-white rounded-2xl shadow-lg animate-fade-in mt-2 md:mt-6 p-4 md:p-8 ${tab === 'ordenes' ? 'max-w-7xl' : 'max-w-3xl'}`}>
         <div className="flex flex-col items-center mb-4">
           <img src="/images/logo.ico" alt="Logo empresa" className="w-36 h-36 mb-4 object-contain" style={{aspectRatio: '1/1'}} />
         </div>
@@ -277,7 +277,7 @@ function SolicitarOrdenCliente() {
           <p className="text-sm text-gray-700"><strong>Correo:</strong> {clienteData?.correo}</p>
           <p className="text-sm text-gray-700"><strong>Teléfono:</strong> {clienteData?.telefono}</p>
         </div>
-        <div className="flex gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-6">
           <button
             className={`px-4 py-2 rounded-xl font-bold shadow transition-all ${tab === 'levantar' ? 'bg-[#1a3a5e] text-white' : 'bg-gray-200 text-[#1a3a5e]'}`}
             onClick={() => setTab('levantar')}
@@ -378,8 +378,8 @@ function SolicitarOrdenCliente() {
             {clienteOrdenes.length > 0 ? (
               <div>
                 <h3 className="text-xl font-bold text-[#1a3a5e] mb-4">Mis Órdenes</h3>
-                <div className="overflow-x-auto shadow-sm rounded-lg">
-                  <table className="w-full text-sm">
+                <div className="overflow-x-auto shadow-sm rounded-lg border border-gray-200">
+                  <table className="w-full text-xs md:text-sm">
                     <thead className="bg-[#1a3a5e] text-white">
                       <tr>
                         <th className="px-4 py-3 text-left">Folio</th>
@@ -408,7 +408,7 @@ function SolicitarOrdenCliente() {
                                 {orden.status || 'Pendiente'}
                               </span>
                             </td>
-                            <td className="px-4 py-3 min-w-[180px]">
+                            <td className="px-4 py-3 w-[260px]">
                               {orden.presupuestoCliente && (
                                 <div className="text-xs text-gray-600 mb-1">
                                   Tu estimado: ${Number(orden.presupuestoCliente).toFixed(2)}
