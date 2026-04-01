@@ -161,11 +161,25 @@ router.post('/', async (req, res) => {
     clienteId,
     imagenes,
     presupuestoCliente,
+    presupuesto,
     presupuestoAdmin,
     estadoPresupuesto,
     notaPresupuesto,
   } = req.body;
   try {
+    const parsedPresupuestoCliente = (presupuestoCliente ?? presupuesto ?? null) !== null && (presupuestoCliente ?? presupuesto ?? '') !== ''
+      ? Number(presupuestoCliente ?? presupuesto)
+      : null;
+    const safePresupuestoCliente = Number.isFinite(parsedPresupuestoCliente) ? parsedPresupuestoCliente : null;
+
+    const parsedPresupuestoAdmin = presupuestoAdmin !== null && presupuestoAdmin !== undefined && presupuestoAdmin !== ''
+      ? Number(presupuestoAdmin)
+      : null;
+    const safePresupuestoAdmin = Number.isFinite(parsedPresupuestoAdmin) ? parsedPresupuestoAdmin : null;
+
+    const safeEstadoPresupuesto = estadoPresupuesto
+      || (safePresupuestoAdmin ? 'pendiente_aprobacion' : (safePresupuestoCliente ? 'pendiente_aprobacion' : 'sin_presupuesto'));
+
     const order = await Order.create({
       folio,
       fecha,
@@ -191,9 +205,9 @@ router.post('/', async (req, res) => {
       resumen,
       clienteId,
       imagenes,
-      presupuestoCliente,
-      presupuestoAdmin,
-      estadoPresupuesto,
+      presupuestoCliente: safePresupuestoCliente,
+      presupuestoAdmin: safePresupuestoAdmin,
+      estadoPresupuesto: safeEstadoPresupuesto,
       notaPresupuesto,
     });
     res.status(201).json(order);
@@ -235,6 +249,18 @@ router.put('/:folio', async (req, res) => {
 
     fields.forEach((field) => {
       if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+        if (field === 'presupuestoCliente') {
+          const raw = req.body[field];
+          const parsed = raw !== null && raw !== undefined && raw !== '' ? Number(raw) : null;
+          order[field] = Number.isFinite(parsed) ? parsed : null;
+          return;
+        }
+        if (field === 'presupuestoAdmin') {
+          const raw = req.body[field];
+          const parsed = raw !== null && raw !== undefined && raw !== '' ? Number(raw) : null;
+          order[field] = Number.isFinite(parsed) ? parsed : null;
+          return;
+        }
         order[field] = req.body[field];
       }
     });

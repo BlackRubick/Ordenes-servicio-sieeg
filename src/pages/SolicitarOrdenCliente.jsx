@@ -86,6 +86,10 @@ function SolicitarOrdenCliente() {
       return;
     }
     try {
+      const presupuestoNormalizado = presupuesto !== null && presupuesto !== undefined && String(presupuesto).trim() !== ''
+        ? Number(String(presupuesto).replace(',', '.'))
+        : null;
+
       // Convertir imágenes a base64
       const imagenesBase64 = [];
       for (let file of selectedImages) {
@@ -127,9 +131,10 @@ function SolicitarOrdenCliente() {
           trabajos: JSON.stringify([]),
           resumen: JSON.stringify({ total: 0 }),
           imagenes: JSON.stringify(imagenes),
-          presupuestoCliente: presupuesto || null,
+          presupuestoCliente: Number.isFinite(presupuestoNormalizado) ? presupuestoNormalizado : null,
+          presupuesto: Number.isFinite(presupuestoNormalizado) ? presupuestoNormalizado : null,
           presupuestoAdmin: null,
-          estadoPresupuesto: presupuesto ? 'pendiente_aprobacion' : 'sin_presupuesto',
+          estadoPresupuesto: Number.isFinite(presupuestoNormalizado) ? 'pendiente_aprobacion' : 'sin_presupuesto',
           notaPresupuesto: ''
         })
       });
