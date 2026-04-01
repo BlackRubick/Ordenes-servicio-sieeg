@@ -191,9 +191,6 @@ function OrdenClienteDetalle() {
             <div className="text-xs text-gray-400 font-semibold uppercase tracking-widest">Folio</div>
             <div className="text-3xl font-extrabold text-[#1976F3] tracking-widest font-mono">{orden.folio || orden.id}</div>
           </div>
-          <div className="flex gap-2 items-center">
-            <span className={`px-4 py-1 rounded-full font-bold text-sm shadow-sm border border-current transition-all bg-blue-100 text-blue-700`}>{orden.estado}</span>
-          </div>
         </div>
         <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
           <button
