@@ -221,8 +221,12 @@ function OrdenesClientes() {
                   <td className="py-4 px-4">{orden.fecha || '-'}</td>
                   <td className="py-4 px-4 min-w-[160px]">
                     <div className="flex flex-col gap-1">
-                      <span className="text-xs text-gray-500">Cliente: {formatMoney(orden.presupuestoCliente)}</span>
-                      <span className="text-xs text-gray-500">Admin: {formatMoney(orden.presupuestoAdmin)}</span>
+                      <span className="text-xs font-semibold text-gray-700">
+                        {orden.presupuestoCliente ? `Estimado del cliente: ${formatMoney(orden.presupuestoCliente)}` : 'Sin estimado del cliente'}
+                      </span>
+                      <span className="text-xs font-semibold text-gray-700">
+                        {orden.presupuestoAdmin ? `Propuesta del admin: ${formatMoney(orden.presupuestoAdmin)}` : 'Sin propuesta del admin'}
+                      </span>
                     </div>
                   </td>
                   <td className="py-4 px-4">

@@ -17,6 +17,11 @@ const parseImagenes = (imagenes) => {
   return [];
 };
 
+const formatMoney = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? `$${number.toFixed(2)}` : null;
+};
+
 function OrdenClienteDetalle() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -237,13 +242,13 @@ function OrdenClienteDetalle() {
             <div className="bg-blue-50 rounded-xl p-3">
               <div className="text-xs text-gray-500 font-semibold mb-1">Presupuesto del cliente</div>
               <div className="font-bold text-blue-700 text-lg">
-                {orden.presupuestoCliente ? `$${Number(orden.presupuestoCliente).toFixed(2)}` : 'No definido'}
+                {formatMoney(orden.presupuestoCliente) || 'No definido'}
               </div>
             </div>
             <div className="bg-indigo-50 rounded-xl p-3">
               <div className="text-xs text-gray-500 font-semibold mb-1">Costo</div>
               <div className="font-bold text-indigo-700 text-lg">
-                {orden.presupuestoAdmin ? `$${Number(orden.presupuestoAdmin).toFixed(2)}` : 'Sin propuesta'}
+                {formatMoney(orden.presupuestoAdmin) || 'Sin propuesta'}
               </div>
             </div>
           </div>
