@@ -26,7 +26,16 @@ function OrdenClienteDetalle() {
   const location = useLocation();
   const navigate = useNavigate();
   const { role } = useAuthStore();
-  const [orden, setOrden] = useState(location.state?.orden ? { ...location.state.orden, imagenes: parseImagenes(location.state.orden.imagenes) } : null);
+  const [orden, setOrden] = useState(location.state?.orden ? {
+    ...location.state.orden,
+    imagenes: parseImagenes(location.state.orden.imagenes),
+    presupuestoCliente: location.state.orden.presupuestoCliente !== null && location.state.orden.presupuestoCliente !== undefined && location.state.orden.presupuestoCliente !== ''
+      ? Number(location.state.orden.presupuestoCliente)
+      : null,
+    presupuestoAdmin: location.state.orden.presupuestoAdmin !== null && location.state.orden.presupuestoAdmin !== undefined && location.state.orden.presupuestoAdmin !== ''
+      ? Number(location.state.orden.presupuestoAdmin)
+      : null,
+  } : null);
   const [presupuestoAdmin, setPresupuestoAdmin] = useState('');
   const [notaPresupuesto, setNotaPresupuesto] = useState('');
 

@@ -31,7 +31,15 @@ function SolicitarOrdenCliente() {
     if (isAuthenticated && clienteData?.id) {
       fetch(`/api/orders?clienteId=${clienteData.id}`)
         .then(res => res.json())
-        .then(data => setClienteOrdenes(Array.isArray(data) ? data : []))
+        .then(data => setClienteOrdenes(Array.isArray(data) ? data.map(orden => ({
+          ...orden,
+          presupuestoCliente: orden.presupuestoCliente !== null && orden.presupuestoCliente !== undefined && orden.presupuestoCliente !== ''
+            ? Number(orden.presupuestoCliente)
+            : null,
+          presupuestoAdmin: orden.presupuestoAdmin !== null && orden.presupuestoAdmin !== undefined && orden.presupuestoAdmin !== ''
+            ? Number(orden.presupuestoAdmin)
+            : null,
+        })) : []))
         .catch(() => {});
     }
   }, [isAuthenticated, clienteData]);
@@ -139,7 +147,15 @@ function SolicitarOrdenCliente() {
         if (clienteData?.id) {
           fetch(`/api/orders?clienteId=${clienteData.id}`)
             .then(res => res.json())
-            .then(data => setClienteOrdenes(Array.isArray(data) ? data : []))
+            .then(data => setClienteOrdenes(Array.isArray(data) ? data.map(orden => ({
+              ...orden,
+              presupuestoCliente: orden.presupuestoCliente !== null && orden.presupuestoCliente !== undefined && orden.presupuestoCliente !== ''
+                ? Number(orden.presupuestoCliente)
+                : null,
+              presupuestoAdmin: orden.presupuestoAdmin !== null && orden.presupuestoAdmin !== undefined && orden.presupuestoAdmin !== ''
+                ? Number(orden.presupuestoAdmin)
+                : null,
+            })) : []))
             .catch(() => {});
         }
       } else {
@@ -390,7 +406,7 @@ function SolicitarOrdenCliente() {
                             <td className="px-4 py-3 min-w-[180px]">
                               {orden.presupuestoCliente && (
                                 <div className="text-xs text-gray-600 mb-1">
-                                  Tu estimado: $${parseFloat(orden.presupuestoCliente).toFixed(2)}
+                                  Tu estimado: ${Number(orden.presupuestoCliente).toFixed(2)}
                                 </div>
                               )}
                               {(!orden.presupuestoCliente && (!orden.estadoPresupuesto || orden.estadoPresupuesto === 'sin_presupuesto')) && (

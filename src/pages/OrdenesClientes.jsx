@@ -69,6 +69,12 @@ function OrdenesClientes() {
             const obsData = getDataFromObservaciones(order.observaciones);
             return {
               ...order,
+              presupuestoCliente: order.presupuestoCliente !== null && order.presupuestoCliente !== undefined && order.presupuestoCliente !== ''
+                ? Number(order.presupuestoCliente)
+                : null,
+              presupuestoAdmin: order.presupuestoAdmin !== null && order.presupuestoAdmin !== undefined && order.presupuestoAdmin !== ''
+                ? Number(order.presupuestoAdmin)
+                : null,
               cliente: order.clientName || order.nombre || '-',
               direccion: obsData.direccion,
               tipoEquipo: obsData.tipoEquipo,
