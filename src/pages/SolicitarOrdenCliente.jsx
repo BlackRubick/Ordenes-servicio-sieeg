@@ -268,7 +268,7 @@ function SolicitarOrdenCliente() {
         </div>
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h2 className="text-2xl font-extrabold text-[#1a3a5e]">Panel de Cliente</h2>
+            <h2 className="text-2xl font-extrabold text-[#1a3a5e]">Ordenes de Clientes </h2>
             <p className="text-gray-600 text-sm">Bienvenido, <span className="font-semibold">{clienteData?.nombre}</span></p>
           </div>
           <button onClick={handleLogout} className="text-sm text-red-600 hover:text-red-800 font-semibold underline">Cerrar Sesión</button>
