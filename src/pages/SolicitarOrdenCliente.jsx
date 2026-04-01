@@ -78,6 +78,17 @@ function SolicitarOrdenCliente() {
       return;
     }
     try {
+      // Convertir imágenes a base64
+      const imagenesBase64 = [];
+      for (let file of selectedImages) {
+        const reader = new FileReader();
+        imagenesBase64.push(new Promise((resolve) => {
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(file);
+        }));
+      }
+      const imagenes = await Promise.all(imagenesBase64);
+
       const folio = 'S' + new Date().toISOString().replace(/[-:T.]/g, '').slice(2, 11);
       const fecha = new Date().toISOString().slice(0, 10);
       const res = await fetch('/api/orders', {
@@ -107,7 +118,7 @@ function SolicitarOrdenCliente() {
           technicianId: null,
           trabajos: JSON.stringify([]),
           resumen: JSON.stringify({ total: 0 }),
-          imagenes: JSON.stringify([]),
+          imagenes: JSON.stringify(imagenes),
           presupuestoCliente: presupuesto || null,
           presupuestoAdmin: null,
           estadoPresupuesto: 'pendiente',

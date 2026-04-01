@@ -4,11 +4,24 @@ import Swal from 'sweetalert2';
 import Navbar from '../components/Navbar';
 import { useAuthStore } from '../store/authStore';
 
+const parseImagenes = (imagenes) => {
+  if (Array.isArray(imagenes)) return imagenes;
+  if (typeof imagenes === 'string') {
+    try {
+      const parsed = JSON.parse(imagenes);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (_) {
+      return [];
+    }
+  }
+  return [];
+};
+
 function OrdenClienteDetalle() {
   const location = useLocation();
   const navigate = useNavigate();
   const { role } = useAuthStore();
-  const [orden, setOrden] = useState(location.state?.orden || null);
+  const [orden, setOrden] = useState(location.state?.orden ? { ...location.state.orden, imagenes: parseImagenes(location.state.orden.imagenes) } : null);
   const [presupuestoAdmin, setPresupuestoAdmin] = useState('');
   const [notaPresupuesto, setNotaPresupuesto] = useState('');
 
