@@ -73,19 +73,50 @@ function SolicitarOrdenCliente() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!tipoEquipo || !direccion || !descripcion || !presupuesto) {
+    if (!tipoEquipo || !direccion || !descripcion) {
       Swal.fire({ icon: 'error', title: 'Campos obligatorios', text: 'Por favor completa todos los campos.' });
       return;
     }
     try {
+      const folio = 'S' + new Date().toISOString().replace(/[-:T.]/g, '').slice(2, 11);
+      const fecha = new Date().toISOString().slice(0, 10);
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tipoEquipo, direccion, descripcion, presupuesto })
+        body: JSON.stringify({
+          folio,
+          fecha,
+          clientName: clienteData?.nombre || '',
+          telefono: clienteData?.telefono || '',
+          correo: clienteData?.correo || '',
+          tipo: 'cliente',
+          clienteId: clienteData?.id,
+          marca: '',
+          modelo: '',
+          serie: '',
+          accesorios: [],
+          otrosAccesorios: '',
+          seguridad: '',
+          patron: [],
+          description: descripcion,
+          diagnostico: '',
+          observaciones: JSON.stringify({ tipoEquipo, direccion }),
+          firma: null,
+          nombreRecibe: '',
+          status: 'Pendiente',
+          technicianId: null,
+          trabajos: [],
+          resumen: { total: 0 },
+          imagenes: [],
+          presupuestoCliente: presupuesto || null,
+          presupuestoAdmin: null,
+          estadoPresupuesto: 'pendiente',
+          notaPresupuesto: ''
+        })
       });
       const data = await res.json();
-      if (data.success) {
-        Swal.fire({ icon: 'success', title: '¡Solicitud enviada!', text: 'Tu solicitud ha sido enviada correctamente.', timer: 1500, showConfirmButton: false });
+      if (res.ok || data.folio) {
+        Swal.fire({ icon: 'success', title: '¡Solicitud enviada!', text: `Tu solicitud ha sido enviada correctamente. Folio: ${data.folio}`, timer: 2000, showConfirmButton: false });
         setTipoEquipo('');
         setDireccion('');
         setDescripcion('');
@@ -93,8 +124,15 @@ function SolicitarOrdenCliente() {
         setMostrarPresupuesto(false);
         setSelectedImages([]);
         setImagePreviews([]);
+        // Recargar órdenes
+        if (clienteData?.id) {
+          fetch(`/api/orders?clienteId=${clienteData.id}`)
+            .then(res => res.json())
+            .then(data => setClienteOrdenes(Array.isArray(data) ? data : []))
+            .catch(() => {});
+        }
       } else {
-        Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'No se pudo enviar la solicitud.' });
+        Swal.fire({ icon: 'error', title: 'Error', text: data.message || data.error || 'No se pudo enviar la solicitud.' });
       }
     } catch {
       Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo conectar con el servidor. Intenta de nuevo.' });
