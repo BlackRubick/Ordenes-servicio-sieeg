@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import Navbar from '../components/Navbar';
 import { useAuthStore } from '../store/authStore';
 
 const parseImagenes = (imagenes) => {
@@ -185,7 +184,6 @@ function OrdenClienteDetalle() {
 
   return (
     <>
-      <Navbar />
       <div className="min-h-screen bg-gradient-to-b from-[#f6fbff] to-[#eaf3fa] p-0 md:p-8 animate-fade-in" style={{marginTop: '80px'}}>
       <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md shadow-lg rounded-b-2xl px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-blue-100 animate-fade-in mb-8">
         <div className="flex flex-col md:flex-row md:items-center gap-4">
