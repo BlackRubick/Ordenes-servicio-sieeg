@@ -121,7 +121,7 @@ function SolicitarOrdenCliente() {
           imagenes: JSON.stringify(imagenes),
           presupuestoCliente: presupuesto || null,
           presupuestoAdmin: null,
-          estadoPresupuesto: 'pendiente',
+          estadoPresupuesto: presupuesto ? 'pendiente_aprobacion' : 'sin_presupuesto',
           notaPresupuesto: ''
         })
       });
@@ -388,9 +388,14 @@ function SolicitarOrdenCliente() {
                               </span>
                             </td>
                             <td className="px-4 py-3 min-w-[180px]">
-                              {(!orden.estadoPresupuesto || orden.estadoPresupuesto === 'sin_presupuesto') && (
+                              {orden.presupuestoCliente && (
+                                <div className="text-xs text-gray-600 mb-1">
+                                  Tu estimado: $${parseFloat(orden.presupuestoCliente).toFixed(2)}
+                                </div>
+                              )}
+                              {(!orden.presupuestoCliente && (!orden.estadoPresupuesto || orden.estadoPresupuesto === 'sin_presupuesto')) && (
                                 <span className="text-gray-400 text-xs">
-                                  {orden.presupuestoCliente ? `Tu estimado: $${parseFloat(orden.presupuestoCliente).toFixed(2)}` : 'Sin presupuesto aún'}
+                                  Sin presupuesto aún
                                 </span>
                               )}
                               {orden.estadoPresupuesto === 'pendiente_aprobacion' && (

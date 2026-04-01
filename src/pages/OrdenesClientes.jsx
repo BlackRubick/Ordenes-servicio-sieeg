@@ -36,6 +36,11 @@ const parseImagenes = (imagenes) => {
   return [];
 };
 
+const formatMoney = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? `$${number.toFixed(2)}` : '—';
+};
+
 
 function OrdenesClientes() {
   const { role, user } = useAuthStore();
@@ -194,6 +199,7 @@ function OrdenesClientes() {
                 <th className="py-3 px-4">Cliente</th>
                 <th className="py-3 px-4">Dirección</th>
                 <th className="py-3 px-4">Fecha</th>
+                <th className="py-3 px-4">Presupuesto</th>
                 <th className="py-3 px-4">Técnico</th>
                 <th className="py-3 px-4">Estado</th>
                 <th className="py-3 px-4 rounded-tr-2xl">Acciones</th>
@@ -202,7 +208,7 @@ function OrdenesClientes() {
             <tbody>
               {ordenesFiltradas.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="text-center text-gray-500 py-8 bg-white rounded-b-2xl">
+                    <td colSpan={8} className="text-center text-gray-500 py-8 bg-white rounded-b-2xl">
                     No hay órdenes de clientes registradas.
                   </td>
                 </tr>
@@ -213,6 +219,12 @@ function OrdenesClientes() {
                   <td className="py-4 px-4">{orden.cliente}</td>
                   <td className="py-4 px-4">{orden.direccion}</td>
                   <td className="py-4 px-4">{orden.fecha || '-'}</td>
+                  <td className="py-4 px-4 min-w-[160px]">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs text-gray-500">Cliente: {formatMoney(orden.presupuestoCliente)}</span>
+                      <span className="text-xs text-gray-500">Admin: {formatMoney(orden.presupuestoAdmin)}</span>
+                    </div>
+                  </td>
                   <td className="py-4 px-4">
                     {isTechnician || isMostrador ? (
                       <span className="font-semibold text-primary-600">{orden.tecnico || 'Sin asignar'}</span>
