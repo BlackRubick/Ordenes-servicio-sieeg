@@ -129,6 +129,9 @@ export const generateOrderPdfDoc = async (order = {}, options = {}) => {
       ? parseMaybeJson(order.imagenes, [])
       : [];
 
+  const mx = 34;
+  const cw = W - mx * 2;
+
   const sectionHeader = (label, x, y, w) => {
     filledRoundRect(x, y, w, 22, 4, C.navy);
     doc.setFont('helvetica', 'bold');
@@ -352,8 +355,6 @@ export const generateOrderPdfDoc = async (order = {}, options = {}) => {
     drawHeader();
   }
 
-  const mx = 34;
-  const cw = W - mx * 2;
   let y = 100;
 
   y += 12;
