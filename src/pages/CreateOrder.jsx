@@ -5,6 +5,7 @@ import SignaturePadCanvas from '../components/SignaturePadCanvas';
 import PatternLock from '../components/PatternLock';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { useEffect } from 'react';
+import { generateOrderPdfDoc } from '../utils/orderPdf';
 
 const accesoriosList = ['Cargador', 'SIM Card', 'Bandeja SIM', 'Memoria SD', 'Funda', 'Cable'];
 
@@ -156,7 +157,17 @@ const CreateOrder = () => {
       });
       if (!res.ok) throw new Error('Error al guardar la orden');
       // Solo generar PDF si la orden se guardó correctamente
-      const pdfBlobUrl = await generateOrderPdf();
+      const doc = await generateOrderPdfDoc({
+        ...form,
+        clientName: form.nombre,
+        nombre: form.nombre,
+        fecha,
+        folio,
+        firma: signature,
+        description: form.problema,
+        accesorios: form.accesorios,
+      });
+      const pdfBlobUrl = URL.createObjectURL(doc.output('blob'));
       window.open(pdfBlobUrl, '_blank');
       setPdfUrl(null);
       setShowPdfPreview(false);

@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import SignaturePadCanvas from '../components/SignaturePadCanvas';
 import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
+import { generateOrderPdfDoc as sharedGenerateOrderPdfDoc } from '../utils/orderPdf';
 
 // ...existing code...
 
@@ -552,14 +553,14 @@ const generateOrderPdfDoc = async (order) => {
 };
 
   const handlePreviewPdf = async (order) => {
-    const doc = await generateOrderPdfDoc(order);
+    const doc = await sharedGenerateOrderPdfDoc(order);
     const blob = doc.output('blob');
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
   };
 
   const handleDownloadPdf = async (order) => {
-    const doc = await generateOrderPdfDoc(order);
+    const doc = await sharedGenerateOrderPdfDoc(order);
     doc.save(`Orden_${order.folio || 'servicio'}.pdf`);
   };
 
