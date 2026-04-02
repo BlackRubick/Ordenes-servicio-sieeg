@@ -48,7 +48,19 @@ const getOrderText = (order, keys, fallback = '—') => {
   return fallback;
 };
 
-export const generateOrderPdfDoc = async (order = {}) => {
+const parseMaybeJson = (value, fallback) => {
+  if (typeof value !== 'string') {
+    return value ?? fallback;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch (_) {
+    return fallback;
+  }
+};
+
+export const generateOrderPdfDoc = async (order = {}, options = {}) => {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
@@ -95,7 +107,7 @@ export const generateOrderPdfDoc = async (order = {}) => {
     img.src = src;
   });
 
-  const logoBase64 = await getLogoBase64('/images/logo.ico');
+  const logoBase64 = await getLogoBase64(options.logoSrc || '/images/logo.ico');
 
   const clientName = getOrderText(order, ['clientName', 'nombre']);
   const technicianName = getOrderText(order, ['tecnico']);
@@ -105,6 +117,17 @@ export const generateOrderPdfDoc = async (order = {}) => {
   const accesorios = normalizeAccesories(order);
   const seguridad = getOrderText(order, ['seguridad']);
   const firmaCliente = order.firma || order.signature || null;
+  const clientView = Boolean(options.clientView);
+  const detalleCliente = parseMaybeJson(order.detalleSolicitud, parseMaybeJson(order.observaciones, {}));
+  const presupuestoCliente = order.presupuestoCliente ?? order.presupuesto ?? null;
+  const presupuestoAdmin = order.presupuestoAdmin ?? null;
+  const estadoPresupuesto = getOrderText(order, ['estadoPresupuesto'], 'sin_presupuesto');
+  const notaPresupuesto = getOrderText(order, ['notaPresupuesto'], '');
+  const imagenes = Array.isArray(order.imagenes)
+    ? order.imagenes
+    : typeof order.imagenes === 'string'
+      ? parseMaybeJson(order.imagenes, [])
+      : [];
 
   const sectionHeader = (label, x, y, w) => {
     filledRoundRect(x, y, w, 22, 4, C.navy);
@@ -129,6 +152,23 @@ export const generateOrderPdfDoc = async (order = {}) => {
     setTxt(C.bodyText);
     const lines = doc.splitTextToSize(String(value || '—'), w - 12);
     doc.text(lines[0] || '—', x + 6, y + 21);
+  };
+
+  const noteBox = (label, value, x, y, w, h) => {
+    filledRoundRect(x, y, w, h, 4, C.bg);
+    setStroke(C.divider);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(x, y, w, h, 4, 4, 'S');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    setTxt(C.labelText);
+    doc.text(label.toUpperCase(), x + 8, y + 10);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.2);
+    setTxt(C.bodyText);
+    const lines = doc.splitTextToSize(String(value || '—'), w - 16);
+    doc.text(lines, x + 8, y + 24);
+    return y + h;
   };
 
   const drawPageBg = () => {
@@ -170,6 +210,77 @@ export const generateOrderPdfDoc = async (order = {}) => {
     doc.text('ORDEN DE SERVICIO', boxX + boxW / 2, boxY + boxH / 2 + 3, { align: 'center' });
   };
 
+  const drawClientSummaryBlock = () => {
+    if (!clientView) {
+      return;
+    }
+
+    let summaryY = 205;
+    summaryY = sectionHeader('Resumen del Cliente y la Solicitud', mx, summaryY, cw);
+    summaryY += 8;
+
+    const halfSummary = (cw - 8) / 2;
+    fieldCell('Cliente', clientName, mx, summaryY, halfSummary);
+    fieldCell('Usuario / ID', getOrderText(order, ['usuario', 'clienteId', 'id']), mx + halfSummary + 8, summaryY, halfSummary);
+
+    summaryY += 44;
+    fieldCell('Teléfono', getOrderText(order, ['telefono']), mx, summaryY, halfSummary);
+    fieldCell('Correo', getOrderText(order, ['correo']), mx + halfSummary + 8, summaryY, halfSummary);
+
+    summaryY += 44;
+    fieldCell('Tipo de Equipo / Servicio', getOrderText(order, ['tipoEquipoServicio', 'tipo']), mx, summaryY, halfSummary);
+    fieldCell('Dirección del Servicio', getOrderText(detalleCliente, ['direccion'], '—'), mx + halfSummary + 8, summaryY, halfSummary);
+
+    summaryY += 44;
+    fieldCell('Presupuesto del Cliente', presupuestoCliente !== null && presupuestoCliente !== undefined && presupuestoCliente !== '' ? `$${Number(presupuestoCliente).toFixed(2)}` : 'No definido', mx, summaryY, halfSummary);
+    fieldCell('Costo / Presupuesto Admin', presupuestoAdmin !== null && presupuestoAdmin !== undefined && presupuestoAdmin !== '' ? `$${Number(presupuestoAdmin).toFixed(2)}` : 'Sin propuesta', mx + halfSummary + 8, summaryY, halfSummary);
+
+    summaryY += 44;
+    fieldCell('Estado del Presupuesto', estadoPresupuesto, mx, summaryY, halfSummary);
+    fieldCell('Técnico Asignado', technicianName || 'Sin asignar', mx + halfSummary + 8, summaryY, halfSummary);
+
+    summaryY += 44;
+    noteBox('Detalle de la Solicitud', getOrderText(order, ['description', 'problema', 'detalles', 'observaciones']), mx, summaryY, cw, 58);
+
+    summaryY += 66;
+    if (notaPresupuesto) {
+      noteBox('Nota del Presupuesto', notaPresupuesto, mx, summaryY, cw, 52);
+      summaryY += 60;
+    }
+
+    if (imagenes.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      setTxt(C.labelText);
+      doc.text('EVIDENCIA FOTOGRÁFICA', mx, summaryY + 10);
+
+      const thumbW = 110;
+      const thumbH = 74;
+      const gapThumb = 10;
+      const maxThumbs = Math.min(imagenes.length, 4);
+
+      for (let index = 0; index < maxThumbs; index += 1) {
+        const img = imagenes[index];
+        const thumbX = mx + (index % 2) * (thumbW + gapThumb);
+        const thumbY = summaryY + 18 + Math.floor(index / 2) * (thumbH + 22);
+        filledRoundRect(thumbX, thumbY, thumbW, thumbH, 4, C.bg);
+        setStroke(C.divider);
+        doc.roundedRect(thumbX, thumbY, thumbW, thumbH, 4, 4, 'S');
+        if (typeof img === 'string' && img.startsWith('data:image')) {
+          try {
+            doc.addImage(img, 'JPEG', thumbX + 4, thumbY + 4, thumbW - 8, thumbH - 8);
+          } catch (_) {
+            try {
+              doc.addImage(img, 'PNG', thumbX + 4, thumbY + 4, thumbW - 8, thumbH - 8);
+            } catch (_) {
+              // ignore invalid images
+            }
+          }
+        }
+      }
+    }
+  };
+
   const drawFooter = (pageNum) => {
     setStroke(C.divider);
     doc.setLineWidth(0.5);
@@ -179,7 +290,7 @@ export const generateOrderPdfDoc = async (order = {}) => {
     setTxt(C.footerText);
     doc.text('Boulevard Belisario Domínguez #4213 L5, Fracc. La Gloria, Tuxtla Gutiérrez, Chiapas', 34, H - 26);
     doc.text('Tel: 961 118 0157  ·  WhatsApp: 961 333 6529', 34, H - 16);
-    doc.text(`Página ${pageNum} de 2`, W - 34, H - 16, { align: 'right' });
+    doc.text(`Página ${pageNum} de ${clientView ? 3 : 2}`, W - 34, H - 16, { align: 'right' });
   };
 
   const drawSignatures = (yStart) => {
@@ -231,6 +342,15 @@ export const generateOrderPdfDoc = async (order = {}) => {
 
   drawPageBg();
   drawHeader();
+
+  if (clientView) {
+    drawClientSummaryBlock();
+    drawFooter(1);
+
+    doc.addPage();
+    drawPageBg();
+    drawHeader();
+  }
 
   const mx = 34;
   const cw = W - mx * 2;

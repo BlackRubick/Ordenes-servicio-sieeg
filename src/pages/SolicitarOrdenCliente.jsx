@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { generateOrderPdfDoc } from '../utils/orderPdf';
 
 function SolicitarOrdenCliente() {
-  const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [clienteData, setClienteData] = useState(null);
   const [usuario, setUsuario] = useState('');
@@ -17,6 +16,9 @@ function SolicitarOrdenCliente() {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [clienteOrdenes, setClienteOrdenes] = useState([]);
   const [tab, setTab] = useState('levantar'); // 'levantar' | 'ordenes'
+  const [detalleOrden, setDetalleOrden] = useState(null);
+  const [detallePdfUrl, setDetallePdfUrl] = useState('');
+  const [detallePdfLoading, setDetallePdfLoading] = useState(false);
 
   useEffect(() => {
     const savedCliente = localStorage.getItem('clienteData');
@@ -43,6 +45,12 @@ function SolicitarOrdenCliente() {
         .catch(() => {});
     }
   }, [isAuthenticated, clienteData]);
+
+  useEffect(() => () => {
+    if (detallePdfUrl) {
+      URL.revokeObjectURL(detallePdfUrl);
+    }
+  }, [detallePdfUrl]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -76,7 +84,94 @@ function SolicitarOrdenCliente() {
     setIsAuthenticated(false);
     setClienteData(null);
     localStorage.removeItem('clienteData');
-    navigate('/');
+  };
+
+  const closeDetalleModal = () => {
+    if (detallePdfUrl) {
+      URL.revokeObjectURL(detallePdfUrl);
+    }
+    setDetalleOrden(null);
+    setDetallePdfUrl('');
+    setDetallePdfLoading(false);
+  };
+
+  const buildClientePdfOrder = (orden) => {
+    let observaciones = orden.observaciones;
+    let accesorios = orden.accesorios;
+    try {
+      if (typeof observaciones === 'string') {
+        observaciones = JSON.parse(observaciones);
+      }
+    } catch (_) {
+      observaciones = {};
+    }
+
+    try {
+      if (typeof accesorios === 'string') {
+        const parsedAccesorios = JSON.parse(accesorios);
+        accesorios = Array.isArray(parsedAccesorios) ? parsedAccesorios : accesorios;
+      }
+    } catch (_) {
+      accesorios = orden.accesorios;
+    }
+
+    const fechaOrden = orden.fecha || new Date().toISOString().slice(0, 10);
+    const tipoEquipoOrden = observaciones?.tipoEquipo || orden.tipo || '—';
+    const direccionOrden = observaciones?.direccion || '—';
+
+    return {
+      ...orden,
+      clientName: orden.clientName || clienteData?.nombre || '—',
+      nombre: orden.clientName || clienteData?.nombre || '—',
+      clienteId: clienteData?.id || orden.clienteId || '',
+      usuario: clienteData?.usuario || clienteData?.username || orden.usuario || '',
+      telefono: orden.telefono || clienteData?.telefono || '—',
+      correo: orden.correo || clienteData?.correo || '—',
+      fecha: fechaOrden,
+      folio: orden.folio || '—',
+      tipo: tipoEquipoOrden,
+      tipoOrden: orden.tipo || 'cliente',
+      marca: orden.marca || tipoEquipoOrden,
+      modelo: orden.modelo || '—',
+      serie: orden.serie || '—',
+      accesorios: Array.isArray(accesorios) ? accesorios : [],
+      otrosAccesorios: orden.otrosAccesorios || '',
+      seguridad: orden.seguridad || '—',
+      description: orden.description || orden.descripcion || '—',
+      problema: orden.description || orden.descripcion || '—',
+      detalleSolicitud: {
+        tipoEquipo: tipoEquipoOrden,
+        direccion: direccionOrden,
+      },
+      observaciones: `Tipo de equipo/servicio: ${tipoEquipoOrden}\nDirección: ${direccionOrden}`,
+      tecnico: orden.tecnico || 'Sin asignar',
+      firma: orden.firma || null,
+    };
+  };
+
+  const handleVerDetalles = async (orden) => {
+    if (detallePdfUrl) {
+      URL.revokeObjectURL(detallePdfUrl);
+    }
+    setDetalleOrden(orden);
+    setDetallePdfLoading(true);
+    setDetallePdfUrl('');
+
+    try {
+      const doc = await generateOrderPdfDoc(buildClientePdfOrder(orden), {
+        logoSrc: '/images/SIEEGNEW.png',
+        clientView: true,
+      });
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      setDetallePdfUrl(url);
+    } catch (error) {
+      Swal.fire('Error', 'No se pudo generar el PDF de la orden.', 'error');
+      closeDetalleModal();
+      return;
+    } finally {
+      setDetallePdfLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -451,7 +546,7 @@ function SolicitarOrdenCliente() {
                             <td className="px-4 py-3">
                               <button
                                 className="px-3 py-1 rounded-lg bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-all"
-                                onClick={() => navigate(`/ordenes-clientes/${orden.folio}`, { state: { orden } })}
+                                onClick={() => handleVerDetalles(orden)}
                               >Ver detalles</button>
                             </td>
                           </tr>
@@ -465,6 +560,54 @@ function SolicitarOrdenCliente() {
               <div className="text-gray-500 text-center py-8">No tienes órdenes registradas.</div>
             )}
           </>
+        )}
+
+        {detalleOrden && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-3 py-6">
+            <div className="w-full max-w-6xl h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-gray-200 bg-gradient-to-r from-[#1a3a5e] to-[#17304e] text-white">
+                <div>
+                  <h3 className="text-lg md:text-xl font-extrabold">Detalles de la orden</h3>
+                  <p className="text-xs md:text-sm text-white/80">Folio {detalleOrden.folio || '-'}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={detallePdfUrl || '#'}
+                    download={`Orden_${detalleOrden.folio || 'cliente'}.pdf`}
+                    className={`px-4 py-2 rounded-xl transition-all font-bold ${detallePdfUrl ? 'bg-white text-[#1a3a5e] hover:bg-slate-100' : 'bg-white/20 text-white/70 cursor-not-allowed pointer-events-none'}`}
+                  >
+                    Descargar PDF
+                  </a>
+                  <button
+                    type="button"
+                    onClick={closeDetalleModal}
+                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 transition-all font-bold"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 bg-[#eef3f8] p-3 md:p-5">
+                {detallePdfLoading && (
+                  <div className="h-full flex items-center justify-center text-[#1a3a5e] font-semibold">
+                    Generando PDF...
+                  </div>
+                )}
+                {!detallePdfLoading && detallePdfUrl && (
+                  <iframe
+                    title={`PDF orden ${detalleOrden.folio || ''}`}
+                    src={detallePdfUrl}
+                    className="w-full h-full rounded-xl bg-white shadow-lg"
+                  />
+                )}
+                {!detallePdfLoading && !detallePdfUrl && (
+                  <div className="h-full flex items-center justify-center text-gray-500 font-medium">
+                    No se pudo mostrar el PDF.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
