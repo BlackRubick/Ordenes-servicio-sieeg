@@ -218,7 +218,7 @@ export const generateOrderPdfDoc = async (order = {}, options = {}) => {
       return;
     }
 
-    let summaryY = 205;
+    let summaryY = 108;
     summaryY = sectionHeader('Resumen del Cliente y la Solicitud', mx, summaryY, cw);
     summaryY += 8;
 
