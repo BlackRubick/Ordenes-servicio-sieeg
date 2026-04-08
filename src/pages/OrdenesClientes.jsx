@@ -42,7 +42,7 @@ const formatMoney = (value) => {
 };
 
 const CLIENT_ORDERS_NAV_CONTEXT_KEY = 'client_orders_nav_context';
-const SCROLL_DEBUG = true;
+const SCROLL_DEBUG = false;
 
 const debugScroll = (...args) => {
   if (!SCROLL_DEBUG) return;
@@ -98,6 +98,7 @@ function OrdenesClientes() {
     };
   }, [location.search]);
   const hasRestoredScrollRef = React.useRef(false);
+  const restoredFromSnapshotRef = React.useRef(false);
 
   useEffect(() => {
     // Cargar órdenes de tipo cliente
@@ -282,6 +283,11 @@ function OrdenesClientes() {
 
     if (!navContext) return;
 
+    restoredFromSnapshotRef.current =
+      Number.isFinite(Number(navContext.containerScrollTop)) ||
+      Number.isFinite(Number(navContext.windowY)) ||
+      Number.isFinite(Number(navContext.docY));
+
     debugScroll('restore nav context', navContext);
 
     hasRestoredScrollRef.current = true;
@@ -343,6 +349,10 @@ function OrdenesClientes() {
   useEffect(() => {
     if (!highlightedFolio || ordenesFiltradas.length === 0) return;
 
+    if (restoredFromSnapshotRef.current) {
+      return;
+    }
+
     const scrollToHighlightedRow = () => {
       const row = document.querySelector(`[data-folio="${highlightedFolio}"]`);
       if (!row) {
@@ -350,49 +360,18 @@ function OrdenesClientes() {
         return;
       }
 
-      // First, force browser-native scroll to the row regardless of which container actually scrolls.
-      row.scrollIntoView({ block: 'center', behavior: 'auto' });
-
-      const scrollContainer = getDashboardScrollContainer();
-      if (scrollContainer && scrollContainer.scrollHeight > scrollContainer.clientHeight + 1) {
-        const containerRect = scrollContainer.getBoundingClientRect();
-        const rowRect = row.getBoundingClientRect();
-        const offset = rowRect.top - containerRect.top;
-        const target = scrollContainer.scrollTop + offset - 120;
-        scrollContainer.scrollTo({ top: Math.max(target, 0), behavior: 'auto' });
-        debugScroll('row focus via container', {
-          highlightedFolio,
-          target,
-          actual: scrollContainer.scrollTop,
-        });
-      } else {
-        const rect = row.getBoundingClientRect();
-        const absoluteTop = rect.top + (window.scrollY || window.pageYOffset || 0);
-        window.scrollTo({ top: Math.max(absoluteTop - 140, 0), behavior: 'auto' });
-        debugScroll('row focus via window', {
-          highlightedFolio,
-          absoluteTop,
-          windowActual: window.scrollY || window.pageYOffset || 0,
-        });
-      }
+      row.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+      debugScroll('row focused once', { highlightedFolio });
     };
 
     requestAnimationFrame(() => {
       requestAnimationFrame(scrollToHighlightedRow);
     });
 
-    const retry1 = setTimeout(scrollToHighlightedRow, 120);
-    const retry2 = setTimeout(scrollToHighlightedRow, 320);
-    const retry3 = setTimeout(scrollToHighlightedRow, 650);
-    const retry4 = setTimeout(scrollToHighlightedRow, 1100);
-    const retry5 = setTimeout(scrollToHighlightedRow, 1700);
+    const retry1 = setTimeout(scrollToHighlightedRow, 180);
 
     return () => {
       clearTimeout(retry1);
-      clearTimeout(retry2);
-      clearTimeout(retry3);
-      clearTimeout(retry4);
-      clearTimeout(retry5);
     };
   }, [highlightedFolio, ordenesFiltradas]);
 
@@ -444,8 +423,15 @@ function OrdenesClientes() {
                   </td>
                 </tr>
               )}
-              {ordenesFiltradas.map((orden, idx) => (
-                <tr data-folio={orden.folio || ''} key={orden.folio || orden.id} className={`bg-white border-b border-border last:border-0 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 hover:bg-primary-50 ${highlightedFolio === orden.folio ? 'ring-2 ring-amber-300' : ''}`}>
+              {ordenesFiltradas.map((orden, idx) => {
+                const isHighlighted = highlightedFolio === orden.folio;
+
+                return (
+                <tr
+                  data-folio={orden.folio || ''}
+                  key={orden.folio || orden.id}
+                  className={`bg-white border-b border-border last:border-0 transition-colors duration-200 ${isHighlighted ? 'bg-amber-50 shadow-[inset_0_0_0_2px_#fcd34d]' : 'hover:bg-primary-50 hover:shadow-lg hover:-translate-y-1'}`}
+                >
                   <td className="py-4 px-4 font-bold text-dark">{orden.folio || '-'}</td>
                   <td className="py-4 px-4">{orden.cliente}</td>
                   <td className="py-4 px-4">{orden.direccion}</td>
@@ -515,7 +501,7 @@ function OrdenesClientes() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>
