@@ -41,6 +41,8 @@ const formatMoney = (value) => {
   return Number.isFinite(number) && number > 0 ? `$${number.toFixed(2)}` : '—';
 };
 
+const CLIENT_ORDERS_NAV_CONTEXT_KEY = 'client_orders_nav_context';
+
 
 function OrdenesClientes() {
   const { role, user } = useAuthStore();
@@ -56,7 +58,9 @@ function OrdenesClientes() {
   const [technicians, setTechnicians] = useState([]);
   const [searchCliente, setSearchCliente] = useState('');
   const [fechaExacta, setFechaExacta] = useState('');
+  const [highlightedFolio, setHighlightedFolio] = useState(null);
   const navigate = useNavigate();
+  const hasRestoredScrollRef = React.useRef(false);
 
   useEffect(() => {
     // Cargar órdenes de tipo cliente
@@ -138,6 +142,16 @@ function OrdenesClientes() {
   };
 
   const handleVer = (orden) => {
+    try {
+      sessionStorage.setItem(CLIENT_ORDERS_NAV_CONTEXT_KEY, JSON.stringify({
+        scrollY: window.scrollY || window.pageYOffset || 0,
+        folio: orden.folio,
+        timestamp: Date.now(),
+      }));
+    } catch (_) {
+      // ignore storage issues
+    }
+
     navigate(`/ordenes-clientes/${orden.folio}`, { state: { orden } });
   };
 
@@ -170,6 +184,56 @@ function OrdenesClientes() {
     const fechaMatch = !fechaExacta || (o.fecha && o.fecha === fechaExacta);
     return clienteMatch && fechaMatch;
   });
+
+  useEffect(() => {
+    let navContext = null;
+    try {
+      navContext = JSON.parse(sessionStorage.getItem(CLIENT_ORDERS_NAV_CONTEXT_KEY) || 'null');
+    } catch (_) {
+      navContext = null;
+    }
+
+    if (navContext?.folio) {
+      setHighlightedFolio(navContext.folio);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (hasRestoredScrollRef.current || ordenes.length === 0) return;
+
+    let navContext = null;
+    try {
+      navContext = JSON.parse(sessionStorage.getItem(CLIENT_ORDERS_NAV_CONTEXT_KEY) || 'null');
+    } catch (_) {
+      navContext = null;
+    }
+
+    if (!navContext || typeof navContext.scrollY !== 'number') return;
+
+    hasRestoredScrollRef.current = true;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: navContext.scrollY, behavior: 'auto' });
+      });
+    });
+
+    const clearContextTimer = setTimeout(() => {
+      try {
+        sessionStorage.removeItem(CLIENT_ORDERS_NAV_CONTEXT_KEY);
+      } catch (_) {
+        // ignore storage issues
+      }
+    }, 1200);
+
+    return () => clearTimeout(clearContextTimer);
+  }, [ordenes]);
+
+  useEffect(() => {
+    if (!highlightedFolio) return;
+    const timer = setTimeout(() => setHighlightedFolio(null), 4000);
+    return () => clearTimeout(timer);
+  }, [highlightedFolio]);
 
   return (
     <DashboardLayout>
@@ -220,7 +284,7 @@ function OrdenesClientes() {
                 </tr>
               )}
               {ordenesFiltradas.map((orden, idx) => (
-                <tr key={orden.folio || orden.id} className="bg-white border-b border-border last:border-0 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 hover:bg-primary-50">
+                <tr key={orden.folio || orden.id} className={`bg-white border-b border-border last:border-0 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 hover:bg-primary-50 ${highlightedFolio === orden.folio ? 'ring-2 ring-amber-300' : ''}`}>
                   <td className="py-4 px-4 font-bold text-dark">{orden.folio || '-'}</td>
                   <td className="py-4 px-4">{orden.cliente}</td>
                   <td className="py-4 px-4">{orden.direccion}</td>
