@@ -4,6 +4,13 @@ import Navbar from '../components/Navbar';
 
 const SCROLL_KEY_PREFIX = 'dashboard_scroll:';
 const WINDOW_SCROLL_KEY_PREFIX = 'dashboard_window_scroll:';
+const SCROLL_DEBUG = true;
+
+const debugScroll = (...args) => {
+  if (!SCROLL_DEBUG) return;
+  // eslint-disable-next-line no-console
+  console.log('[SCROLL_DEBUG][DashboardLayout]', ...args);
+};
 
 const DashboardLayout = ({ children }) => {
   const location = useLocation();
@@ -20,10 +27,24 @@ const DashboardLayout = ({ children }) => {
     const savedScrollTop = Number(savedValue);
     const savedWindowScroll = Number(savedWindowValue);
 
+    debugScroll('mount', {
+      pathname: location.pathname,
+      storageKey,
+      savedScrollTop,
+      savedWindowScroll,
+      containerClientHeight: scrollContainer.clientHeight,
+      containerScrollHeight: scrollContainer.scrollHeight,
+    });
+
     if (Number.isFinite(savedScrollTop) && savedScrollTop > 0) {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           scrollContainer.scrollTop = savedScrollTop;
+          debugScroll('restored container scroll', {
+            pathname: location.pathname,
+            restored: savedScrollTop,
+            actual: scrollContainer.scrollTop,
+          });
         });
       });
     }
@@ -32,13 +53,25 @@ const DashboardLayout = ({ children }) => {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           window.scrollTo({ top: savedWindowScroll, behavior: 'auto' });
+          debugScroll('restored window scroll', {
+            pathname: location.pathname,
+            restored: savedWindowScroll,
+            actual: window.scrollY || window.pageYOffset || 0,
+          });
         });
       });
     }
 
     const persistScroll = () => {
-      sessionStorage.setItem(storageKey, String(scrollContainer.scrollTop || 0));
-      sessionStorage.setItem(windowStorageKey, String(window.scrollY || window.pageYOffset || 0));
+      const containerValue = scrollContainer.scrollTop || 0;
+      const windowValue = window.scrollY || window.pageYOffset || 0;
+      sessionStorage.setItem(storageKey, String(containerValue));
+      sessionStorage.setItem(windowStorageKey, String(windowValue));
+      debugScroll('persist', {
+        pathname: location.pathname,
+        containerValue,
+        windowValue,
+      });
     };
 
     // Persist as user scrolls so route transitions do not rely on unmount timing.

@@ -42,17 +42,26 @@ const formatMoney = (value) => {
 };
 
 const CLIENT_ORDERS_NAV_CONTEXT_KEY = 'client_orders_nav_context';
+const SCROLL_DEBUG = true;
+
+const debugScroll = (...args) => {
+  if (!SCROLL_DEBUG) return;
+  // eslint-disable-next-line no-console
+  console.log('[SCROLL_DEBUG][OrdenesClientes]', ...args);
+};
 
 const getDashboardScrollContainer = () => document.getElementById('dashboard-scroll-container');
 
 const getScrollSnapshot = () => {
   const scrollContainer = getDashboardScrollContainer();
   const docY = document.documentElement?.scrollTop || document.body?.scrollTop || 0;
-  return {
+  const snapshot = {
     windowY: window.scrollY || window.pageYOffset || 0,
     docY,
     containerScrollTop: scrollContainer ? scrollContainer.scrollTop : 0,
   };
+  debugScroll('snapshot', snapshot);
+  return snapshot;
 };
 
 
@@ -162,6 +171,7 @@ function OrdenesClientes() {
     const snapshot = getScrollSnapshot();
 
     try {
+      debugScroll('navigate to detail', { folio: orden.folio, snapshot });
       sessionStorage.setItem(CLIENT_ORDERS_NAV_CONTEXT_KEY, JSON.stringify({
         ...snapshot,
         folio: orden.folio,
@@ -212,11 +222,13 @@ function OrdenesClientes() {
 
   useEffect(() => {
     if (focusFolioFromQuery) {
+      debugScroll('focus from query', { focusFolioFromQuery });
       setHighlightedFolio(focusFolioFromQuery);
       return;
     }
 
     if (location.state?.restoreFolio) {
+      debugScroll('focus from location state', { restoreFolio: location.state.restoreFolio });
       setHighlightedFolio(location.state.restoreFolio);
       return;
     }
@@ -229,6 +241,7 @@ function OrdenesClientes() {
     }
 
     if (navContext?.folio) {
+      debugScroll('focus from session storage', navContext);
       setHighlightedFolio(navContext.folio);
     }
   }, [location.state, focusFolioFromQuery]);
@@ -244,6 +257,8 @@ function OrdenesClientes() {
     }
 
     if (!navContext) return;
+
+    debugScroll('restore nav context', navContext);
 
     hasRestoredScrollRef.current = true;
 
@@ -261,6 +276,12 @@ function OrdenesClientes() {
         document.documentElement.scrollTop = navContext.docY;
         document.body.scrollTop = navContext.docY;
       }
+
+      debugScroll('restoreScroll applied', {
+        containerActual: scrollContainer ? scrollContainer.scrollTop : null,
+        windowActual: window.scrollY || window.pageYOffset || 0,
+        docActual: document.documentElement?.scrollTop || document.body?.scrollTop || 0,
+      });
     };
 
     requestAnimationFrame(() => {
@@ -300,7 +321,10 @@ function OrdenesClientes() {
 
     const scrollToHighlightedRow = () => {
       const row = document.querySelector(`[data-folio="${highlightedFolio}"]`);
-      if (!row) return;
+      if (!row) {
+        debugScroll('row not found yet', { highlightedFolio });
+        return;
+      }
 
       // First, force browser-native scroll to the row regardless of which container actually scrolls.
       row.scrollIntoView({ block: 'center', behavior: 'auto' });
@@ -312,10 +336,20 @@ function OrdenesClientes() {
         const offset = rowRect.top - containerRect.top;
         const target = scrollContainer.scrollTop + offset - 120;
         scrollContainer.scrollTo({ top: Math.max(target, 0), behavior: 'auto' });
+        debugScroll('row focus via container', {
+          highlightedFolio,
+          target,
+          actual: scrollContainer.scrollTop,
+        });
       } else {
         const rect = row.getBoundingClientRect();
         const absoluteTop = rect.top + (window.scrollY || window.pageYOffset || 0);
         window.scrollTo({ top: Math.max(absoluteTop - 140, 0), behavior: 'auto' });
+        debugScroll('row focus via window', {
+          highlightedFolio,
+          absoluteTop,
+          windowActual: window.scrollY || window.pageYOffset || 0,
+        });
       }
     };
 

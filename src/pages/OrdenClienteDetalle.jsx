@@ -3,6 +3,14 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { useAuthStore } from '../store/authStore';
 
+const SCROLL_DEBUG = true;
+
+const debugScroll = (...args) => {
+  if (!SCROLL_DEBUG) return;
+  // eslint-disable-next-line no-console
+  console.log('[SCROLL_DEBUG][OrdenClienteDetalle]', ...args);
+};
+
 const parseImagenes = (imagenes) => {
   if (Array.isArray(imagenes)) return imagenes;
   if (typeof imagenes === 'string') {
@@ -49,14 +57,21 @@ function OrdenClienteDetalle() {
 
   const handleBackToClientOrders = () => {
     const returnFolio = location.state?.returnFolio || orden?.folio || id;
+    debugScroll('back pressed', {
+      returnFolio,
+      locationState: location.state,
+      pathname: location.pathname,
+    });
     if (location.state?.fromList || returnFolio) {
       navigate(`/ordenes-clientes?focus=${encodeURIComponent(returnFolio || '')}`, {
         state: {
           restoreFolio: returnFolio,
         },
       });
+      debugScroll('navigate to list with focus', { returnFolio });
       return;
     }
+    debugScroll('fallback navigate(-1)');
     navigate(-1);
   };
 
