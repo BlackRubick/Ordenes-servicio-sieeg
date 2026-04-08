@@ -52,6 +52,26 @@ function SolicitarOrdenCliente() {
     }
   }, [detallePdfUrl]);
 
+  useEffect(() => {
+    if (!detalleOrden) return undefined;
+
+    const blockShortcuts = (event) => {
+      const isCtrlOrMeta = event.ctrlKey || event.metaKey;
+      if (!isCtrlOrMeta) return;
+
+      const key = String(event.key || '').toLowerCase();
+      if (key === 'p' || key === 's') {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+
+    window.addEventListener('keydown', blockShortcuts, true);
+    return () => {
+      window.removeEventListener('keydown', blockShortcuts, true);
+    };
+  }, [detalleOrden]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!usuario || !contrasena) {
@@ -571,13 +591,9 @@ function SolicitarOrdenCliente() {
                   <p className="text-xs md:text-sm text-white/80">Folio {detalleOrden.folio || '-'}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <a
-                    href={detallePdfUrl || '#'}
-                    download={`Orden_${detalleOrden.folio || 'cliente'}.pdf`}
-                    className={`px-4 py-2 rounded-xl transition-all font-bold ${detallePdfUrl ? 'bg-white text-[#1a3a5e] hover:bg-slate-100' : 'bg-white/20 text-white/70 cursor-not-allowed pointer-events-none'}`}
-                  >
-                    Descargar PDF
-                  </a>
+                  <span className="px-4 py-2 rounded-xl bg-white/10 text-white/90 text-xs md:text-sm font-semibold">
+                    Solo visualizacion
+                  </span>
                   <button
                     type="button"
                     onClick={closeDetalleModal}
@@ -596,7 +612,7 @@ function SolicitarOrdenCliente() {
                 {!detallePdfLoading && detallePdfUrl && (
                   <iframe
                     title={`PDF orden ${detalleOrden.folio || ''}`}
-                    src={detallePdfUrl}
+                    src={`${detallePdfUrl}#toolbar=0&navpanes=0&scrollbar=1&view=FitH`}
                     className="w-full h-full rounded-xl bg-white shadow-lg"
                   />
                 )}
