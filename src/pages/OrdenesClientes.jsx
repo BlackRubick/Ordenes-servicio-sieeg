@@ -86,6 +86,17 @@ function OrdenesClientes() {
     const params = new URLSearchParams(location.search || '');
     return params.get('focus') || '';
   }, [location.search]);
+  const queryScrollSnapshot = React.useMemo(() => {
+    const params = new URLSearchParams(location.search || '');
+    const ct = Number(params.get('ct'));
+    const wy = Number(params.get('wy'));
+    const dy = Number(params.get('dy'));
+    return {
+      containerScrollTop: Number.isFinite(ct) ? ct : null,
+      windowY: Number.isFinite(wy) ? wy : null,
+      docY: Number.isFinite(dy) ? dy : null,
+    };
+  }, [location.search]);
   const hasRestoredScrollRef = React.useRef(false);
 
   useEffect(() => {
@@ -186,6 +197,7 @@ function OrdenesClientes() {
         orden,
         fromList: true,
         returnFolio: orden.folio,
+        returnScrollSnapshot: snapshot,
       },
     });
   };
@@ -249,11 +261,23 @@ function OrdenesClientes() {
   useEffect(() => {
     if (hasRestoredScrollRef.current || ordenes.length === 0) return;
 
+    const stateSnapshot = location.state?.restoreSnapshot || null;
+
     let navContext = null;
-    try {
-      navContext = JSON.parse(sessionStorage.getItem(CLIENT_ORDERS_NAV_CONTEXT_KEY) || 'null');
-    } catch (_) {
-      navContext = null;
+    if (stateSnapshot) {
+      navContext = stateSnapshot;
+    } else if (
+      queryScrollSnapshot.containerScrollTop !== null ||
+      queryScrollSnapshot.windowY !== null ||
+      queryScrollSnapshot.docY !== null
+    ) {
+      navContext = queryScrollSnapshot;
+    } else {
+      try {
+        navContext = JSON.parse(sessionStorage.getItem(CLIENT_ORDERS_NAV_CONTEXT_KEY) || 'null');
+      } catch (_) {
+        navContext = null;
+      }
     }
 
     if (!navContext) return;
@@ -264,15 +288,15 @@ function OrdenesClientes() {
 
     const restoreScroll = () => {
       const scrollContainer = getDashboardScrollContainer();
-      if (scrollContainer && typeof navContext.containerScrollTop === 'number') {
+      if (scrollContainer && Number.isFinite(Number(navContext.containerScrollTop))) {
         scrollContainer.scrollTop = navContext.containerScrollTop;
       }
 
-      if (typeof navContext.windowY === 'number') {
+      if (Number.isFinite(Number(navContext.windowY))) {
         window.scrollTo({ top: navContext.windowY, behavior: 'auto' });
       }
 
-      if (typeof navContext.docY === 'number') {
+      if (Number.isFinite(Number(navContext.docY))) {
         document.documentElement.scrollTop = navContext.docY;
         document.body.scrollTop = navContext.docY;
       }
@@ -308,7 +332,7 @@ function OrdenesClientes() {
       clearTimeout(retry3);
       clearTimeout(clearContextTimer);
     };
-  }, [ordenes]);
+  }, [ordenes, location.state, queryScrollSnapshot]);
 
   useEffect(() => {
     if (!highlightedFolio) return;

@@ -57,15 +57,29 @@ function OrdenClienteDetalle() {
 
   const handleBackToClientOrders = () => {
     const returnFolio = location.state?.returnFolio || orden?.folio || id;
+    const snapshot = location.state?.returnScrollSnapshot || {};
+    const query = new URLSearchParams();
+    query.set('focus', String(returnFolio || ''));
+    if (Number.isFinite(Number(snapshot.containerScrollTop))) {
+      query.set('ct', String(Number(snapshot.containerScrollTop)));
+    }
+    if (Number.isFinite(Number(snapshot.windowY))) {
+      query.set('wy', String(Number(snapshot.windowY)));
+    }
+    if (Number.isFinite(Number(snapshot.docY))) {
+      query.set('dy', String(Number(snapshot.docY)));
+    }
     debugScroll('back pressed', {
       returnFolio,
+      snapshot,
       locationState: location.state,
       pathname: location.pathname,
     });
     if (location.state?.fromList || returnFolio) {
-      navigate(`/ordenes-clientes?focus=${encodeURIComponent(returnFolio || '')}`, {
+      navigate(`/ordenes-clientes?${query.toString()}`, {
         state: {
           restoreFolio: returnFolio,
+          restoreSnapshot: snapshot,
         },
       });
       debugScroll('navigate to list with focus', { returnFolio });
