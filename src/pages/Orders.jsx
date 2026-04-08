@@ -60,6 +60,8 @@ const parseImagenes = (imagenes) => {
 
 const ORDERS_NAV_CONTEXT_KEY = 'orders_nav_context';
 
+const getDashboardScrollContainer = () => document.getElementById('dashboard-scroll-container');
+
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -92,9 +94,13 @@ const Orders = () => {
   const hasRestoredScrollRef = React.useRef(false);
 
   const handleOpenOrderDetail = (folio) => {
+    const scrollContainer = getDashboardScrollContainer();
+    const containerScrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
+
     try {
       sessionStorage.setItem(ORDERS_NAV_CONTEXT_KEY, JSON.stringify({
         scrollY: window.scrollY || window.pageYOffset || 0,
+        containerScrollTop,
         folio,
         timestamp: Date.now(),
       }));
@@ -636,13 +642,19 @@ const generateOrderPdfDoc = async (order) => {
       navContext = null;
     }
 
-    if (!navContext || typeof navContext.scrollY !== 'number') return;
+    if (!navContext || (typeof navContext.scrollY !== 'number' && typeof navContext.containerScrollTop !== 'number')) return;
 
     hasRestoredScrollRef.current = true;
 
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        window.scrollTo({ top: navContext.scrollY, behavior: 'auto' });
+        const scrollContainer = getDashboardScrollContainer();
+        if (scrollContainer && typeof navContext.containerScrollTop === 'number') {
+          scrollContainer.scrollTo({ top: navContext.containerScrollTop, behavior: 'auto' });
+        }
+        if (typeof navContext.scrollY === 'number') {
+          window.scrollTo({ top: navContext.scrollY, behavior: 'auto' });
+        }
       });
     });
 
