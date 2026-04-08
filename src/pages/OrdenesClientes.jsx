@@ -274,6 +274,40 @@ function OrdenesClientes() {
     return () => clearTimeout(timer);
   }, [highlightedFolio]);
 
+  useEffect(() => {
+    if (!highlightedFolio || ordenesFiltradas.length === 0) return;
+
+    const scrollToHighlightedRow = () => {
+      const row = document.querySelector(`[data-folio="${highlightedFolio}"]`);
+      if (!row) return;
+
+      const scrollContainer = getDashboardScrollContainer();
+      if (scrollContainer) {
+        const containerRect = scrollContainer.getBoundingClientRect();
+        const rowRect = row.getBoundingClientRect();
+        const offset = rowRect.top - containerRect.top;
+        const target = scrollContainer.scrollTop + offset - 120;
+        scrollContainer.scrollTo({ top: Math.max(target, 0), behavior: 'auto' });
+      } else {
+        row.scrollIntoView({ block: 'center', behavior: 'auto' });
+      }
+    };
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(scrollToHighlightedRow);
+    });
+
+    const retry1 = setTimeout(scrollToHighlightedRow, 120);
+    const retry2 = setTimeout(scrollToHighlightedRow, 320);
+    const retry3 = setTimeout(scrollToHighlightedRow, 650);
+
+    return () => {
+      clearTimeout(retry1);
+      clearTimeout(retry2);
+      clearTimeout(retry3);
+    };
+  }, [highlightedFolio, ordenesFiltradas]);
+
   return (
     <DashboardLayout>
       <div className="mb-6 flex flex-col gap-4">
@@ -323,7 +357,7 @@ function OrdenesClientes() {
                 </tr>
               )}
               {ordenesFiltradas.map((orden, idx) => (
-                <tr key={orden.folio || orden.id} className={`bg-white border-b border-border last:border-0 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 hover:bg-primary-50 ${highlightedFolio === orden.folio ? 'ring-2 ring-amber-300' : ''}`}>
+                <tr data-folio={orden.folio || ''} key={orden.folio || orden.id} className={`bg-white border-b border-border last:border-0 transition-all duration-200 hover:shadow-lg hover:-translate-y-1 hover:bg-primary-50 ${highlightedFolio === orden.folio ? 'ring-2 ring-amber-300' : ''}`}>
                   <td className="py-4 px-4 font-bold text-dark">{orden.folio || '-'}</td>
                   <td className="py-4 px-4">{orden.cliente}</td>
                   <td className="py-4 px-4">{orden.direccion}</td>
