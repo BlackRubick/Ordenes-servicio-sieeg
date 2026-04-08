@@ -65,7 +65,7 @@ const AppRoutes = () => (
       <Route path="/servicios-externos" element={<PrivateRoute element={<ForeignServices />} allowedRoles={['Administrador', 'admin', 'Técnico', 'tecnico', 'Mostrador', 'mostrador']} />} />
       <Route path="/servicios-externos/crear" element={<PrivateRoute element={<ForeignServicesCreate />} allowedRoles={['Administrador', 'admin', 'Mostrador', 'mostrador']} />} />
       <Route path="/ordenes-clientes" element={<PrivateRoute element={<OrdenesClientes />} allowedRoles={['Administrador', 'admin', 'Técnico', 'tecnico', 'Mostrador', 'mostrador']} />} />
-      <Route path="/ordenes-clientes/:id" element={<OrdenClienteDetalle />} />
+      <Route path="/ordenes-clientes/:id" element={<PrivateRoute element={<OrdenClienteDetalle />} allowedRoles={['Administrador', 'admin', 'Técnico', 'tecnico', 'Mostrador', 'mostrador']} />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>

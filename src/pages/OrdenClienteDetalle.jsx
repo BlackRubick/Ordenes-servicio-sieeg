@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { useAuthStore } from '../store/authStore';
+import DashboardLayout from '../layouts/DashboardLayout';
 
 const SCROLL_DEBUG = true;
 
@@ -215,18 +216,20 @@ function OrdenClienteDetalle() {
 
   if (!orden) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <p className="text-xl text-red-500 font-bold mb-4">No se encontró la orden.</p>
-        <button className="px-4 py-2 rounded-xl bg-primary-500 text-white font-bold shadow-lg hover:bg-primary-600 transition-all" onClick={handleBackToClientOrders}>
-          Volver
-        </button>
-      </div>
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center min-h-full py-16">
+          <p className="text-xl text-red-500 font-bold mb-4">No se encontró la orden.</p>
+          <button className="px-4 py-2 rounded-xl bg-primary-500 text-white font-bold shadow-lg hover:bg-primary-600 transition-all" onClick={handleBackToClientOrders}>
+            Volver
+          </button>
+        </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-b from-[#f6fbff] to-[#eaf3fa] p-0 md:p-8 animate-fade-in" style={{marginTop: '80px'}}>
+    <DashboardLayout>
+      <div className="min-h-full bg-gradient-to-b from-[#f6fbff] to-[#eaf3fa] p-0 md:p-8 animate-fade-in">
       <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md shadow-lg rounded-b-2xl px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-blue-100 animate-fade-in mb-8">
         <div className="flex flex-col md:flex-row md:items-center gap-4">
           <div>
@@ -427,8 +430,8 @@ function OrdenClienteDetalle() {
           </div>
         </div>
       )}
-    </div>
-  </>
+      </div>
+    </DashboardLayout>
 
   );
 }
