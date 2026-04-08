@@ -70,7 +70,7 @@ export const generateOrderPdfDoc = async (order = {}, options = {}) => {
     blue: '#1a3a5e',
     blueLight: '#1a3a5e',
     accent: '#000000',
-    bg: '#F4F6F9',
+    bg: '#FFFFFF',
     white: '#FFFFFF',
     divider: '#DDE3EC',
     labelText: '#6B7A99',
