@@ -11,7 +11,6 @@ import Swal from 'sweetalert2';
 import jsPDF from 'jspdf';
 import { generateOrderPdfDoc as sharedGenerateOrderPdfDoc } from '../utils/orderPdf';
 
-// ...existing code...
 
 const ESTADOS = {
   pendiente: { label: 'Pendiente', bg: 'bg-state-pending/30', text: 'text-state-pending' },
@@ -59,6 +58,8 @@ const parseImagenes = (imagenes) => {
   return [];
 };
 
+const ORDERS_NAV_CONTEXT_KEY = 'orders_nav_context';
+
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -86,7 +87,23 @@ const Orders = () => {
   const [newImageFiles, setNewImageFiles] = useState([]);
   const [newImagePreviews, setNewImagePreviews] = useState([]);
   const [savingImages, setSavingImages] = useState(false);
+  const [highlightedFolio, setHighlightedFolio] = useState(null);
   const signaturePadRef = React.useRef();
+  const hasRestoredScrollRef = React.useRef(false);
+
+  const handleOpenOrderDetail = (folio) => {
+    try {
+      sessionStorage.setItem(ORDERS_NAV_CONTEXT_KEY, JSON.stringify({
+        scrollY: window.scrollY || window.pageYOffset || 0,
+        folio,
+        timestamp: Date.now(),
+      }));
+    } catch (_) {
+      // ignore storage issues
+    }
+
+    navigate(`/admin/orders/${folio}`);
+  };
 
   const openImagesModal = (order) => {
     setImageOrder(order);
@@ -565,6 +582,17 @@ const generateOrderPdfDoc = async (order) => {
   };
 
   React.useEffect(() => {
+    let navContext = null;
+    try {
+      navContext = JSON.parse(sessionStorage.getItem(ORDERS_NAV_CONTEXT_KEY) || 'null');
+    } catch (_) {
+      navContext = null;
+    }
+
+    if (navContext?.folio) {
+      setHighlightedFolio(navContext.folio);
+    }
+
     fetch('/api/orders?excludeForeign=true')
       .then(res => res.json())
       .then(data => {
@@ -597,6 +625,44 @@ const generateOrderPdfDoc = async (order) => {
       .then(data => setAllTechnicians(data))
       .catch(() => Swal.fire('Error', 'No se pudieron cargar los técnicos', 'error'));
   }, [normalizedRole, currentUserName]);
+
+  React.useEffect(() => {
+    if (hasRestoredScrollRef.current || orders.length === 0) return;
+
+    let navContext = null;
+    try {
+      navContext = JSON.parse(sessionStorage.getItem(ORDERS_NAV_CONTEXT_KEY) || 'null');
+    } catch (_) {
+      navContext = null;
+    }
+
+    if (!navContext || typeof navContext.scrollY !== 'number') return;
+
+    hasRestoredScrollRef.current = true;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: navContext.scrollY, behavior: 'auto' });
+      });
+    });
+
+    const clearContextTimer = setTimeout(() => {
+      try {
+        sessionStorage.removeItem(ORDERS_NAV_CONTEXT_KEY);
+      } catch (_) {
+        // ignore storage issues
+      }
+    }, 1200);
+
+    return () => clearTimeout(clearContextTimer);
+  }, [orders]);
+
+  React.useEffect(() => {
+    if (!highlightedFolio) return;
+
+    const timer = setTimeout(() => setHighlightedFolio(null), 4000);
+    return () => clearTimeout(timer);
+  }, [highlightedFolio]);
 
   // Obtener técnicos únicos (ya no se usa, pero lo dejamos para el filtro por técnico)
   const tecnicos = Array.from(new Set(orders.map(o => o.tecnico)));
@@ -692,7 +758,7 @@ const generateOrderPdfDoc = async (order) => {
               return (
                 <tr
                   key={o.folio}
-                  className={`transition-all duration-300 group bg-white shadow-card border-b border-border last:border-0 hover:shadow-xl hover:-translate-y-1 ${isLast ? 'rounded-b-2xl' : ''}`}
+                  className={`transition-all duration-300 group bg-white shadow-card border-b border-border last:border-0 hover:shadow-xl hover:-translate-y-1 ${highlightedFolio === o.folio ? 'ring-2 ring-amber-300' : ''} ${isLast ? 'rounded-b-2xl' : ''}`}
                   style={{ borderRadius: isLast ? '0 0 1rem 1rem' : undefined }}
                 >
                   <td className="py-4 px-4 font-mono text-primary-600 text-lg font-bold align-middle">{o.folio}</td>
@@ -784,7 +850,7 @@ const generateOrderPdfDoc = async (order) => {
                     <button
                       className="flex items-center justify-center w-9 h-9 rounded-full bg-primary-100 text-primary-600 hover:bg-primary-500 hover:text-white transition-all shadow-sm"
                       title={isAdmin || isMostrador ? 'Ver detalle' : 'Ver PDF'}
-                      onClick={() => (isAdmin || isMostrador ? navigate(`/admin/orders/${o.folio}`) : handlePreviewPdf(o))}
+                      onClick={() => (isAdmin || isMostrador ? handleOpenOrderDetail(o.folio) : handlePreviewPdf(o))}
                     >
                       {/* Eye icon */}
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
