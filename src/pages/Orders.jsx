@@ -62,6 +62,16 @@ const ORDERS_NAV_CONTEXT_KEY = 'orders_nav_context';
 
 const getDashboardScrollContainer = () => document.getElementById('dashboard-scroll-container');
 
+const getScrollSnapshot = () => {
+  const scrollContainer = getDashboardScrollContainer();
+  const docY = document.documentElement?.scrollTop || document.body?.scrollTop || 0;
+  return {
+    windowY: window.scrollY || window.pageYOffset || 0,
+    docY,
+    containerScrollTop: scrollContainer ? scrollContainer.scrollTop : 0,
+  };
+};
+
 
 const Orders = () => {
   const navigate = useNavigate();
@@ -94,13 +104,11 @@ const Orders = () => {
   const hasRestoredScrollRef = React.useRef(false);
 
   const handleOpenOrderDetail = (folio) => {
-    const scrollContainer = getDashboardScrollContainer();
-    const containerScrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
+    const snapshot = getScrollSnapshot();
 
     try {
       sessionStorage.setItem(ORDERS_NAV_CONTEXT_KEY, JSON.stringify({
-        scrollY: window.scrollY || window.pageYOffset || 0,
-        containerScrollTop,
+        ...snapshot,
         folio,
         timestamp: Date.now(),
       }));
@@ -642,21 +650,35 @@ const generateOrderPdfDoc = async (order) => {
       navContext = null;
     }
 
-    if (!navContext || (typeof navContext.scrollY !== 'number' && typeof navContext.containerScrollTop !== 'number')) return;
+    if (!navContext) return;
 
     hasRestoredScrollRef.current = true;
 
+    const restoreScroll = () => {
+      const scrollContainer = getDashboardScrollContainer();
+      if (scrollContainer && typeof navContext.containerScrollTop === 'number') {
+        scrollContainer.scrollTop = navContext.containerScrollTop;
+      }
+
+      if (typeof navContext.windowY === 'number') {
+        window.scrollTo({ top: navContext.windowY, behavior: 'auto' });
+      }
+
+      if (typeof navContext.docY === 'number') {
+        document.documentElement.scrollTop = navContext.docY;
+        document.body.scrollTop = navContext.docY;
+      }
+    };
+
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        const scrollContainer = getDashboardScrollContainer();
-        if (scrollContainer && typeof navContext.containerScrollTop === 'number') {
-          scrollContainer.scrollTo({ top: navContext.containerScrollTop, behavior: 'auto' });
-        }
-        if (typeof navContext.scrollY === 'number') {
-          window.scrollTo({ top: navContext.scrollY, behavior: 'auto' });
-        }
+        restoreScroll();
       });
     });
+
+    const retry1 = setTimeout(restoreScroll, 80);
+    const retry2 = setTimeout(restoreScroll, 220);
+    const retry3 = setTimeout(restoreScroll, 450);
 
     const clearContextTimer = setTimeout(() => {
       try {
@@ -664,9 +686,14 @@ const generateOrderPdfDoc = async (order) => {
       } catch (_) {
         // ignore storage issues
       }
-    }, 1200);
+    }, 2200);
 
-    return () => clearTimeout(clearContextTimer);
+    return () => {
+      clearTimeout(retry1);
+      clearTimeout(retry2);
+      clearTimeout(retry3);
+      clearTimeout(clearContextTimer);
+    };
   }, [orders]);
 
   React.useEffect(() => {
