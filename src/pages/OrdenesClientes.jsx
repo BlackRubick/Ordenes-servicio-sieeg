@@ -73,6 +73,10 @@ function OrdenesClientes() {
   const [highlightedFolio, setHighlightedFolio] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const focusFolioFromQuery = React.useMemo(() => {
+    const params = new URLSearchParams(location.search || '');
+    return params.get('focus') || '';
+  }, [location.search]);
   const hasRestoredScrollRef = React.useRef(false);
 
   useEffect(() => {
@@ -207,6 +211,11 @@ function OrdenesClientes() {
   });
 
   useEffect(() => {
+    if (focusFolioFromQuery) {
+      setHighlightedFolio(focusFolioFromQuery);
+      return;
+    }
+
     if (location.state?.restoreFolio) {
       setHighlightedFolio(location.state.restoreFolio);
       return;
@@ -222,7 +231,7 @@ function OrdenesClientes() {
     if (navContext?.folio) {
       setHighlightedFolio(navContext.folio);
     }
-  }, [location.state]);
+  }, [location.state, focusFolioFromQuery]);
 
   useEffect(() => {
     if (hasRestoredScrollRef.current || ordenes.length === 0) return;

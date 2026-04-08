@@ -50,7 +50,7 @@ function OrdenClienteDetalle() {
   const handleBackToClientOrders = () => {
     const returnFolio = location.state?.returnFolio || orden?.folio || id;
     if (location.state?.fromList || returnFolio) {
-      navigate('/ordenes-clientes', {
+      navigate(`/ordenes-clientes?focus=${encodeURIComponent(returnFolio || '')}`, {
         state: {
           restoreFolio: returnFolio,
         },
