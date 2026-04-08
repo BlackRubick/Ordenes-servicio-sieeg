@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
 const SCROLL_KEY_PREFIX = 'dashboard_scroll:';
+const WINDOW_SCROLL_KEY_PREFIX = 'dashboard_window_scroll:';
 
 const DashboardLayout = ({ children }) => {
   const location = useLocation();
@@ -13,8 +14,11 @@ const DashboardLayout = ({ children }) => {
     if (!scrollContainer) return;
 
     const storageKey = `${SCROLL_KEY_PREFIX}${location.pathname}`;
+    const windowStorageKey = `${WINDOW_SCROLL_KEY_PREFIX}${location.pathname}`;
     const savedValue = sessionStorage.getItem(storageKey);
+    const savedWindowValue = sessionStorage.getItem(windowStorageKey);
     const savedScrollTop = Number(savedValue);
+    const savedWindowScroll = Number(savedWindowValue);
 
     if (Number.isFinite(savedScrollTop) && savedScrollTop > 0) {
       requestAnimationFrame(() => {
@@ -24,15 +28,31 @@ const DashboardLayout = ({ children }) => {
       });
     }
 
+    if (Number.isFinite(savedWindowScroll) && savedWindowScroll > 0) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: savedWindowScroll, behavior: 'auto' });
+        });
+      });
+    }
+
     const persistScroll = () => {
       sessionStorage.setItem(storageKey, String(scrollContainer.scrollTop || 0));
+      sessionStorage.setItem(windowStorageKey, String(window.scrollY || window.pageYOffset || 0));
     };
+
+    // Persist as user scrolls so route transitions do not rely on unmount timing.
+    const handleScroll = () => persistScroll();
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Ensure restored value is available even if user navigates without additional scrolling.
+    persistScroll();
 
     const handlePageHide = () => persistScroll();
     window.addEventListener('pagehide', handlePageHide);
 
     return () => {
-      persistScroll();
+      scrollContainer.removeEventListener('scroll', handleScroll);
       window.removeEventListener('pagehide', handlePageHide);
     };
   }, [location.pathname]);
