@@ -1,6 +1,6 @@
 import DashboardLayout from '../layouts/DashboardLayout';
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { useAuthStore } from '../store/authStore';
 
@@ -72,6 +72,7 @@ function OrdenesClientes() {
   const [fechaExacta, setFechaExacta] = useState('');
   const [highlightedFolio, setHighlightedFolio] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const hasRestoredScrollRef = React.useRef(false);
 
   useEffect(() => {
@@ -166,7 +167,13 @@ function OrdenesClientes() {
       // ignore storage issues
     }
 
-    navigate(`/ordenes-clientes/${orden.folio}`, { state: { orden } });
+    navigate(`/ordenes-clientes/${orden.folio}`, {
+      state: {
+        orden,
+        fromList: true,
+        returnFolio: orden.folio,
+      },
+    });
   };
 
   const handleDelete = async (orden) => {
@@ -200,6 +207,11 @@ function OrdenesClientes() {
   });
 
   useEffect(() => {
+    if (location.state?.restoreFolio) {
+      setHighlightedFolio(location.state.restoreFolio);
+      return;
+    }
+
     let navContext = null;
     try {
       navContext = JSON.parse(sessionStorage.getItem(CLIENT_ORDERS_NAV_CONTEXT_KEY) || 'null');
@@ -210,7 +222,7 @@ function OrdenesClientes() {
     if (navContext?.folio) {
       setHighlightedFolio(navContext.folio);
     }
-  }, []);
+  }, [location.state]);
 
   useEffect(() => {
     if (hasRestoredScrollRef.current || ordenes.length === 0) return;

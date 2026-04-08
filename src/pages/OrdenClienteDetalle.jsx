@@ -47,6 +47,19 @@ function OrdenClienteDetalle() {
     return normalizedRole === 'admin' || normalizedRole === 'administrador';
   }, [role]);
 
+  const handleBackToClientOrders = () => {
+    const returnFolio = location.state?.returnFolio || orden?.folio || id;
+    if (location.state?.fromList || returnFolio) {
+      navigate('/ordenes-clientes', {
+        state: {
+          restoreFolio: returnFolio,
+        },
+      });
+      return;
+    }
+    navigate(-1);
+  };
+
   useEffect(() => {
     if (orden || !id) return;
 
@@ -175,7 +188,7 @@ function OrdenClienteDetalle() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <p className="text-xl text-red-500 font-bold mb-4">No se encontró la orden.</p>
-        <button className="px-4 py-2 rounded-xl bg-primary-500 text-white font-bold shadow-lg hover:bg-primary-600 transition-all" onClick={() => navigate(-1)}>
+        <button className="px-4 py-2 rounded-xl bg-primary-500 text-white font-bold shadow-lg hover:bg-primary-600 transition-all" onClick={handleBackToClientOrders}>
           Volver
         </button>
       </div>
@@ -195,7 +208,7 @@ function OrdenClienteDetalle() {
         <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
           <button
             className="px-6 py-2 rounded-xl bg-[#1976F3] text-white font-bold shadow-lg hover:bg-blue-700 transition-all"
-            onClick={() => navigate(-1)}
+            onClick={handleBackToClientOrders}
           >
             Volver
           </button>
