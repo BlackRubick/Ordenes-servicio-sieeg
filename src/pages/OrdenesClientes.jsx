@@ -302,15 +302,20 @@ function OrdenesClientes() {
       const row = document.querySelector(`[data-folio="${highlightedFolio}"]`);
       if (!row) return;
 
+      // First, force browser-native scroll to the row regardless of which container actually scrolls.
+      row.scrollIntoView({ block: 'center', behavior: 'auto' });
+
       const scrollContainer = getDashboardScrollContainer();
-      if (scrollContainer) {
+      if (scrollContainer && scrollContainer.scrollHeight > scrollContainer.clientHeight + 1) {
         const containerRect = scrollContainer.getBoundingClientRect();
         const rowRect = row.getBoundingClientRect();
         const offset = rowRect.top - containerRect.top;
         const target = scrollContainer.scrollTop + offset - 120;
         scrollContainer.scrollTo({ top: Math.max(target, 0), behavior: 'auto' });
       } else {
-        row.scrollIntoView({ block: 'center', behavior: 'auto' });
+        const rect = row.getBoundingClientRect();
+        const absoluteTop = rect.top + (window.scrollY || window.pageYOffset || 0);
+        window.scrollTo({ top: Math.max(absoluteTop - 140, 0), behavior: 'auto' });
       }
     };
 
@@ -321,11 +326,15 @@ function OrdenesClientes() {
     const retry1 = setTimeout(scrollToHighlightedRow, 120);
     const retry2 = setTimeout(scrollToHighlightedRow, 320);
     const retry3 = setTimeout(scrollToHighlightedRow, 650);
+    const retry4 = setTimeout(scrollToHighlightedRow, 1100);
+    const retry5 = setTimeout(scrollToHighlightedRow, 1700);
 
     return () => {
       clearTimeout(retry1);
       clearTimeout(retry2);
       clearTimeout(retry3);
+      clearTimeout(retry4);
+      clearTimeout(retry5);
     };
   }, [highlightedFolio, ordenesFiltradas]);
 
