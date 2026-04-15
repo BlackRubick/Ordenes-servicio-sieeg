@@ -746,11 +746,11 @@ const CreateOrder = () => {
 
         {/* Modal de Términos y Condiciones */}
         {showTerms && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-8 relative animate-fade-in">
-              <h2 className="text-xl font-bold text-primary-600 mb-2">Términos y Condiciones</h2>
-              <p className="text-xs text-gray-700 mb-4">Por favor, lea cuidadosamente antes de firmar</p>
-              <ol className="text-sm text-gray-800 mb-4 list-decimal pl-4 space-y-1">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-2 py-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 md:p-12 relative animate-fade-in">
+              <h2 className="text-2xl font-bold text-primary-600 mb-2">Términos y Condiciones</h2>
+              <p className="text-sm text-gray-700 mb-4">Por favor, lea cuidadosamente antes de firmar</p>
+              <ol className="text-base text-gray-800 mb-4 list-decimal pl-4 space-y-1">
                 <li>SIEEG no se responsabiliza en caso el equipo presente daños por mal uso de terceros o a nivel software y/o hardware antes de su ingreso a reparación.</li>
                 <li>El cliente acepta pagar todas las piezas y mano de obra al finalizar la reparación.</li>
                 <li>La fecha estimada de finalización está sujeta a cambios según la disponibilidad de piezas.</li>
@@ -768,27 +768,29 @@ const CreateOrder = () => {
                   disabled
                 />
               </div>
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Firma digital</label>
-                <div className="bg-gray-100 rounded-lg border border-primary-200 p-2 flex flex-col items-center">
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Firma digital</label>
+                <div className="bg-gray-100 rounded-lg border border-primary-200 p-4 flex flex-col items-center">
                   <SignaturePadCanvas
                     ref={sigPadRef}
-                    width={320}
-                    height={100}
+                    width={520}
+                    height={220}
+                    style={{ touchAction: 'none', maxWidth: '100%', height: '220px', borderRadius: 12, background: 'white', boxShadow: '0 1px 8px #0001' }}
                     onEnd={() => setSignature(sigPadRef.current.isEmpty() ? null : sigPadRef.current.getTrimmedCanvas().toDataURL('image/png'))}
                   />
                   <button
                     type="button"
-                    className="mt-2 px-3 py-1 rounded-lg border border-primary-200 text-primary-600 font-semibold flex items-center gap-1 hover:bg-primary-50 transition"
+                    className="mt-4 px-5 py-2 rounded-lg border border-primary-200 text-primary-600 font-semibold flex items-center gap-1 hover:bg-primary-50 transition text-base"
                     onClick={() => { sigPadRef.current.clear(); setSignature(null); }}
                   >
                     Limpiar firma
                   </button>
+                  <span className="text-xs text-gray-500 mt-2">Usa tu dedo o stylus para firmar. Si te equivocas, puedes limpiar y volver a intentar.</span>
                 </div>
               </div>
               <button
                 type="button"
-                className="w-full py-2 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300"
+                className="w-full py-3 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300 text-lg"
                 onClick={handleAcceptTerms}
               >
                 Acepto términos y condiciones
