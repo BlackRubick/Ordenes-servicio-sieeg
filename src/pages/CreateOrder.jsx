@@ -747,57 +747,69 @@ const CreateOrder = () => {
         {/* Modal de Términos y Condiciones */}
         {showTerms && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-2 py-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-8 md:p-12 relative animate-fade-in">
-              <h2 className="text-2xl font-bold text-primary-600 mb-2">Términos y Condiciones</h2>
-              <p className="text-sm text-gray-700 mb-4">Por favor, lea cuidadosamente antes de firmar</p>
-              <ol className="text-base text-gray-800 mb-4 list-decimal pl-4 space-y-1">
-                <li>SIEEG no se responsabiliza en caso el equipo presente daños por mal uso de terceros o a nivel software y/o hardware antes de su ingreso a reparación.</li>
-                <li>El cliente acepta pagar todas las piezas y mano de obra al finalizar la reparación.</li>
-                <li>La fecha estimada de finalización está sujeta a cambios según la disponibilidad de piezas.</li>
-                <li>El taller de reparación no es responsable de ninguna pérdida de datos en equipos electrónicos.</li>
-                <li>Si la reparación requiere trabajos y/o piezas que no se hayan especificado anteriormente, SIEEG indicará un presupuesto actualizado, en caso de no autorizarlo no se realizará ninguna reparación.</li>
-                <li>SIEEG te notificará una vez que tu producto esté reparado y listo para su entrega, este mismo se almacenará sin coste durante los primeros 10 días hábiles. Después de 10 días, si no se ha retirado el dispositivo, se cobrará los gastos de almacenamiento. El gasto de almacenamiento equivale a $50.00 por día.</li>
-                <li>Una vez el producto se considere abandonado, SIEEG tomará la propiedad del mismo en compensación de los costos de almacenamiento.</li>
-                <li>La garantía sobre reparaciones es válida solo en la mano de obra a partir de la fecha de finalización.</li>
-              </ol>
-              <div className="mb-2">
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Nombre del cliente</label>
-                <input
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-gray-50 text-dark font-medium mb-2"
-                  value={form.nombre}
-                  disabled
-                />
-              </div>
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Firma digital</label>
-                <div className="bg-gray-100 rounded-lg border border-primary-200 p-4 flex flex-col items-center">
-                  <SignaturePadCanvas
-                    ref={sigPadRef}
-                    width={520}
-                    height={220}
-                    style={{ touchAction: 'none', maxWidth: '100%', height: '220px', borderRadius: 12, background: 'white', boxShadow: '0 1px 8px #0001' }}
-                    onEnd={() => setSignature(sigPadRef.current.isEmpty() ? null : sigPadRef.current.getTrimmedCanvas().toDataURL('image/png'))}
+            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-4 md:p-6 relative animate-fade-in flex flex-col" style={{ maxHeight: '95vh' }}>
+              <h2 className="text-xl font-bold text-primary-600 mb-2">Términos y Condiciones</h2>
+              <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
+                <p className="text-sm text-gray-700 mb-4">Por favor, lea cuidadosamente antes de firmar</p>
+                <ol className="text-base text-gray-800 mb-4 list-decimal pl-4 space-y-1">
+                  <li>SIEEG no se responsabiliza en caso el equipo presente daños por mal uso de terceros o a nivel software y/o hardware antes de su ingreso a reparación.</li>
+                  <li>El cliente acepta pagar todas las piezas y mano de obra al finalizar la reparación.</li>
+                  <li>La fecha estimada de finalización está sujeta a cambios según la disponibilidad de piezas.</li>
+                  <li>El taller de reparación no es responsable de ninguna pérdida de datos en equipos electrónicos.</li>
+                  <li>Si la reparación requiere trabajos y/o piezas que no se hayan especificado anteriormente, SIEEG indicará un presupuesto actualizado, en caso de no autorizarlo no se realizará ninguna reparación.</li>
+                  <li>SIEEG te notificará una vez que tu producto esté reparado y listo para su entrega, este mismo se almacenará sin coste durante los primeros 10 días hábiles. Después de 10 días, si no se ha retirado el dispositivo, se cobrará los gastos de almacenamiento. El gasto de almacenamiento equivale a $50.00 por día.</li>
+                  <li>Una vez el producto se considere abandonado, SIEEG tomará la propiedad del mismo en compensación de los costos de almacenamiento.</li>
+                  <li>La garantía sobre reparaciones es válida solo en la mano de obra a partir de la fecha de finalización.</li>
+                </ol>
+                <div className="mb-2">
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Nombre del cliente</label>
+                  <input
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-gray-50 text-dark font-medium mb-2"
+                    value={form.nombre}
+                    disabled
                   />
-                  <button
-                    type="button"
-                    className="mt-4 px-5 py-2 rounded-lg border border-primary-200 text-primary-600 font-semibold flex items-center gap-1 hover:bg-primary-50 transition text-base"
-                    onClick={() => { sigPadRef.current.clear(); setSignature(null); }}
-                  >
-                    Limpiar firma
-                  </button>
-                  <span className="text-xs text-gray-500 mt-2">Usa tu dedo o stylus para firmar. Si te equivocas, puedes limpiar y volver a intentar.</span>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Firma digital</label>
+                  <div className="bg-gray-100 rounded-lg border border-primary-200 p-2 flex flex-col items-center">
+                    <SignaturePadCanvas
+                      ref={sigPadRef}
+                      width={400}
+                      height={140}
+                      style={{ touchAction: 'none', maxWidth: '100%', height: '140px', borderRadius: 10, background: 'white', boxShadow: '0 1px 8px #0001' }}
+                      onEnd={() => setSignature(sigPadRef.current.isEmpty() ? null : sigPadRef.current.getTrimmedCanvas().toDataURL('image/png'))}
+                    />
+                    <button
+                      type="button"
+                      className="mt-3 px-4 py-1 rounded-lg border border-primary-200 text-primary-600 font-semibold flex items-center gap-1 hover:bg-primary-50 transition text-base"
+                      onClick={() => { sigPadRef.current.clear(); setSignature(null); }}
+                    >
+                      Limpiar firma
+                    </button>
+                    <span className="text-xs text-gray-500 mt-2">Usa tu dedo o stylus para firmar. Si te equivocas, puedes limpiar y volver a intentar.</span>
+                  </div>
                 </div>
               </div>
+              <div className="flex flex-col gap-2 mt-2">
+                <button
+                  type="button"
+                  className="w-full py-3 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300 text-lg"
+                  onClick={handleAcceptTerms}
+                >
+                  Acepto términos y condiciones
+                </button>
+                <button
+                  type="button"
+                  className="w-full py-2 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 text-base"
+                  onClick={() => setShowTerms(false)}
+                  aria-label="Cerrar"
+                >
+                  Cerrar
+                </button>
+              </div>
               <button
                 type="button"
-                className="w-full py-3 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300 text-lg"
-                onClick={handleAcceptTerms}
-              >
-                Acepto términos y condiciones
-              </button>
-              <button
-                type="button"
-                className="absolute top-2 right-2 text-gray-400 hover:text-primary-500 text-xl"
+                className="absolute top-2 right-2 text-gray-400 hover:text-primary-500 text-xl md:hidden"
                 onClick={() => setShowTerms(false)}
                 aria-label="Cerrar"
               >
