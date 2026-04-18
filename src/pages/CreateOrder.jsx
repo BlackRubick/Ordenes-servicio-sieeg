@@ -774,9 +774,9 @@ const CreateOrder = () => {
                   <div className="bg-gray-100 rounded-lg border border-primary-200 p-2 flex flex-col items-center">
                     <SignaturePadCanvas
                       ref={sigPadRef}
-                      width={400}
-                      height={140}
-                      style={{ touchAction: 'none', maxWidth: '100%', height: '140px', borderRadius: 10, background: 'white', boxShadow: '0 1px 8px #0001' }}
+                      width={650}
+                      height={220}
+                      style={{ touchAction: 'none', maxWidth: '100%', height: '220px', borderRadius: 14, background: 'white', boxShadow: '0 1px 8px #0001' }}
                       onEnd={() => setSignature(sigPadRef.current.isEmpty() ? null : sigPadRef.current.getTrimmedCanvas().toDataURL('image/png'))}
                     />
                     <button
