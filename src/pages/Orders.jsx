@@ -1000,38 +1000,45 @@ const generateOrderPdfDoc = async (order) => {
 
       {/* Modal para entrega (nombre y firma) */}
       {entregaOrderFolio !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col gap-4">
-            <h3 className="text-xl font-bold text-blue-600">Entregar orden</h3>
-            <p className="text-sm text-gray-700">Por favor, escribe el nombre de la persona que recibe y firma abajo:</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 touch-none">
+          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-2xl flex flex-col gap-6" style={{ maxWidth: '700px' }}>
+            <h3 className="text-2xl font-bold text-blue-600">Entregar orden</h3>
+            <p className="text-base text-gray-700">Por favor, escribe el nombre de la persona que recibe y firma abajo:</p>
             <input
-              className="w-full rounded-xl border border-border p-3 text-base focus:ring-2 focus:ring-blue-200 outline-none"
+              className="w-full rounded-xl border border-border p-3 text-lg focus:ring-2 focus:ring-blue-200 outline-none"
               value={recipientName}
               onChange={e => setRecipientName(e.target.value)}
               placeholder="Nombre de quien recibe..."
             />
             <div>
-              <label className="block text-sm font-semibold mb-2 text-blue-600">Firma:</label>
-              <div className="border rounded-xl p-2 bg-gray-50 flex flex-col items-center">
+              <label className="block text-base font-semibold mb-2 text-blue-600">Firma:</label>
+              <div className="border rounded-xl p-4 bg-gray-50 flex flex-col items-center w-full" style={{ minWidth: 0 }}>
                 {/* SignaturePadCanvas */}
-                <SignaturePadCanvas ref={signaturePadRef} width={320} height={100} onEnd={() => {
-                  const canvas = signaturePadRef.current.getTrimmedCanvas();
-                  setSignatureData(canvas.toDataURL());
-                }} />
-                <button className="mt-2 px-3 py-1 rounded bg-blue-200 text-blue-700 font-semibold" onClick={() => {
+                <SignaturePadCanvas
+                  ref={signaturePadRef}
+                  width={600}
+                  height={220}
+                  style={{ touchAction: 'none', maxWidth: '100%', height: '220px', borderRadius: 12, background: 'white', boxShadow: '0 1px 8px #0001' }}
+                  onEnd={() => {
+                    const canvas = signaturePadRef.current.getTrimmedCanvas();
+                    setSignatureData(canvas.toDataURL());
+                  }}
+                />
+                <button className="mt-4 px-5 py-2 rounded bg-blue-200 text-blue-700 font-semibold text-base" onClick={() => {
                   signaturePadRef.current.clear();
                   setSignatureData(null);
                 }}>Limpiar firma</button>
+                <span className="text-xs text-gray-500 mt-2">Usa tu dedo o stylus para firmar. Si te equivocas, puedes limpiar y volver a intentar.</span>
               </div>
             </div>
-            <div className="flex gap-2 justify-end">
-              <button className="px-4 py-2 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300" onClick={() => {
+            <div className="flex gap-4 justify-end mt-2">
+              <button className="px-5 py-2 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 text-base" onClick={() => {
                 setEntregaOrderFolio(null);
                 setRecipientName('');
                 setSignatureData(null);
                 if (signaturePadRef.current) signaturePadRef.current.clear();
               }}>Cancelar</button>
-              <button className="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700" disabled={!recipientName.trim() || !signatureData} onClick={async () => {
+              <button className="px-5 py-2 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 text-base" disabled={!recipientName.trim() || !signatureData} onClick={async () => {
                 try {
                   await fetch(`/api/orders/${entregaOrderFolio}/estado`, {
                     method: 'PUT',
