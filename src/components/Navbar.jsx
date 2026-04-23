@@ -18,12 +18,14 @@ const Navbar = () => {
     normalizedRole === 'tecnico'
       ? [
           { name: 'Mis Órdenes', to: '/admin/orders' },
+          { name: 'Cotizaciones', to: '/admin/quotes' },
           { name: 'Servicios Externos', to: '/servicios-externos' },
           { name: 'Órdenes de Clientes', to: '/ordenes-clientes' },
         ]
       : isMostrador
       ? [
           { name: 'Órdenes', to: '/admin/orders' },
+          { name: 'Cotizaciones', to: '/admin/quotes' },
           { name: 'Crear Orden', to: '/admin/orders/create' },
           { name: 'Servicios Externos', to: '/servicios-externos' },
           { name: 'Crear Externo', to: '/servicios-externos/crear' },
@@ -32,6 +34,7 @@ const Navbar = () => {
       : [
           { name: 'Dashboard', to: '/admin' },
           { name: 'Órdenes', to: '/admin/orders' },
+          { name: 'Cotizaciones', to: '/admin/quotes' },
           { name: 'Usuarios', to: '/admin/technicians' },
           ...(isAdmin ? [{ name: 'Clientes', to: '/admin/clientes' }] : []),
           { name: 'Servicios Externos', to: '/servicios-externos' },
