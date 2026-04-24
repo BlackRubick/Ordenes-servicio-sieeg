@@ -716,8 +716,14 @@ const generateOrderPdfDoc = async (order) => {
         o.clientName?.toLowerCase().includes(search.toLowerCase()) ||
         equipoStr.includes(search.toLowerCase());
       // Filtro robusto: compara usando getEstado para obtener la clave normalizada
-      const estadoObj = getEstado(o.status || o.estado);
-      const estadoKey = estadoObj ? Object.keys(ESTADOS).find(key => ESTADOS[key] === estadoObj && key === key.toLowerCase()) : '';
+      // Filtro robusto: obtener la clave exacta del estado
+      let estadoKey = '';
+      for (const [key, value] of Object.entries(ESTADOS)) {
+        if (key === key.toLowerCase() && value.label === (getEstado(o.status || o.estado)?.label)) {
+          estadoKey = key;
+          break;
+        }
+      }
       const matchEstado = !estado || estadoKey === estado;
       const matchTecnico = !tecnico || o.tecnico === tecnico;
       // Si es técnico, solo ve sus órdenes
