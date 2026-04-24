@@ -6,6 +6,7 @@ import NotFound from '../pages/NotFound';
 import AdminDashboard from '../pages/AdminDashboard';
 import Orders from '../pages/Orders';
 import Quotes from '../pages/Quotes';
+import QuotesList from '../pages/QuotesList';
 import OrderDetail from '../pages/OrderDetail';
 import CreateOrder from '../pages/CreateOrder';
 import TechnicianOrders from '../pages/TechnicianOrders';
@@ -54,7 +55,8 @@ const AppRoutes = () => (
       <Route path="/admin" element={<PrivateRoute element={<AdminDashboard />} allowedRoles={['Administrador', 'admin']} />} />
       <Route path="/admin/dashboard" element={<PrivateRoute element={<AdminDashboard />} allowedRoles={['Administrador', 'admin']} />} />
       <Route path="/admin/orders" element={<PrivateRoute element={<Orders />} allowedRoles={['Administrador', 'admin', 'Técnico', 'tecnico', 'Mostrador', 'mostrador']} />} />
-      <Route path="/admin/quotes" element={<PrivateRoute element={<Quotes />} allowedRoles={['Administrador', 'admin', 'Mostrador', 'mostrador']} />} />
+      <Route path="/admin/quotes" element={<PrivateRoute element={<QuotesList />} allowedRoles={['Administrador', 'admin', 'Mostrador', 'mostrador']} />} />
+      <Route path="/admin/quotes/create" element={<PrivateRoute element={<Quotes />} allowedRoles={['Administrador', 'admin', 'Mostrador', 'mostrador']} />} />
       <Route path="/admin/orders/create" element={<PrivateRoute element={<CreateOrder />} allowedRoles={['Administrador', 'admin', 'Mostrador', 'mostrador']} />} />
       <Route path="/admin/orders/:folio" element={<PrivateRoute element={<OrderDetail />} allowedRoles={['Administrador', 'admin', 'Mostrador', 'mostrador']} />} />
       <Route path="/admin/orders/deleted" element={<PrivateRoute element={<DeletedOrders />} allowedRoles={['Administrador', 'admin']} />} />
