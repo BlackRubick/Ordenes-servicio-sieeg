@@ -715,7 +715,7 @@ const generateOrderPdfDoc = async (order) => {
         o.folio?.toLowerCase().includes(search.toLowerCase()) ||
         o.clientName?.toLowerCase().includes(search.toLowerCase()) ||
         equipoStr.includes(search.toLowerCase());
-      const matchEstado = !estado || (o.status || o.estado) === estado;
+      const matchEstado = !estado || String(o.status || o.estado).toLowerCase() === estado.toLowerCase();
       const matchTecnico = !tecnico || o.tecnico === tecnico;
       // Si es técnico, solo ve sus órdenes
       if (normalizedRole === 'tecnico') {
