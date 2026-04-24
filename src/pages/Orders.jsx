@@ -706,22 +706,30 @@ const generateOrderPdfDoc = async (order) => {
   // Obtener técnicos únicos (ya no se usa, pero lo dejamos para el filtro por técnico)
   const tecnicos = Array.from(new Set(orders.map(o => o.tecnico)));
 
-  // Filtrado en tiempo real
-  const filtered = orders.filter(o => {
-    const equipoStr = [o.marca, o.modelo, o.serie].filter(Boolean).join(' ').toLowerCase();
-    const matchSearch =
-      !search ||
-      o.folio?.toLowerCase().includes(search.toLowerCase()) ||
-      o.clientName?.toLowerCase().includes(search.toLowerCase()) ||
-      equipoStr.includes(search.toLowerCase());
-    const matchEstado = !estado || (o.status || o.estado) === estado;
-    const matchTecnico = !tecnico || o.tecnico === tecnico;
-    // Si es técnico, solo ve sus órdenes
-    if (normalizedRole === 'tecnico') {
-      return matchSearch && matchEstado && o.tecnico === currentUserName;
-    }
-    return matchSearch && matchEstado && matchTecnico;
-  });
+  // Filtrado en tiempo real y orden descendente por fecha (más recientes primero)
+  const filtered = orders
+    .filter(o => {
+      const equipoStr = [o.marca, o.modelo, o.serie].filter(Boolean).join(' ').toLowerCase();
+      const matchSearch =
+        !search ||
+        o.folio?.toLowerCase().includes(search.toLowerCase()) ||
+        o.clientName?.toLowerCase().includes(search.toLowerCase()) ||
+        equipoStr.includes(search.toLowerCase());
+      const matchEstado = !estado || (o.status || o.estado) === estado;
+      const matchTecnico = !tecnico || o.tecnico === tecnico;
+      // Si es técnico, solo ve sus órdenes
+      if (normalizedRole === 'tecnico') {
+        return matchSearch && matchEstado && o.tecnico === currentUserName;
+      }
+      return matchSearch && matchEstado && matchTecnico;
+    })
+    .sort((a, b) => {
+      // Ordenar por fecha descendente (más recientes primero)
+      // Si no hay fecha, dejar al final
+      const fechaA = a.fecha ? new Date(a.fecha) : new Date(0);
+      const fechaB = b.fecha ? new Date(b.fecha) : new Date(0);
+      return fechaB - fechaA;
+    });
 
   return (
     <DashboardLayout>
