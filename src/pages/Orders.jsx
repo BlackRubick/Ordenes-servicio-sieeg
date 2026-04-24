@@ -715,7 +715,10 @@ const generateOrderPdfDoc = async (order) => {
         o.folio?.toLowerCase().includes(search.toLowerCase()) ||
         o.clientName?.toLowerCase().includes(search.toLowerCase()) ||
         equipoStr.includes(search.toLowerCase());
-      const matchEstado = !estado || String(o.status || o.estado).toLowerCase() === estado.toLowerCase();
+      // Filtro robusto: compara usando getEstado para obtener la clave normalizada
+      const estadoObj = getEstado(o.status || o.estado);
+      const estadoKey = estadoObj ? Object.keys(ESTADOS).find(key => ESTADOS[key] === estadoObj && key === key.toLowerCase()) : '';
+      const matchEstado = !estado || estadoKey === estado;
       const matchTecnico = !tecnico || o.tecnico === tecnico;
       // Si es técnico, solo ve sus órdenes
       if (normalizedRole === 'tecnico') {
