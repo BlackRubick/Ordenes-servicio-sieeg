@@ -193,9 +193,11 @@ export default function Quotes() {
             <Field label="RFC">
               <input name="rfc" value={form.rfc} onChange={handleChange} className={inputCls} placeholder="XAXX010101000" />
             </Field>
-            <Field label="REPSE">
-              <input name="repse" value={form.repse} onChange={handleChange} className={inputCls} placeholder="Número de registro" />
-            </Field>
+            {emisorSelect !== 'sieeg' && (
+              <Field label="REPSE">
+                <input name="repse" value={form.repse} onChange={handleChange} className={inputCls} placeholder="Número de registro" />
+              </Field>
+            )}
             <Field label="Número de cotización">
               <input name="numeroCotizacion" value={form.numeroCotizacion} onChange={handleChange} className={inputCls} placeholder="COT-2024-001" />
             </Field>
