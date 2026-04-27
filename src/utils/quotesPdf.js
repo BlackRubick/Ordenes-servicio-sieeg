@@ -5,17 +5,16 @@ export async function generateQuotePdfDoc(quote) {
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
 
-  // ── Colores fieles al PDF de referencia ───────────────────
+  const rgb    = (hex) => [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+  const fill   = (hex) => doc.setFillColor(...rgb(hex));
+  const stroke = (hex) => doc.setDrawColor(...rgb(hex));
+  const color  = (hex) => doc.setTextColor(...rgb(hex));
+
   const NAVY      = '#1a3a5e';
   const BLACK     = '#222222';
   const GRAY_ROW  = '#e8e8e8';
   const WHITE     = '#FFFFFF';
   const LIGHT_BOX = '#f0f4f8';
-
-  const rgb    = (hex) => [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
-  const fill   = (hex) => doc.setFillColor(...rgb(hex));
-  const stroke = (hex) => doc.setDrawColor(...rgb(hex));
-  const color  = (hex) => doc.setTextColor(...rgb(hex));
 
   // ── Logo ──────────────────────────────────────────────────
   const getLogoBase64 = (src) => new Promise((resolve) => {
@@ -33,56 +32,52 @@ export async function generateQuotePdfDoc(quote) {
   const logoBase64 = await getLogoBase64('/images/logo.ico');
 
   const MX = 28;
+  const tableW = W - MX * 2;
 
   // ══════════════════════════════════════════════════════════
-  // ENCABEZADO: Logo izquierda | Datos empresa derecha
+  // ENCABEZADO
   // ══════════════════════════════════════════════════════════
   if (logoBase64) {
     doc.addImage(logoBase64, 'PNG', MX, 10, 160, 72);
   }
 
-  // Datos empresa — derecha, centrados en su columna
-  const dX = W / 2 + 10;
+  const dX   = W / 2 + 10;
+  const dCX  = dX + (W - MX - dX) / 2;
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   color(BLACK);
-  doc.text('Blvd. Belisario Dominguez #4213 L5', dX + (W - MX - dX) / 2, 20, { align: 'center' });
+  doc.text('Blvd. Belisario Dominguez #4213 L5', dCX, 20, { align: 'center' });
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  doc.text('Razon Social: ' + (quote.razonSocial || ''), dX + (W - MX - dX) / 2, 34, { align: 'center' });
-  doc.text('RFC: ' + (quote.rfc || ''), dX + (W - MX - dX) / 2, 47, { align: 'center' });
-  doc.text('REPSE: ' + (quote.repse || ''), dX + (W - MX - dX) / 2, 60, { align: 'center' });
+  doc.text('Razon Social: ' + (quote.razonSocial || ''), dCX, 34, { align: 'center' });
+  doc.text('RFC: ' + (quote.rfc || ''), dCX, 47, { align: 'center' });
+  doc.text('REPSE: ' + (quote.repse || ''), dCX, 60, { align: 'center' });
 
-  // Línea "Cotización N." con valor en negrita
-  const cnY = 76;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  color(BLACK);
-  const cnLabel = 'Cotización N.';
-  const cnValue = quote.numeroCotizacion || '';
+  const cnLabel  = 'Cotización N.';
+  const cnValue  = quote.numeroCotizacion || '';
   const cnLabelW = doc.getTextWidth(cnLabel);
   const cnTotalW = cnLabelW + doc.getTextWidth('  ' + cnValue) + 10;
-  const cnX = dX + (W - MX - dX) / 2 - cnTotalW / 2;
-  doc.text(cnLabel, cnX, cnY);
+  const cnX      = dCX - cnTotalW / 2;
+  doc.setFont('helvetica', 'normal');
+  doc.text(cnLabel, cnX, 76);
   doc.setFont('helvetica', 'bold');
-  doc.text(cnValue, cnX + cnLabelW + 10, cnY);
+  doc.text(cnValue, cnX + cnLabelW + 10, 76);
 
-  // Línea separadora
   stroke('#bbbbbb');
   doc.setLineWidth(0.6);
   doc.line(MX, 90, W - MX, 90);
 
   // ══════════════════════════════════════════════════════════
-  // GRID DATOS GENERALES (2 filas × 4 celdas)
+  // GRID DATOS GENERALES
   // ══════════════════════════════════════════════════════════
-  const tableW = W - MX * 2;
-  const colW   = tableW / 4;
-  const gY     = 92;
-  const hH     = 24; // altura fila etiqueta
-  const vH     = 20; // altura fila valor
+  const colW = tableW / 4;
+  const hH   = 24;
+  const vH   = 20;
+  let gy     = 92;
 
-  const rows = [
+  const gridRows = [
     [
       { label: 'Fecha',    value: quote.fecha || '' },
       { label: 'Vigencia', value: quote.vigencia ? quote.vigencia + ' DIAS' : '' },
@@ -97,13 +92,10 @@ export async function generateQuotePdfDoc(quote) {
     ],
   ];
 
-  let gy = gY;
-  rows.forEach((row) => {
-    // Fila etiquetas
+  gridRows.forEach((row) => {
     row.forEach(({ label }, i) => {
       const x = MX + i * colW;
-      fill(LIGHT_BOX);
-      stroke('#cccccc');
+      fill(LIGHT_BOX); stroke('#cccccc');
       doc.setLineWidth(0.4);
       doc.rect(x, gy, colW, hH, 'FD');
       doc.setFont('helvetica', 'bold');
@@ -112,11 +104,9 @@ export async function generateQuotePdfDoc(quote) {
       doc.text(label, x + colW / 2, gy + hH / 2 + 3.5, { align: 'center' });
     });
     gy += hH;
-    // Fila valores
     row.forEach(({ value }, i) => {
       const x = MX + i * colW;
-      fill(WHITE);
-      stroke('#cccccc');
+      fill(WHITE); stroke('#cccccc');
       doc.setLineWidth(0.4);
       doc.rect(x, gy, colW, vH, 'FD');
       doc.setFont('helvetica', 'normal');
@@ -128,7 +118,7 @@ export async function generateQuotePdfDoc(quote) {
     gy += vH;
   });
 
-  // ── Descripción general ───────────────────────────────────
+  // ── Descripción ───────────────────────────────────────────
   const desc = quote.descripcionGeneral || 'Por este medio pongo a su disposición la cotización solicitada.';
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(8.5);
@@ -139,20 +129,19 @@ export async function generateQuotePdfDoc(quote) {
   // ══════════════════════════════════════════════════════════
   // TABLA DE PARTIDAS
   // ══════════════════════════════════════════════════════════
-  // Columnas
   const TC = [
-    { label: 'PARTIDA',          key: 'idx',            x: MX,       w: 46  },
-    { label: 'CANTIDAD',         key: 'cantidad',       x: MX+46,    w: 55  },
-    { label: 'DESCRIPCION',      key: 'descripcion',    x: MX+101,   w: 210 },
-    { label: 'UNIDAD',           key: 'unidad',         x: MX+311,   w: 58  },
-    { label: 'PRECIO\nUNITARIO', key: 'precioUnitario', x: MX+369,   w: 82  },
-    { label: 'IMPORTE',          key: 'importe',        x: MX+451,   w: W - MX*2 - 451 },
+    { label: 'PARTIDA',          key: 'idx',            x: MX,      w: 46  },
+    { label: 'CANTIDAD',         key: 'cantidad',       x: MX+46,   w: 55  },
+    { label: 'DESCRIPCION',      key: 'descripcion',    x: MX+101,  w: 210 },
+    { label: 'UNIDAD',           key: 'unidad',         x: MX+311,  w: 58  },
+    { label: 'PRECIO\nUNITARIO', key: 'precioUnitario', x: MX+369,  w: 82  },
+    { label: 'IMPORTE',          key: 'importe',        x: MX+451,  w: tableW - 451 },
   ];
 
   const thH  = 32;
   const rowH = 22;
 
-  // Encabezado
+  // — Encabezado tabla —
   TC.forEach(({ x, w }) => {
     fill(NAVY); stroke(NAVY);
     doc.setLineWidth(0.3);
@@ -171,97 +160,92 @@ export async function generateQuotePdfDoc(quote) {
     }
   });
 
-  // Filas: datos + vacías hasta llenar (igual al PDF ref con fondo gris)
-  const partidas   = quote.partidas || [];
-  const usedH      = bodyY + thH;
-  const footerH    = 70; // espacio para totales + banco
-  const availRows  = Math.floor((H - usedH - footerH) / rowH);
-  const totalRows  = Math.max(partidas.length, availRows);
-
+  // — Solo filas con producto (sin cuadrícula vacía) —
+  const partidas = quote.partidas || [];
   let ry = bodyY + thH;
 
-  for (let i = 0; i < totalRows; i++) {
-    const p = partidas[i];
+  partidas.forEach((p, i) => {
+    // Calcular altura dinámica según líneas de descripción
+    const descLines = doc.splitTextToSize(String(p.descripcion || ''), TC[2].w - 6);
+    const dynH = Math.max(rowH, descLines.length * 11 + 10);
 
-    fill(GRAY_ROW);
+    // Fondo gris alternado
+    fill(i % 2 === 0 ? GRAY_ROW : WHITE);
     stroke('#bbbbbb');
     doc.setLineWidth(0.3);
-    TC.forEach(({ x, w }) => doc.rect(x, ry, w, rowH, 'FD'));
+    TC.forEach(({ x, w }) => doc.rect(x, ry, w, dynH, 'FD'));
 
-    if (p) {
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      color(BLACK);
+    // Texto
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    color(BLACK);
 
-      const row = {
-        idx:            String(i + 1),
-        cantidad:       String(p.cantidad || ''),
-        descripcion:    String(p.descripcion || ''),
-        unidad:         String(p.unidad || ''),
-        precioUnitario: '$' + (Number(p.precioUnitario)||0).toLocaleString('es-MX', { minimumFractionDigits: 2 }),
-        importe:        '$' + (Number(p.importe)       ||0).toLocaleString('es-MX', { minimumFractionDigits: 2 }),
-      };
+    const row = {
+      idx:            String(i + 1),
+      cantidad:       String(p.cantidad || ''),
+      descripcion:    String(p.descripcion || ''),
+      unidad:         String(p.unidad || ''),
+      precioUnitario: '$' + (Number(p.precioUnitario)||0).toLocaleString('es-MX', { minimumFractionDigits: 2 }),
+      importe:        '$' + (Number(p.importe)       ||0).toLocaleString('es-MX', { minimumFractionDigits: 2 }),
+    };
 
-      TC.forEach(({ key, x, w }) => {
-        if (key === 'descripcion') {
-          const lines = doc.splitTextToSize(row[key], w - 6);
-          doc.text(lines, x + 4, ry + 8);
-        } else {
-          doc.text(row[key], x + w / 2, ry + rowH / 2 + 3, { align: 'center' });
-        }
-      });
-    }
+    TC.forEach(({ key, x, w }) => {
+      if (key === 'descripcion') {
+        doc.text(descLines, x + 4, ry + 9);
+      } else {
+        doc.text(row[key], x + w / 2, ry + dynH / 2 + 3, { align: 'center' });
+      }
+    });
 
-    ry += rowH;
-  }
+    ry += dynH;
+  });
+
+  // Línea de cierre de la tabla (bajo el último producto)
+  stroke('#bbbbbb');
+  doc.setLineWidth(0.5);
+  doc.line(MX, ry, MX + tableW, ry);
 
   // ══════════════════════════════════════════════════════════
-  // TOTALES (bajo tabla, alineados con últimas 2 columnas)
+  // TOTALES
   // ══════════════════════════════════════════════════════════
   const subtotal = partidas.reduce((s, p) => s + (parseFloat(p.importe) || 0), 0);
   const iva      = subtotal * 0.16;
   const total    = subtotal + iva;
 
-  const tLabelCol = TC[4]; // PRECIO UNITARIO → label totales
-  const tValCol   = TC[5]; // IMPORTE         → valor totales
+  const tLabelCol = TC[4];
+  const tValCol   = TC[5];
   const tRowH     = 20;
 
+  ry += 6;
   [
     { label: 'SUBTOTAL', value: subtotal },
     { label: 'IVA',      value: iva      },
     { label: 'TOTAL',    value: total    },
-  ].forEach(({ label, value }, idx) => {
-    fill(LIGHT_BOX);
-    stroke('#bbbbbb');
+  ].forEach(({ label, value }) => {
+    fill(LIGHT_BOX); stroke('#bbbbbb');
     doc.setLineWidth(0.3);
     doc.rect(tLabelCol.x, ry, tLabelCol.w, tRowH, 'FD');
     doc.rect(tValCol.x,   ry, tValCol.w,   tRowH, 'FD');
-
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8.5);
     color(BLACK);
-    doc.text(label,
-      tLabelCol.x + tLabelCol.w / 2,
-      ry + tRowH / 2 + 3,
-      { align: 'center' });
+    doc.text(label, tLabelCol.x + tLabelCol.w / 2, ry + tRowH / 2 + 3, { align: 'center' });
     doc.text(
       '$' + value.toLocaleString('es-MX', { minimumFractionDigits: 2 }),
-      tValCol.x + tValCol.w / 2,
-      ry + tRowH / 2 + 3,
-      { align: 'center' });
-
+      tValCol.x + tValCol.w / 2, ry + tRowH / 2 + 3, { align: 'center' },
+    );
     ry += tRowH;
   });
 
   // ══════════════════════════════════════════════════════════
   // DATOS BANCARIOS
   // ══════════════════════════════════════════════════════════
-  const bankY = ry + 10;
+  ry += 14;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   color(BLACK);
-  doc.text('Banorte Cta : 0295855215     Clabe : 072 100 002958552154   Nombre: Sinar Adrián Casanova García', MX, bankY);
-  doc.text('Bbva       Cta : 0480072338     Clabe: 012 100 004800723387    Nombre: Sinar Adrián Casanova García', MX, bankY + 14);
+  doc.text('Banorte Cta : 0295855215     Clabe : 072 100 002958552154   Nombre: Sinar Adrián Casanova García', MX, ry);
+  doc.text('Bbva       Cta : 0480072338     Clabe: 012 100 004800723387    Nombre: Sinar Adrián Casanova García', MX, ry + 14);
 
   return doc;
 }
