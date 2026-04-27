@@ -236,5 +236,19 @@ const bodyY = gy + 8;
   doc.setLineWidth(0.5);
   doc.line(MX, ry, MX + tableW, ry);
 
+  // ══════════════════════════════════════════════════════════
+  // DATOS BANCARIOS SEGÚN EMISOR
+  // ══════════════════════════════════════════════════════════
+  let bankY = ry + 24;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  color(NAVY);
+  if ((quote.razonSocial || '').toUpperCase().includes('SIEEG')) {
+    doc.text('cuenta bbva : 0123875156   clabe 012100001238751568   Nombre SIEEG INGENIERIA Y TELECOMUNICACIONES SA DE CV', MX, bankY);
+  } else {
+    doc.text('Banorte Cta : 0295855215     Clabe : 072 100 002958552154   Nombre:  Sinar Adrián Casanova García', MX, bankY);
+    bankY += 16;
+    doc.text('Bbva       Cta : 0480072338     Clabe: 012 100 004800723387    Nombre: Sinar Adrián Casanova García', MX, bankY);
+  }
   return doc;
 }
