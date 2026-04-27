@@ -51,7 +51,9 @@ export async function generateQuotePdfDoc(quote) {
   doc.setFontSize(9);
   doc.text('Razon Social: ' + (quote.razonSocial || ''), dCX, 34, { align: 'center' });
   doc.text('RFC: ' + (quote.rfc || ''), dCX, 47, { align: 'center' });
-  doc.text('REPSE: ' + (quote.repse || ''), dCX, 60, { align: 'center' });
+  if (quote.repse && quote.repse.trim() !== '') {
+    doc.text('REPSE: ' + quote.repse, dCX, 60, { align: 'center' });
+  }
 
   const cnLabel  = 'Cotización N.';
   const cnValue  = quote.numeroCotizacion || '';

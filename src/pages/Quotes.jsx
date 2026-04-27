@@ -89,7 +89,7 @@ export default function Quotes() {
       direccion: emisor.direccion,
       razonSocial: emisor.razonSocial,
       rfc: emisor.rfc,
-      repse: emisor.repse,
+      repse: emisor.repse || '',
       numeroCotizacion: generarNumeroCotizacion(val),
     }));
     setCotCounter(c => c + 1);
