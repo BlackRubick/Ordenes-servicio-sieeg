@@ -1,4 +1,4 @@
-
+import jsPDF from 'jspdf';
 
 export async function generateQuotePdfDoc(quote) {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
@@ -142,7 +142,7 @@ export async function generateQuotePdfDoc(quote) {
 
   return doc;
 }
-
+import jsPDF from 'jspdf';
 
 const TERMS = [
   '1) SIEEG no se responsabiliza en caso el equipo presente daños por mal uso de terceros o a nivel software y/o hardware antes de su ingreso a reparación.',
