@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
+import { generateQuotePdfDoc } from '../utils/orderPdf';
 
 const initialData = {
   direccion: '',
@@ -145,7 +146,14 @@ export default function Quotes() {
         </span>
       </div>
 
-      <form className="max-w-3xl mx-auto space-y-0" onSubmit={e => e.preventDefault()}>
+      <form
+        className="max-w-3xl mx-auto space-y-0"
+        onSubmit={async e => {
+          e.preventDefault();
+          const doc = await generateQuotePdfDoc(form);
+          doc.save(`Cotizacion_${form.numeroCotizacion || 'nueva'}.pdf`);
+        }}
+      >
 
         {/* Información general */}
         <SectionCard
