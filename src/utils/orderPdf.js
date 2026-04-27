@@ -1,4 +1,3 @@
-import jsPDF from 'jspdf';
 
 export async function generateQuotePdfDoc(quote) {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
