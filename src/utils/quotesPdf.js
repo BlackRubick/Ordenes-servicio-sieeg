@@ -110,10 +110,7 @@ export async function generateQuotePdfDoc(quote) {
   });
 
   // ── Descripción ───────────────────────────────────────────
-  const desc = quote.descripcionGeneral || 'Por este medio pongo a su disposición la cotización solicitada.';
-  doc.setFont('helvetica', 'italic'); doc.setFontSize(8.5); color(BLACK);
-  doc.text(desc, W - MX, gy + 14, { align: 'right', maxWidth: tableW * 0.6 });
-  const bodyY = gy + 26;
+const bodyY = gy + 8;
 
   // ══════════════════════════════════════════════════════════
   // COLUMNAS DE LA TABLA
