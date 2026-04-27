@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import DashboardLayout from '../layouts/DashboardLayout';
-import { generateQuotePdfDoc } from '../utils/orderPdf';
+import { generateQuotePdfDoc } from '../utils/quotesPdf';
 
 const initialData = {
   direccion: '',
