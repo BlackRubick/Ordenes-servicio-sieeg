@@ -57,7 +57,7 @@ export default function Quotes() {
       direccion: 'Blvd. Belisario Dominguez #4213 L5',
       razonSocial: 'SIEEG INGENIERIA Y TELECOMUNICACIONES',
       rfc: 'SIT2409128S3',
-      repse: 'AR9966/2022',
+      repse: '',
     },
     {
       key: 'sinar',
