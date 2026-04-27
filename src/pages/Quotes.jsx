@@ -96,6 +96,12 @@ export default function Quotes() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'telefono') {
+      // Solo permitir números y máximo 15 caracteres
+      const soloNumeros = value.replace(/[^0-9]/g, '').slice(0, 15);
+      setForm({ ...form, [name]: soloNumeros });
+      return;
+    }
     setForm({ ...form, [name]: value });
   };
 
@@ -224,7 +230,18 @@ export default function Quotes() {
               <input name="vigencia" type="number" value={form.vigencia} onChange={handleChange} className={inputCls} placeholder="30" min="1" />
             </Field>
             <Field label="Teléfono">
-              <input name="telefono" type="tel" value={form.telefono} onChange={handleChange} className={inputCls} placeholder="+52 000 000 0000" />
+              <input
+                name="telefono"
+                type="tel"
+                value={form.telefono}
+                onChange={handleChange}
+                className={inputCls}
+                placeholder="Ej: 9611234567"
+                pattern="[0-9]{7,15}"
+                maxLength={15}
+                inputMode="numeric"
+                autoComplete="tel"
+              />
             </Field>
             <div className="md:col-span-3">
               <Field label="Dirección del cliente">
