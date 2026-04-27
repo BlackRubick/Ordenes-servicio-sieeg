@@ -128,22 +128,6 @@ export default function Quotes() {
 
   return (
     <DashboardLayout>
-      {/* Selects de emisor arriba */}
-      <div className="max-w-3xl mx-auto mb-6">
-        <div className="flex flex-col md:flex-row gap-4 items-center">
-          <label className="text-sm font-semibold text-gray-700">Emisor:</label>
-          <select
-            className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-100"
-            value={emisorSelect}
-            onChange={handleEmisorChange}
-          >
-            <option value="">-- Selecciona emisor o manual --</option>
-            {EMISORES.map(e => (
-              <option key={e.key} value={e.key}>{e.label}</option>
-            ))}
-          </select>
-        </div>
-      </div>
       {/* Header */}
       <div className="flex items-end justify-between mb-6 pb-4 border-b border-gray-100">
         <div>
@@ -169,6 +153,36 @@ export default function Quotes() {
             </svg>
           }
         >
+          {/* Radios de emisor */}
+          <div className="mb-4 flex flex-wrap gap-6 items-center">
+            <span className="text-sm font-semibold text-gray-700 mr-2">Emisor:</span>
+            {EMISORES.map(e => (
+              <label key={e.key} className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="radio"
+                  name="emisor"
+                  value={e.key}
+                  checked={emisorSelect === e.key}
+                  onChange={handleEmisorChange}
+                  className="form-radio h-5 w-5 text-primary-500 border-gray-300 focus:ring-primary-400"
+                  style={{ accentColor: '#2563eb' }}
+                />
+                <span className="text-base font-medium text-gray-700">{e.label}</span>
+              </label>
+            ))}
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="radio"
+                name="emisor"
+                value=""
+                checked={emisorSelect === ''}
+                onChange={handleEmisorChange}
+                className="form-radio h-5 w-5 text-primary-500 border-gray-300 focus:ring-primary-400"
+                style={{ accentColor: '#2563eb' }}
+              />
+              <span className="text-base font-medium text-gray-500">Manual</span>
+            </label>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Dirección">
               <input name="direccion" value={form.direccion} onChange={handleChange} className={inputCls} placeholder="Calle, número, colonia..." />
