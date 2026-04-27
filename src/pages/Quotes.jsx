@@ -45,6 +45,54 @@ const inputCls =
 
 export default function Quotes() {
   const [form, setForm] = useState(initialData);
+  const [emisorSelect, setEmisorSelect] = useState('');
+  // Simular autoincremento simple (en real, vendría de backend)
+  const [cotCounter, setCotCounter] = useState(1);
+
+  const EMISORES = [
+    {
+      key: 'sieeg',
+      label: 'SIEEG',
+      direccion: 'Blvd. Belisario Dominguez #4213 L5',
+      razonSocial: 'SIEEG INGENIERIA Y TELECOMUNICACIONES',
+      rfc: 'SIT2409128S3',
+      repse: 'AR9966/2022',
+    },
+    {
+      key: 'sinar',
+      label: 'Sinar Adrian',
+      direccion: 'Blvd. Belisario Dominguez #4213 L5',
+      razonSocial: 'Sinar Adrian Casanova García',
+      rfc: 'CAGS890306QG4',
+      repse: 'AR9966/2022',
+    },
+  ];
+
+  // Generar número de cotización automático
+  const generarNumeroCotizacion = (emisorKey) => {
+    const prefix = emisorKey === 'sieeg' ? 'SIEEG' : emisorKey === 'sinar' ? 'SINAR' : 'COT';
+    const num = String(cotCounter).padStart(4, '0');
+    return `${prefix}-${new Date().getFullYear()}-${num}`;
+  };
+
+  const handleEmisorChange = (e) => {
+    const val = e.target.value;
+    setEmisorSelect(val);
+    if (!val) {
+      setForm(f => ({ ...f, direccion: '', razonSocial: '', rfc: '', repse: '', numeroCotizacion: '' }));
+      return;
+    }
+    const emisor = EMISORES.find(e => e.key === val);
+    setForm(f => ({
+      ...f,
+      direccion: emisor.direccion,
+      razonSocial: emisor.razonSocial,
+      rfc: emisor.rfc,
+      repse: emisor.repse,
+      numeroCotizacion: generarNumeroCotizacion(val),
+    }));
+    setCotCounter(c => c + 1);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -80,6 +128,22 @@ export default function Quotes() {
 
   return (
     <DashboardLayout>
+      {/* Selects de emisor arriba */}
+      <div className="max-w-3xl mx-auto mb-6">
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <label className="text-sm font-semibold text-gray-700">Emisor:</label>
+          <select
+            className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-100"
+            value={emisorSelect}
+            onChange={handleEmisorChange}
+          >
+            <option value="">-- Selecciona emisor o manual --</option>
+            {EMISORES.map(e => (
+              <option key={e.key} value={e.key}>{e.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
       {/* Header */}
       <div className="flex items-end justify-between mb-6 pb-4 border-b border-gray-100">
         <div>
