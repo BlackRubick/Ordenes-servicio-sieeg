@@ -1,295 +1,254 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
+import jsPDF from 'jspdf';
 
-const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [touched, setTouched] = useState({ email: false, password: false });
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const loginStore = useAuthStore();
+export async function generateQuotePdfDoc(quote) {
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const W = doc.internal.pageSize.getWidth();
+  const H = doc.internal.pageSize.getHeight();
 
-  const validate = () => {
-    const errors = {};
-    if (!email) errors.email = 'El correo es obligatorio';
-    if (!password) errors.password = 'La contraseña es obligatoria';
-    return errors;
-  };
+  const rgb    = (hex) => [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
+  const fill   = (hex) => doc.setFillColor(...rgb(hex));
+  const stroke = (hex) => doc.setDrawColor(...rgb(hex));
+  const color  = (hex) => doc.setTextColor(...rgb(hex));
 
-  const handleBlur = (e) => {
-    setTouched({ ...touched, [e.target.name]: true });
-  };
+  const NAVY      = '#1a3a5e';
+  const BLACK     = '#222222';
+  const GRAY_ROW  = '#e8e8e8';
+  const WHITE     = '#FFFFFF';
+  const LIGHT_BOX = '#f0f4f8';
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const errors = validate();
-    if (Object.keys(errors).length > 0) {
-      setTouched({ email: true, password: true });
-      setError('Completa todos los campos');
-      return;
+  // ── Logo ──────────────────────────────────────────────────
+  const getLogoBase64 = (src) => new Promise((resolve) => {
+    const img = new window.Image();
+    img.crossOrigin = '';
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      c.getContext('2d').drawImage(img, 0, 0);
+      resolve(c.toDataURL('image/png'));
+    };
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+  const logoBase64 = await getLogoBase64('/images/logo.ico');
+
+  const MX     = 28;
+  const tableW = W - MX * 2;
+
+  // ══════════════════════════════════════════════════════════
+  // ENCABEZADO
+  // ══════════════════════════════════════════════════════════
+  if (logoBase64) {
+    doc.addImage(logoBase64, 'PNG', MX, 10, 160, 72);
+  }
+
+  const dCX = W / 2 + 10 + (W - MX - (W / 2 + 10)) / 2;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  color(BLACK);
+  doc.text('Blvd. Belisario Dominguez #4213 L5', dCX, 20, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text('Razon Social: ' + (quote.razonSocial || ''), dCX, 34, { align: 'center' });
+  doc.text('RFC: ' + (quote.rfc || ''), dCX, 47, { align: 'center' });
+  if (quote.repse && quote.repse.trim() !== '') {
+    doc.text('REPSE: ' + quote.repse, dCX, 60, { align: 'center' });
+  }
+
+  const cnLabel  = 'Cotización N.';
+  const cnValue  = quote.numeroCotizacion || '';
+  const cnLabelW = doc.getTextWidth(cnLabel);
+  const cnX      = dCX - (cnLabelW + doc.getTextWidth('  ' + cnValue) + 10) / 2;
+  doc.setFont('helvetica', 'normal');
+  doc.text(cnLabel, cnX, 76);
+  doc.setFont('helvetica', 'bold');
+  doc.text(cnValue, cnX + cnLabelW + 10, 76);
+
+  stroke('#bbbbbb');
+  doc.setLineWidth(0.6);
+  doc.line(MX, 90, W - MX, 90);
+
+  // ══════════════════════════════════════════════════════════
+  // GRID DATOS GENERALES
+  // ══════════════════════════════════════════════════════════
+  const colW = tableW / 4;
+  const hH = 24, vH = 20;
+  let gy = 92;
+
+  const gridRows = [
+    [
+      { label: 'Fecha',    value: quote.fecha || '' },
+      { label: 'Vigencia', value: quote.vigencia ? quote.vigencia + ' DIAS' : '' },
+      { label: 'Empresa',  value: quote.empresa || '' },
+      { label: 'Cliente',  value: quote.cliente || '' },
+    ],
+    [
+      { label: 'Telefono',           value: quote.telefono         || '' },
+      { label: 'Direccion',          value: quote.direccionCliente || '' },
+      { label: 'Correo Eléctronico', value: quote.correo           || '' },
+      { label: 'Otro.',              value: quote.otro             || '-------' },
+    ],
+  ];
+
+  gridRows.forEach((row) => {
+    row.forEach(({ label }, i) => {
+      const x = MX + i * colW;
+      fill(LIGHT_BOX); stroke('#cccccc');
+      doc.setLineWidth(0.4);
+      doc.rect(x, gy, colW, hH, 'FD');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); color(NAVY);
+      doc.text(label, x + colW / 2, gy + hH / 2 + 3.5, { align: 'center' });
+    });
+    gy += hH;
+    row.forEach(({ value }, i) => {
+      const x = MX + i * colW;
+      fill(WHITE); stroke('#cccccc');
+      doc.setLineWidth(0.4);
+      doc.rect(x, gy, colW, vH, 'FD');
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); color(BLACK);
+      doc.text(doc.splitTextToSize(value, colW - 8)[0] || '', x + colW / 2, gy + vH / 2 + 3, { align: 'center' });
+    });
+    gy += vH;
+  });
+
+  // ── Descripción ───────────────────────────────────────────
+const bodyY = gy + 8;
+
+  // ══════════════════════════════════════════════════════════
+  // COLUMNAS DE LA TABLA
+  // ══════════════════════════════════════════════════════════
+  const TC = [
+    { label: 'PARTIDA',          key: 'idx',            x: MX,      w: 46  },
+    { label: 'CANTIDAD',         key: 'cantidad',       x: MX+46,   w: 55  },
+    { label: 'DESCRIPCION',      key: 'descripcion',    x: MX+101,  w: 210 },
+    { label: 'UNIDAD',           key: 'unidad',         x: MX+311,  w: 58  },
+    { label: 'PRECIO\nUNITARIO', key: 'precioUnitario', x: MX+369,  w: 82  },
+    { label: 'IMPORTE',          key: 'importe',        x: MX+451,  w: tableW - 451 },
+  ];
+
+  const thH  = 32;
+  const rowH = 22;
+
+  // ══════════════════════════════════════════════════════════
+  // ZONA FIJA AL PIE: totales (3×20) + banco (2 líneas) + margen
+  // Esto se dibuja SIEMPRE al fondo, independiente de cuántos productos haya
+  // ══════════════════════════════════════════════════════════
+  const tRowH   = 20;
+  const bankH   = 40;  // 2 líneas de texto banco
+  const footerY = H - bankH - tRowH * 3 - 14; // Y donde empiezan los totales
+
+  // — Totales —
+  const subtotal = (quote.partidas || []).reduce((s, p) => s + (parseFloat(p.importe) || 0), 0);
+  const iva      = subtotal * 0.16;
+  const total    = subtotal + iva;
+
+  const tLabelCol = TC[4];
+  const tValCol   = TC[5];
+  let totY = footerY;
+
+  [
+    { label: 'SUBTOTAL', value: subtotal },
+    { label: 'IVA',      value: iva      },
+    { label: 'TOTAL',    value: total    },
+  ].forEach(({ label, value }) => {
+    fill(LIGHT_BOX); stroke('#bbbbbb');
+    doc.setLineWidth(0.3);
+    doc.rect(tLabelCol.x, totY, tLabelCol.w, tRowH, 'FD');
+    doc.rect(tValCol.x,   totY, tValCol.w,   tRowH, 'FD');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); color(BLACK);
+    doc.text(label, tLabelCol.x + tLabelCol.w / 2, totY + tRowH / 2 + 3, { align: 'center' });
+    doc.text(
+      '$' + value.toLocaleString('es-MX', { minimumFractionDigits: 2 }),
+      tValCol.x + tValCol.w / 2, totY + tRowH / 2 + 3, { align: 'center' }
+    );
+    totY += tRowH;
+  });
+
+  // — Datos bancarios —
+  let bankY = totY + 10;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(BLACK);
+  doc.text('Banorte Cta : 0295855215     Clabe : 072 100 002958552154   Nombre: Sinar Adrián Casanova García', MX, bankY);
+  doc.text('Bbva       Cta : 0480072338     Clabe: 012 100 004800723387    Nombre: Sinar Adrián Casanova García', MX, bankY + 14);
+
+  // ══════════════════════════════════════════════════════════
+  // ENCABEZADO DE TABLA
+  // ══════════════════════════════════════════════════════════
+  TC.forEach(({ x, w }) => {
+    fill(NAVY); stroke(NAVY);
+    doc.setLineWidth(0.3);
+    doc.rect(x, bodyY, w, thH, 'FD');
+  });
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); color(WHITE);
+  TC.forEach(({ label, x, w }) => {
+    const lines = label.split('\n');
+    if (lines.length === 2) {
+      doc.text(lines[0], x + w / 2, bodyY + 12, { align: 'center' });
+      doc.text(lines[1], x + w / 2, bodyY + 23, { align: 'center' });
+    } else {
+      doc.text(label, x + w / 2, bodyY + thH / 2 + 4, { align: 'center' });
     }
-    fetch('/api/users/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ correo: email, contrasena: password })
-    })
-      .then(res => res.json())
-      .then(data => {
-        console.log('Respuesta login:', data);
-        if (data.success) {
-          setError('');
-          loginStore.login(data.user, data.user.rol);
-          console.log('Usuario logueado:', data.user);
-          const rol = String(data.user.rol || '')
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .toLowerCase();
-          if (rol === 'admin' || rol === 'administrador') {
-            navigate('/admin/dashboard');
-          } else if (rol === 'technician' || rol === 'tecnico') {
-            navigate('/admin/orders');
-          } else if (rol === 'mostrador') {
-            navigate('/admin/orders');
-          }
-        } else {
-          setError('Credenciales incorrectas');
-        }
-      })
-      .catch(() => {
-        setError('Error de conexión');
-      });
-  };
+  });
 
-  const errors = validate();
+  // ══════════════════════════════════════════════════════════
+  // FILAS DE PRODUCTOS — crecen hacia abajo desde el header
+  // Se detienen antes de pisar los totales
+  // ══════════════════════════════════════════════════════════
+  const partidas    = quote.partidas || [];
+  const tableEndY   = footerY - 6; // límite: no pisar totales
+  let ry = bodyY + thH;
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0a1628 0%, #0d2a4a 50%, #0a1628 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '2rem',
-      position: 'relative',
-      overflow: 'hidden',
-      fontFamily: 'sans-serif',
-    }}>
+  partidas.forEach((p, i) => {
+    const descLines = doc.splitTextToSize(String(p.descripcion || ''), TC[2].w - 6);
+    const dynH = Math.max(rowH, descLines.length * 11 + 10);
 
-      {/* Líneas de circuito decorativas */}
-      <svg
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.06, pointerEvents: 'none' }}
-        viewBox="0 0 800 600"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        stroke="#0078ff"
-        strokeWidth="1"
-      >
-        <line x1="0" y1="100" x2="200" y2="100" />
-        <circle cx="200" cy="100" r="4" fill="#0078ff" />
-        <line x1="200" y1="100" x2="200" y2="300" />
-        <line x1="200" y1="300" x2="400" y2="300" />
-        <line x1="600" y1="50" x2="800" y2="50" />
-        <circle cx="600" cy="50" r="4" fill="#0078ff" />
-        <line x1="600" y1="50" x2="600" y2="200" />
-        <line x1="600" y1="200" x2="750" y2="200" />
-        <line x1="0" y1="450" x2="150" y2="450" />
-        <circle cx="150" cy="450" r="4" fill="#0078ff" />
-        <line x1="150" y1="450" x2="150" y2="550" />
-        <line x1="700" y1="350" x2="800" y2="350" />
-        <circle cx="700" cy="350" r="4" fill="#0078ff" />
-        <line x1="700" y1="350" x2="700" y2="500" />
-        <line x1="700" y1="500" x2="800" y2="500" />
-      </svg>
+    // Si no cabe en la zona disponible, parar (evitar solaparse con totales)
+    if (ry + dynH > tableEndY) return;
 
-      {/* Card principal */}
-      <div style={{
-        background: 'rgba(255,255,255,0.04)',
-        border: '1px solid rgba(0,120,255,0.25)',
-        borderRadius: '20px',
-        padding: '2.5rem 2rem',
-        width: '100%',
-        maxWidth: '420px',
-        position: 'relative',
-        boxShadow: '0 0 40px rgba(0,120,255,0.12), inset 0 1px 0 rgba(255,255,255,0.08)',
-      }}>
+    fill(i % 2 === 0 ? GRAY_ROW : WHITE);
+    stroke('#bbbbbb');
+    doc.setLineWidth(0.3);
+    TC.forEach(({ x, w }) => doc.rect(x, ry, w, dynH, 'FD'));
 
-        {/* Logo directo sin caja detrás */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginBottom: '1.75rem' }}>
-          <img
-            src="/images/logo.ico"
-            alt="Ingeniería SIEEG"
-            style={{
-              width: '100%',
-              maxWidth: '300px',
-              height: 'auto',
-              objectFit: 'contain',
-              display: 'block',
-            }}
-          />
-          <div style={{
-            fontSize: '13px',
-            fontWeight: 600,
-            color: '#3b9eff',
-            letterSpacing: '2px',
-            textAlign: 'center',
-            textTransform: 'uppercase',
-          }}>
-            Órdenes de Servicio
-          </div>
-        </div>
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(BLACK);
 
-        {/* Divider */}
-        <div style={{
-          height: '1px',
-          background: 'linear-gradient(90deg, transparent, rgba(0,120,255,0.4), transparent)',
-          marginBottom: '1.75rem',
-        }} />
+    const row = {
+      idx:            String(i + 1),
+      cantidad:       String(p.cantidad || ''),
+      descripcion:    String(p.descripcion || ''),
+      unidad:         String(p.unidad || ''),
+      precioUnitario: '$' + (Number(p.precioUnitario)||0).toLocaleString('es-MX', { minimumFractionDigits: 2 }),
+      importe:        '$' + (Number(p.importe)       ||0).toLocaleString('es-MX', { minimumFractionDigits: 2 }),
+    };
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
+    TC.forEach(({ key, x, w }) => {
+      if (key === 'descripcion') {
+        doc.text(descLines, x + 4, ry + 9);
+      } else {
+        doc.text(row[key], x + w / 2, ry + dynH / 2 + 3, { align: 'center' });
+      }
+    });
 
-          {/* Alerta general */}
-          {error && (
-            <div style={{
-              background: 'rgba(255,80,80,0.1)',
-              border: '1px solid rgba(255,80,80,0.3)',
-              borderRadius: '8px',
-              padding: '10px 14px',
-              fontSize: '13px',
-              color: '#ff8080',
-              textAlign: 'center',
-              marginBottom: '1.25rem',
-            }}>
-              {error}
-            </div>
-          )}
+    ry += dynH;
+  });
 
-          {/* Campo correo */}
-          <div style={{ marginBottom: '1.25rem' }}>
-            <label htmlFor="email" style={{
-              display: 'block',
-              fontSize: '11px',
-              fontWeight: 500,
-              color: 'rgba(255,255,255,0.5)',
-              letterSpacing: '0.8px',
-              textTransform: 'uppercase',
-              marginBottom: '8px',
-            }}>
-              Correo electrónico
-            </label>
-            <div style={{ position: 'relative' }}>
-              <svg
-                width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke="#ffffff" strokeWidth="2" strokeLinecap="round"
-                style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4, pointerEvents: 'none' }}
-              >
-                <rect x="2" y="4" width="20" height="16" rx="2" />
-                <path d="m2 7 10 7 10-7" />
-              </svg>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="usuario@correo.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                onBlur={handleBlur}
-                autoComplete="username"
-                style={{
-                  width: '100%',
-                  background: touched.email && errors.email ? 'rgba(255,80,80,0.05)' : 'rgba(255,255,255,0.05)',
-                  border: `1px solid ${touched.email && errors.email ? 'rgba(255,80,80,0.6)' : 'rgba(0,120,255,0.2)'}`,
-                  borderRadius: '10px',
-                  padding: '12px 14px 12px 42px',
-                  color: '#fff',
-                  fontSize: '14px',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-            {touched.email && errors.email && (
-              <span style={{ fontSize: '11px', color: '#ff6b6b', marginTop: '5px', display: 'block' }}>
-                {errors.email}
-              </span>
-            )}
-          </div>
+  // Línea de cierre justo debajo del último producto
+  stroke('#888888');
+  doc.setLineWidth(0.5);
+  doc.line(MX, ry, MX + tableW, ry);
 
-          {/* Campo contraseña */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label htmlFor="password" style={{
-              display: 'block',
-              fontSize: '11px',
-              fontWeight: 500,
-              color: 'rgba(255,255,255,0.5)',
-              letterSpacing: '0.8px',
-              textTransform: 'uppercase',
-              marginBottom: '8px',
-            }}>
-              Contraseña
-            </label>
-            <div style={{ position: 'relative' }}>
-              <svg
-                width="16" height="16" viewBox="0 0 24 24" fill="none"
-                stroke="#ffffff" strokeWidth="2" strokeLinecap="round"
-                style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4, pointerEvents: 'none' }}
-              >
-                <rect x="3" y="11" width="18" height="11" rx="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                onBlur={handleBlur}
-                autoComplete="current-password"
-                style={{
-                  width: '100%',
-                  background: touched.password && errors.password ? 'rgba(255,80,80,0.05)' : 'rgba(255,255,255,0.05)',
-                  border: `1px solid ${touched.password && errors.password ? 'rgba(255,80,80,0.6)' : 'rgba(0,120,255,0.2)'}`,
-                  borderRadius: '10px',
-                  padding: '12px 14px 12px 42px',
-                  color: '#fff',
-                  fontSize: '14px',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-            {touched.password && errors.password && (
-              <span style={{ fontSize: '11px', color: '#ff6b6b', marginTop: '5px', display: 'block' }}>
-                {errors.password}
-              </span>
-            )}
-          </div>
-
-          {/* Botón */}
-          <button
-            type="submit"
-            style={{
-              width: '100%',
-              padding: '13px',
-              borderRadius: '10px',
-              border: 'none',
-              background: 'linear-gradient(135deg, #0078ff 0%, #0055cc 100%)',
-              color: '#fff',
-              fontSize: '15px',
-              fontWeight: 600,
-              letterSpacing: '0.5px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 20px rgba(0,120,255,0.35)',
-            }}
-          >
-            Entrar
-          </button>
-
-        </form>
-      </div>
-    </div>
-  );
-};
-
-export default Login;
+  // ══════════════════════════════════════════════════════════
+  // DATOS BANCARIOS SEGÚN EMISOR
+  // ══════════════════════════════════════════════════════════
+  bankY = ry + 24;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  color(NAVY);
+  if ((quote.razonSocial || '').toUpperCase().includes('SIEEG')) {
+    doc.text('cuenta bbva : 0123875156   clabe 012100001238751568   Nombre SIEEG INGENIERIA Y TELECOMUNICACIONES SA DE CV', MX, bankY);
+  } else {
+    doc.text('Banorte Cta : 0295855215     Clabe : 072 100 002958552154   Nombre:  Sinar Adrián Casanova García', MX, bankY);
+    bankY += 16;
+    doc.text('Bbva       Cta : 0480072338     Clabe: 012 100 004800723387    Nombre: Sinar Adrián Casanova García', MX, bankY);
+  }
+  return doc;
+}

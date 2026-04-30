@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AuthLayout from '../layouts/AuthLayout';
 import { useAuthStore } from '../store/authStore';
 
 const Login = () => {
@@ -47,23 +46,18 @@ const Login = () => {
             .replace(/[\u0300-\u036f]/g, '')
             .toLowerCase();
           if (rol === 'admin' || rol === 'administrador') {
-            console.log('Navegando a /admin/dashboard');
             navigate('/admin/dashboard');
           } else if (rol === 'technician' || rol === 'tecnico') {
-            console.log('Navegando a /admin/orders');
             navigate('/admin/orders');
           } else if (rol === 'mostrador') {
-            console.log('Navegando a /admin/orders');
             navigate('/admin/orders');
           }
         } else {
           setError('Credenciales incorrectas');
-          console.log('Login fallido');
         }
       })
-      .catch((err) => {
+      .catch(() => {
         setError('Error de conexión');
-        console.log('Error fetch login:', err);
       });
   };
 
@@ -120,32 +114,24 @@ const Login = () => {
         boxShadow: '0 0 40px rgba(0,120,255,0.12), inset 0 1px 0 rgba(255,255,255,0.08)',
       }}>
 
-        {/* Brand / Logo */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', marginBottom: '1.75rem' }}>
+        {/* Logo directo sin caja detrás */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', marginBottom: '1.75rem' }}>
+          <img
+            src="/images/logo.ico"
+            alt="Ingeniería SIEEG"
+            style={{
+              width: '100%',
+              maxWidth: '300px',
+              height: 'auto',
+              objectFit: 'contain',
+              display: 'block',
+            }}
+          />
           <div style={{
-            width: '100%',
-            maxWidth: '280px',
-            height: '80px',
-            borderRadius: '12px',
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(0,120,255,0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '10px 16px',
-            overflow: 'hidden',
-          }}>
-            <img
-              src="/images/logo.ico"
-              alt="Ingeniería SIEEG"
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-            />
-          </div>
-          <div style={{
-            fontSize: '14px',
+            fontSize: '13px',
             fontWeight: 600,
             color: '#3b9eff',
-            letterSpacing: '1.5px',
+            letterSpacing: '2px',
             textAlign: 'center',
             textTransform: 'uppercase',
           }}>
@@ -160,7 +146,7 @@ const Login = () => {
           marginBottom: '1.75rem',
         }} />
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
 
           {/* Alerta general */}
           {error && (
