@@ -435,10 +435,10 @@ export default function Quotes() {
           </div>
         </SectionCard>
 
-        {/* Descripción general */}
+        {/* Observaciones general */}
         <SectionCard
-          title="Descripción general"
-          subtitle="Introducción del documento"
+          title="Observaciones generales"
+          subtitle="Observaciones o notas para el cliente"
           iconClass="bg-amber-50 text-amber-700"
           icon={
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
