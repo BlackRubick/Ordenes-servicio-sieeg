@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
+import { generateQuotePdfDoc } from '../utils/quotesPdf';
 
 const statusOptions = ['Borrador', 'Pendiente', 'Aprobado', 'Cancelada'];
 
@@ -34,6 +35,15 @@ export default function QuotesList() {
       await Swal.fire('Eliminada', 'La cotización fue eliminada correctamente.', 'success');
     } catch (error) {
       await Swal.fire('Error', error.message || 'No se pudo eliminar la cotización', 'error');
+    }
+  };
+
+  const handleDownloadPDF = async (quote) => {
+    try {
+      const doc = await generateQuotePdfDoc(quote);
+      doc.save(`Cotizacion_${quote.numeroCotizacion}.pdf`);
+    } catch (error) {
+      await Swal.fire('Error', 'No se pudo generar el PDF', 'error');
     }
   };
 
@@ -160,6 +170,13 @@ export default function QuotesList() {
                   </td>
                   <td className="py-4 px-4 align-middle">
                     <div className="flex flex-wrap gap-2">
+                      <button
+                        className="px-3 py-1 rounded-xl bg-green-50 text-green-700 font-semibold border border-green-100 hover:bg-green-100 transition-all"
+                        onClick={() => handleDownloadPDF(q)}
+                        title="Descargar PDF"
+                      >
+                        📥 PDF
+                      </button>
                       <button
                         className="px-3 py-1 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-semibold shadow-soft hover:from-primary-600 hover:to-blue-400 transition-all"
                         onClick={() => navigate(`/admin/quotes/${q.id}`)}
