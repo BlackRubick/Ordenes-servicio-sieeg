@@ -17,7 +17,11 @@ const initialData = {
   empresa: '',
   cliente: '',
   correo: '',
-  descripcionGeneral: '',
+  descripcionGeneral: `OBSERVACIONES
+FORMA DE PAGO: TRANSFERENCIA ELECTRONICA DE FONDOS(03)
+USO DE MCÍA.:G03 -GASTOSEN GENERAL
+MÉTODO DE PAGO:PAGO EN UNA SOLA EXHIBICIÓN
+UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
   status: 'Borrador',
   partidas: [
     { cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '' }
@@ -81,7 +85,11 @@ const formFromQuote = (quote) => ({
   empresa: quote?.empresa || '',
   cliente: quote?.cliente || '',
   correo: quote?.correo || '',
-  descripcionGeneral: quote?.descripcionGeneral || '',
+  descripcionGeneral: `OBSERVACIONES
+FORMA DE PAGO: TRANSFERENCIA ELECTRONICA DE FONDOS(03)
+USO DE MCÍA.:G03 -GASTOSEN GENERAL
+MÉTODO DE PAGO:PAGO EN UNA SOLA EXHIBICIÓN
+UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
   status: quote?.status || 'Borrador',
   partidas: Array.isArray(quote?.partidas) && quote.partidas.length > 0
     ? quote.partidas.map((partida) => ({
@@ -296,7 +304,6 @@ export default function Quotes() {
             form.empresa,
             form.cliente,
             form.correo,
-            form.descripcionGeneral,
             form.status,
           ].some(isEmpty);
 
@@ -322,6 +329,11 @@ export default function Quotes() {
                 ...form,
                 partidas,
                 total,
+                  descripcionGeneral: `OBSERVACIONES
+FORMA DE PAGO: TRANSFERENCIA ELECTRONICA DE FONDOS(03)
+USO DE MCÍA.:G03 -GASTOSEN GENERAL
+MÉTODO DE PAGO:PAGO EN UNA SOLA EXHIBICIÓN
+UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
                 status: isEditMode ? (form.status || 'Borrador') : 'Borrador',
               }),
             });
@@ -440,7 +452,6 @@ export default function Quotes() {
                 type="tel"
                 value={form.telefono}
                 onChange={handleChange}
-                className={inputCls}
                 placeholder="Ej: 9611234567"
                 pattern="[0-9]{7,15}"
                 maxLength={15}
@@ -509,9 +520,11 @@ export default function Quotes() {
               value={form.descripcionGeneral}
               onChange={handleChange}
               className={`${requiredInputClass(form.descripcionGeneral)} min-h-[80px] resize-y`}
-              placeholder="Describe el alcance general del servicio o proyecto..."
+              placeholder="Observaciones automáticas"
+              readOnly
               required
             />
+            <p className="text-xs text-gray-400">Este texto se agrega automáticamente y no se puede modificar.</p>
           </Field>
         </SectionCard>
 
