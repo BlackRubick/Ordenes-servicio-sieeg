@@ -1,34 +1,71 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
-
-// Datos mock de cotizaciones
-const mockQuotes = [
-  {
-    id: 1,
-    numeroCotizacion: 'CT-1527D',
-    fecha: '2026-04-22',
-    empresa: 'PAQUETEXPRESS',
-    cliente: 'ING. ULISES',
-    total: 2160.34,
-    vigencia: 10,
-    status: 'Borrador',
-  },
-  {
-    id: 2,
-    numeroCotizacion: 'CT-1528A',
-    fecha: '2026-04-23',
-    empresa: 'EMPRESA DEMO',
-    cliente: 'LIC. JUAN',
-    total: 5000.00,
-    vigencia: 15,
-    status: 'Borrador',
-  },
-];
+import Swal from 'sweetalert2';
 
 export default function QuotesList() {
-  const [quotes] = useState(mockQuotes);
+  const [quotes, setQuotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  const handleDeleteQuote = async (quote) => {
+    try {
+      const result = await Swal.fire({
+        title: '¿Eliminar cotización?',
+        text: `Se eliminará ${quote.numeroCotizacion}.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+      });
+
+      if (!result.isConfirmed) return;
+
+      const response = await fetch(`/api/quotes/${quote.id}`, { method: 'DELETE' });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || 'No se pudo eliminar la cotización');
+      }
+
+      setQuotes(prev => prev.filter(item => item.id !== quote.id));
+      await Swal.fire('Eliminada', 'La cotización fue eliminada correctamente.', 'success');
+    } catch (error) {
+      await Swal.fire('Error', error.message || 'No se pudo eliminar la cotización', 'error');
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+
+    const loadQuotes = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/quotes');
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data?.error || 'No se pudieron cargar las cotizaciones');
+        }
+        if (active) {
+          setQuotes(Array.isArray(data) ? data : []);
+          setError('');
+        }
+      } catch (loadError) {
+        if (active) {
+          setQuotes([]);
+          setError(loadError.message || 'No se pudieron cargar las cotizaciones');
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    loadQuotes();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <DashboardLayout>
@@ -59,7 +96,9 @@ export default function QuotesList() {
           <tbody>
             {quotes.length === 0 && (
               <tr>
-                <td colSpan={9} className="text-center text-muted py-8 bg-white rounded-b-2xl">No hay cotizaciones registradas.</td>
+                <td colSpan={9} className="text-center text-muted py-8 bg-white rounded-b-2xl">
+                  {loading ? 'Cargando cotizaciones...' : (error || 'No hay cotizaciones registradas.')}
+                </td>
               </tr>
             )}
             {quotes.map((q, idx) => {
@@ -81,12 +120,26 @@ export default function QuotesList() {
                     <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold">{q.status}</span>
                   </td>
                   <td className="py-4 px-4 align-middle">
-                    <button
-                      className="px-3 py-1 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-semibold shadow-soft hover:from-primary-600 hover:to-blue-400 transition-all"
-                      onClick={() => navigate(`/admin/quotes/${q.id}`)}
-                    >
-                      Ver
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        className="px-3 py-1 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-semibold shadow-soft hover:from-primary-600 hover:to-blue-400 transition-all"
+                        onClick={() => navigate(`/admin/quotes/${q.id}`)}
+                      >
+                        Ver
+                      </button>
+                      <button
+                        className="px-3 py-1 rounded-xl bg-blue-50 text-blue-700 font-semibold border border-blue-100 hover:bg-blue-100 transition-all"
+                        onClick={() => navigate(`/admin/quotes/${q.id}/edit`)}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        className="px-3 py-1 rounded-xl bg-red-50 text-red-700 font-semibold border border-red-100 hover:bg-red-100 transition-all"
+                        onClick={() => handleDeleteQuote(q)}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { generateQuotePdfDoc } from '../utils/quotesPdf';
+import Swal from 'sweetalert2';
 
 const initialData = {
   direccion: '',
@@ -16,6 +18,7 @@ const initialData = {
   cliente: '',
   correo: '',
   descripcionGeneral: '',
+  status: 'Borrador',
   partidas: [
     { cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '' }
   ]
@@ -44,8 +47,52 @@ const Field = ({ label, children }) => (
 const inputCls =
   'w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all';
 
+const normalizePartidas = (partidas) => partidas.map((partida) => ({
+  cantidad: partida.cantidad !== '' && partida.cantidad !== null && partida.cantidad !== undefined
+    ? Number(partida.cantidad)
+    : '',
+  descripcion: partida.descripcion || '',
+  unidad: partida.unidad || '',
+  precioUnitario: partida.precioUnitario !== '' && partida.precioUnitario !== null && partida.precioUnitario !== undefined
+    ? Number(partida.precioUnitario)
+    : '',
+  importe: partida.importe !== '' && partida.importe !== null && partida.importe !== undefined
+    ? Number(partida.importe)
+    : '',
+}));
+
+const formFromQuote = (quote) => ({
+  direccion: quote?.direccion || '',
+  razonSocial: quote?.razonSocial || '',
+  rfc: quote?.rfc || '',
+  repse: quote?.repse || '',
+  numeroCotizacion: quote?.numeroCotizacion || '',
+  fecha: quote?.fecha || '',
+  vigencia: quote?.vigencia ?? '',
+  telefono: quote?.telefono || '',
+  direccionCliente: quote?.direccionCliente || '',
+  empresa: quote?.empresa || '',
+  cliente: quote?.cliente || '',
+  correo: quote?.correo || '',
+  descripcionGeneral: quote?.descripcionGeneral || '',
+  status: quote?.status || 'Borrador',
+  partidas: Array.isArray(quote?.partidas) && quote.partidas.length > 0
+    ? quote.partidas.map((partida) => ({
+        cantidad: partida?.cantidad !== undefined && partida?.cantidad !== null && String(partida?.cantidad) !== '' ? String(partida.cantidad) : '',
+        descripcion: partida?.descripcion || '',
+        unidad: partida?.unidad || '',
+        precioUnitario: partida?.precioUnitario !== undefined && partida?.precioUnitario !== null && String(partida?.precioUnitario) !== '' ? String(partida.precioUnitario) : '',
+        importe: partida?.importe !== undefined && partida?.importe !== null && String(partida?.importe) !== '' ? String(partida.importe) : '',
+      }))
+    : [{ cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '' }],
+});
+
 export default function Quotes() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEditMode = Boolean(id);
   const [form, setForm] = useState(initialData);
+  const [loadingQuote, setLoadingQuote] = useState(isEditMode);
   const [emisorSelect, setEmisorSelect] = useState('');
   // Simular autoincremento simple (en real, vendría de backend)
   const [cotCounter, setCotCounter] = useState(1);
@@ -133,16 +180,80 @@ export default function Quotes() {
 
   const total = form.partidas.reduce((sum, p) => sum + (parseFloat(p.importe) || 0), 0);
 
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    let active = true;
+
+    const loadQuote = async () => {
+      try {
+        setLoadingQuote(true);
+        const response = await fetch(`/api/quotes/${id}`);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data?.error || 'No se pudo cargar la cotización');
+        }
+
+        if (active) {
+          setForm(formFromQuote(data));
+        }
+      } catch (error) {
+        if (active) {
+          Swal.fire('Error', error.message || 'No se pudo cargar la cotización', 'error');
+          navigate('/admin/quotes');
+        }
+      } finally {
+        if (active) setLoadingQuote(false);
+      }
+    };
+
+    loadQuote();
+
+    return () => {
+      active = false;
+    };
+  }, [id, isEditMode, navigate]);
+
+  const handleDeleteQuote = async () => {
+    const result = await Swal.fire({
+      title: '¿Eliminar cotización?',
+      text: 'Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    });
+
+    if (!result.isConfirmed) return;
+
+    const response = await fetch(`/api/quotes/${id}`, { method: 'DELETE' });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.error || 'No se pudo eliminar la cotización');
+    }
+
+    await Swal.fire('Eliminada', 'La cotización fue eliminada correctamente.', 'success');
+    navigate('/admin/quotes');
+  };
+
+  if (loadingQuote && isEditMode) {
+    return (
+      <DashboardLayout>
+        <div className="p-8 text-center text-lg text-gray-500">Cargando cotización...</div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
       {/* Header */}
       <div className="flex items-end justify-between mb-6 pb-4 border-b border-gray-100">
         <div>
-          <h2 className="text-2xl font-extrabold text-primary-500">Nueva cotización</h2>
-          <p className="text-sm text-gray-400 mt-0.5">Completa los campos para generar el documento</p>
+          <h2 className="text-2xl font-extrabold text-primary-500">{isEditMode ? 'Editar cotización' : 'Nueva cotización'}</h2>
+          <p className="text-sm text-gray-400 mt-0.5">{isEditMode ? 'Actualiza los datos y guarda los cambios' : 'Completa los campos para generar el documento'}</p>
         </div>
         <span className="text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-blue-50 text-blue-600">
-          Borrador
+          {isEditMode ? 'Edición' : 'Borrador'}
         </span>
       </div>
 
@@ -150,8 +261,32 @@ export default function Quotes() {
         className="max-w-3xl mx-auto space-y-0"
         onSubmit={async e => {
           e.preventDefault();
-          const doc = await generateQuotePdfDoc(form);
-          doc.save(`Cotizacion_${form.numeroCotizacion || 'nueva'}.pdf`);
+          try {
+            const partidas = normalizePartidas(form.partidas);
+            const total = partidas.reduce((sum, partida) => sum + (Number(partida.importe) || 0), 0);
+            const response = await fetch(isEditMode ? `/api/quotes/${id}` : '/api/quotes', {
+              method: isEditMode ? 'PUT' : 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                ...form,
+                partidas,
+                total,
+                status: isEditMode ? (form.status || 'Borrador') : 'Borrador',
+              }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+              throw new Error(data?.error || 'No se pudo guardar la cotización');
+            }
+
+            const savedQuote = data?.quote || data;
+            const doc = await generateQuotePdfDoc({ ...savedQuote, partidas: Array.isArray(savedQuote.partidas) ? savedQuote.partidas : partidas });
+            doc.save(`Cotizacion_${savedQuote.numeroCotizacion || form.numeroCotizacion || 'nueva'}.pdf`);
+            Swal.fire(isEditMode ? 'Cotización actualizada' : 'Cotización guardada', isEditMode ? 'Los cambios se guardaron en la base de datos y el PDF fue generado.' : 'La cotización se guardó en la base de datos y el PDF fue generado.', 'success');
+            navigate(isEditMode ? `/admin/quotes/${savedQuote.id}` : '/admin/quotes');
+          } catch (error) {
+            Swal.fire('Error', error.message || 'No se pudo guardar la cotización', 'error');
+          }
         }}
       >
 
@@ -419,6 +554,7 @@ export default function Quotes() {
           <button
             type="button"
             className="flex-1 py-3 rounded-2xl border border-gray-200 text-sm font-medium text-gray-500 hover:bg-gray-50 transition-all"
+            onClick={() => navigate(isEditMode ? `/admin/quotes/${id}` : '/admin/quotes')}
           >
             Cancelar
           </button>
@@ -426,7 +562,7 @@ export default function Quotes() {
             type="submit"
             className="flex-[2] py-3 rounded-2xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white text-sm font-bold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-300"
           >
-            Guardar cotización
+            {isEditMode ? 'Actualizar cotización' : 'Guardar cotización'}
           </button>
         </div>
       </form>
