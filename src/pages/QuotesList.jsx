@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
 
+const statusOptions = ['Borrador', 'Pendiente', 'Aprobado', 'Cancelada'];
+
 export default function QuotesList() {
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,6 +34,33 @@ export default function QuotesList() {
       await Swal.fire('Eliminada', 'La cotización fue eliminada correctamente.', 'success');
     } catch (error) {
       await Swal.fire('Error', error.message || 'No se pudo eliminar la cotización', 'error');
+    }
+  };
+
+  const handleStatusChange = async (quote, nextStatus) => {
+    if (!nextStatus || nextStatus === quote.status) return;
+
+    const previousStatus = quote.status;
+    setQuotes(prev => prev.map(item => (item.id === quote.id ? { ...item, status: nextStatus } : item)));
+
+    try {
+      const response = await fetch(`/api/quotes/${quote.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || 'No se pudo actualizar el estado');
+      }
+
+      const savedQuote = data?.quote || data;
+      setQuotes(prev => prev.map(item => (item.id === quote.id ? { ...item, ...savedQuote } : item)));
+      await Swal.fire('Estado actualizado', 'El estado de la cotización se guardó correctamente.', 'success');
+    } catch (error) {
+      setQuotes(prev => prev.map(item => (item.id === quote.id ? { ...item, status: previousStatus } : item)));
+      await Swal.fire('Error', error.message || 'No se pudo actualizar el estado', 'error');
     }
   };
 
@@ -117,7 +146,17 @@ export default function QuotesList() {
                   <td className="py-4 px-4 align-middle">${q.total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
                   <td className="py-4 px-4 align-middle">{q.vigencia} días</td>
                   <td className="py-4 px-4 align-middle">
-                    <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold">{q.status}</span>
+                    <select
+                      value={q.status || 'Borrador'}
+                      onChange={(e) => handleStatusChange(q, e.target.value)}
+                      className="w-full min-w-[170px] px-3 py-2 rounded-xl border border-blue-100 bg-white text-sm font-semibold text-blue-700 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                    >
+                      {statusOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                   <td className="py-4 px-4 align-middle">
                     <div className="flex flex-wrap gap-2">

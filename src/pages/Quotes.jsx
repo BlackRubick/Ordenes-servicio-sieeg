@@ -49,7 +49,8 @@ const inputCls =
 
 const statusOptions = [
   'Borrador',
-  'Pendiente aprobado',
+  'Pendiente',
+  'Aprobado',
   'Cancelada',
 ];
 
