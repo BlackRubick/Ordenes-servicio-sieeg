@@ -17,7 +17,7 @@ const initialData = {
   empresa: '',
   cliente: '',
   correo: '',
-  descripcionGeneral: `OBSERVACIONES
+  descripcionGeneral: `OBSERVACIONES : 
 FORMA DE PAGO: TRANSFERENCIA ELECTRONICA DE FONDOS(03)
 USO DE MCÍA.:G03 -GASTOS EN GENERAL
 MÉTODO DE PAGO: PAGO EN UNA SOLA EXHIBICIÓN
