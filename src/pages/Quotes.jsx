@@ -304,6 +304,7 @@ export default function Quotes() {
             form.empresa,
             form.cliente,
             form.correo,
+            form.descripcionGeneral,
             form.status,
           ].some(isEmpty);
 
@@ -329,11 +330,6 @@ export default function Quotes() {
                 ...form,
                 partidas,
                 total,
-                  descripcionGeneral: `OBSERVACIONES
-FORMA DE PAGO: TRANSFERENCIA ELECTRONICA DE FONDOS(03)
-USO DE MCÍA.:G03 -GASTOSEN GENERAL
-MÉTODO DE PAGO:PAGO EN UNA SOLA EXHIBICIÓN
-UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
                 status: isEditMode ? (form.status || 'Borrador') : 'Borrador',
               }),
             });
@@ -521,10 +517,9 @@ UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
               onChange={handleChange}
               className={`${requiredInputClass(form.descripcionGeneral)} min-h-[80px] resize-y`}
               placeholder="Observaciones automáticas"
-              readOnly
               required
             />
-            <p className="text-xs text-gray-400">Este texto se agrega automáticamente y no se puede modificar.</p>
+            <p className="text-xs text-gray-400">datos agregados automaticamente pero puedes modificarlos si es necesario</p>
           </Field>
         </SectionCard>
 
