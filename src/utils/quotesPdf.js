@@ -236,7 +236,8 @@ const bodyY = gy + 8;
   // ══════════════════════════════════════════════════════════
   // DATOS BANCARIOS SEGÚN EMISOR
   // ══════════════════════════════════════════════════════════
-  let bankY = ry + 24;
+  // Asegurar que los datos bancarios queden al final, justo debajo de los totales
+  let bankY = footerY + tRowH * 3 + 8;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   color(NAVY);
