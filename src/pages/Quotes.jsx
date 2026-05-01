@@ -101,6 +101,7 @@ export default function Quotes() {
   const [form, setForm] = useState(initialData);
   const [loadingQuote, setLoadingQuote] = useState(isEditMode);
   const [emisorSelect, setEmisorSelect] = useState('');
+  const [validationAttempted, setValidationAttempted] = useState(false);
   // Simular autoincremento simple (en real, vendría de backend)
   const [cotCounter, setCotCounter] = useState(1);
 
@@ -129,6 +130,11 @@ export default function Quotes() {
     const num = String(cotCounter).padStart(4, '0');
     return `${prefix}-${new Date().getFullYear()}-${num}`;
   };
+
+  const isEmpty = (value) => String(value ?? '').trim() === '';
+  const requiredInputClass = (value, extraClass = '') => (
+    `${inputCls} ${validationAttempted && isEmpty(value) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : ''} ${extraClass}`
+  );
 
   const handleEmisorChange = (e) => {
     const val = e.target.value;
@@ -268,6 +274,44 @@ export default function Quotes() {
         className="max-w-3xl mx-auto space-y-0"
         onSubmit={async e => {
           e.preventDefault();
+          setValidationAttempted(true);
+
+          const partidasIncompletas = form.partidas.some((partida) => (
+            isEmpty(partida.descripcion)
+            || isEmpty(partida.cantidad)
+            || isEmpty(partida.unidad)
+            || isEmpty(partida.precioUnitario)
+            || isEmpty(partida.importe)
+          ));
+
+          const camposBaseObligatorios = [
+            form.direccion,
+            form.razonSocial,
+            form.rfc,
+            form.numeroCotizacion,
+            form.fecha,
+            form.vigencia,
+            form.telefono,
+            form.direccionCliente,
+            form.empresa,
+            form.cliente,
+            form.correo,
+            form.descripcionGeneral,
+            form.status,
+          ].some(isEmpty);
+
+          const requiereEmisor = !isEditMode && !emisorSelect;
+          const requiereRepse = emisorSelect !== 'sieeg' && isEmpty(form.repse);
+
+          if (requiereEmisor || camposBaseObligatorios || requiereRepse || partidasIncompletas) {
+            await Swal.fire({
+              title: 'Faltan datos obligatorios',
+              text: 'Completa todos los campos marcados en rojo antes de guardar la cotización.',
+              icon: 'warning',
+            });
+            return;
+          }
+
           try {
             const partidas = normalizePartidas(form.partidas);
             const total = partidas.reduce((sum, partida) => sum + (Number(partida.importe) || 0), 0);
@@ -297,6 +341,12 @@ export default function Quotes() {
         }}
       >
 
+        {validationAttempted && (
+          <div className="max-w-3xl mx-auto mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 font-medium shadow-sm">
+            Hay campos obligatorios vacíos. Revisa los resaltados en rojo.
+          </div>
+        )}
+
         {/* Información general */}
         <SectionCard
           title="Información general"
@@ -320,6 +370,7 @@ export default function Quotes() {
                   value={e.key}
                   checked={emisorSelect === e.key}
                   onChange={handleEmisorChange}
+                  required
                   className="form-radio h-5 w-5 text-primary-500 border-gray-300 focus:ring-primary-400"
                   style={{ accentColor: '#2563eb' }}
                 />
@@ -333,29 +384,33 @@ export default function Quotes() {
                 value=""
                 checked={emisorSelect === ''}
                 onChange={handleEmisorChange}
+                required
                 className="form-radio h-5 w-5 text-primary-500 border-gray-300 focus:ring-primary-400"
                 style={{ accentColor: '#2563eb' }}
               />
               <span className="text-base font-medium text-gray-500">Manual</span>
             </label>
+            {validationAttempted && !isEditMode && !emisorSelect && (
+              <p className="w-full text-xs font-medium text-red-500">Selecciona un emisor antes de guardar.</p>
+            )}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Dirección">
-              <input name="direccion" value={form.direccion} onChange={handleChange} className={inputCls} placeholder="Calle, número, colonia..." />
+              <input name="direccion" value={form.direccion} onChange={handleChange} className={requiredInputClass(form.direccion)} placeholder="Calle, número, colonia..." required />
             </Field>
             <Field label="Razón social">
-              <input name="razonSocial" value={form.razonSocial} onChange={handleChange} className={inputCls} placeholder="Nombre o empresa legal" />
+              <input name="razonSocial" value={form.razonSocial} onChange={handleChange} className={requiredInputClass(form.razonSocial)} placeholder="Nombre o empresa legal" required />
             </Field>
             <Field label="RFC">
-              <input name="rfc" value={form.rfc} onChange={handleChange} className={inputCls} placeholder="XAXX010101000" />
+              <input name="rfc" value={form.rfc} onChange={handleChange} className={requiredInputClass(form.rfc)} placeholder="XAXX010101000" required />
             </Field>
             {emisorSelect !== 'sieeg' && (
               <Field label="REPSE">
-                <input name="repse" value={form.repse} onChange={handleChange} className={inputCls} placeholder="Número de registro" />
+                <input name="repse" value={form.repse} onChange={handleChange} className={requiredInputClass(form.repse)} placeholder="Número de registro" required />
               </Field>
             )}
             <Field label="Número de cotización">
-              <input name="numeroCotizacion" value={form.numeroCotizacion} onChange={handleChange} className={inputCls} placeholder="COT-2024-001" />
+              <input name="numeroCotizacion" value={form.numeroCotizacion} onChange={handleChange} className={requiredInputClass(form.numeroCotizacion)} placeholder="COT-2024-001" required />
             </Field>
           </div>
         </SectionCard>
@@ -374,10 +429,10 @@ export default function Quotes() {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Field label="Fecha">
-              <input name="fecha" type="date" value={form.fecha} onChange={handleChange} className={inputCls} />
+              <input name="fecha" type="date" value={form.fecha} onChange={handleChange} className={requiredInputClass(form.fecha)} required />
             </Field>
             <Field label="Vigencia (días)">
-              <input name="vigencia" type="number" value={form.vigencia} onChange={handleChange} className={inputCls} placeholder="30" min="1" />
+              <input name="vigencia" type="number" value={form.vigencia} onChange={handleChange} className={requiredInputClass(form.vigencia)} placeholder="30" min="1" required />
             </Field>
             <Field label="Teléfono">
               <input
@@ -391,11 +446,13 @@ export default function Quotes() {
                 maxLength={15}
                 inputMode="numeric"
                 autoComplete="tel"
+                className={requiredInputClass(form.telefono)}
+                required
               />
             </Field>
             <div className="md:col-span-3">
               <Field label="Dirección del cliente">
-                <input name="direccionCliente" value={form.direccionCliente} onChange={handleChange} className={inputCls} placeholder="Calle, número, colonia, ciudad..." />
+                <input name="direccionCliente" value={form.direccionCliente} onChange={handleChange} className={requiredInputClass(form.direccionCliente)} placeholder="Calle, número, colonia, ciudad..." required />
               </Field>
             </div>
           </div>
@@ -415,16 +472,16 @@ export default function Quotes() {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Field label="Empresa">
-              <input name="empresa" value={form.empresa} onChange={handleChange} className={inputCls} placeholder="Nombre de la empresa" />
+              <input name="empresa" value={form.empresa} onChange={handleChange} className={requiredInputClass(form.empresa)} placeholder="Nombre de la empresa" required />
             </Field>
             <Field label="Contacto">
-              <input name="cliente" value={form.cliente} onChange={handleChange} className={inputCls} placeholder="Nombre completo" />
+              <input name="cliente" value={form.cliente} onChange={handleChange} className={requiredInputClass(form.cliente)} placeholder="Nombre completo" required />
             </Field>
             <Field label="Correo electrónico">
-              <input name="correo" type="email" value={form.correo} onChange={handleChange} className={inputCls} placeholder="correo@empresa.com" />
+              <input name="correo" type="email" value={form.correo} onChange={handleChange} className={requiredInputClass(form.correo)} placeholder="correo@empresa.com" required />
             </Field>
             <Field label="Estado">
-              <select name="status" value={form.status} onChange={handleChange} className={inputCls}>
+              <select name="status" value={form.status} onChange={handleChange} className={requiredInputClass(form.status)} required>
                 {statusOptions.map((option) => (
                   <option key={option} value={option}>
                     {option}
@@ -451,8 +508,9 @@ export default function Quotes() {
               name="descripcionGeneral"
               value={form.descripcionGeneral}
               onChange={handleChange}
-              className={`${inputCls} min-h-[80px] resize-y`}
+              className={`${requiredInputClass(form.descripcionGeneral)} min-h-[80px] resize-y`}
               placeholder="Describe el alcance general del servicio o proyecto..."
+              required
             />
           </Field>
         </SectionCard>
@@ -486,45 +544,50 @@ export default function Quotes() {
                     <td className="py-2 px-2 text-xs text-gray-400 font-medium w-6">{idx + 1}</td>
                     <td className="py-2 px-1">
                       <input
-                        className="w-full px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
+                        className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.descripcion) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
                         value={p.descripcion}
                         placeholder="Descripción..."
                         onChange={e => handlePartidaChange(idx, 'descripcion', e.target.value)}
+                        required
                       />
                     </td>
                     <td className="py-2 px-1 w-20">
                       <input
                         type="number" min="0"
-                        className="w-full px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
+                        className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.cantidad) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
                         value={p.cantidad}
                         placeholder="0"
                         onChange={e => handlePartidaChange(idx, 'cantidad', e.target.value)}
+                        required
                       />
                     </td>
                     <td className="py-2 px-1 w-16">
                       <input
-                        className="w-full px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
+                        className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.unidad) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
                         value={p.unidad}
                         placeholder="pza"
                         onChange={e => handlePartidaChange(idx, 'unidad', e.target.value)}
+                        required
                       />
                     </td>
                     <td className="py-2 px-1 w-24">
                       <input
                         type="number" min="0" step="0.01"
-                        className="w-full px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
+                        className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.precioUnitario) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
                         value={p.precioUnitario}
                         placeholder="0.00"
                         onChange={e => handlePartidaChange(idx, 'precioUnitario', e.target.value)}
+                        required
                       />
                     </td>
                     <td className="py-2 px-1 w-24">
                       <input
                         type="number" min="0" step="0.01"
-                        className="w-full px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
+                        className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.importe) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
                         value={p.importe}
                         placeholder="0.00"
                         onChange={e => handlePartidaChange(idx, 'importe', e.target.value)}
+                        required
                       />
                     </td>
                     <td className="py-2 px-1 w-8 text-center">
