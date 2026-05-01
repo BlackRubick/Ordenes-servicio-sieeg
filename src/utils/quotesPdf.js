@@ -236,7 +236,7 @@ const bodyY = gy + 8;
   // ══════════════════════════════════════════════════════════
   // DATOS BANCARIOS SEGÚN EMISOR
   // ══════════════════════════════════════════════════════════
-  bankY = ry + 24;
+  let bankY = ry + 24;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   color(NAVY);
