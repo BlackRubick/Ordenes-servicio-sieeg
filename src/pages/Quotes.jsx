@@ -47,6 +47,12 @@ const Field = ({ label, children }) => (
 const inputCls =
   'w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 transition-all';
 
+const statusOptions = [
+  'Borrador',
+  'Pendiente aprobado',
+  'Cancelada',
+];
+
 const normalizePartidas = (partidas) => partidas.map((partida) => ({
   cantidad: partida.cantidad !== '' && partida.cantidad !== null && partida.cantidad !== undefined
     ? Number(partida.cantidad)
@@ -415,6 +421,15 @@ export default function Quotes() {
             </Field>
             <Field label="Correo electrónico">
               <input name="correo" type="email" value={form.correo} onChange={handleChange} className={inputCls} placeholder="correo@empresa.com" />
+            </Field>
+            <Field label="Estado">
+              <select name="status" value={form.status} onChange={handleChange} className={inputCls}>
+                {statusOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
             </Field>
           </div>
         </SectionCard>
