@@ -165,10 +165,7 @@ const bodyY = gy + 8;
   });
 
   // — Datos bancarios —
-  let bankY = totY + 10;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(BLACK);
-  doc.text('Banorte Cta : 0295855215     Clabe : 072 100 002958552154   Nombre: Sinar Adrián Casanova García', MX, bankY);
-  doc.text('Bbva       Cta : 0480072338     Clabe: 012 100 004800723387    Nombre: Sinar Adrián Casanova García', MX, bankY + 14);
+  // (Los datos bancarios se renderizan más abajo según el emisor)
 
   // ══════════════════════════════════════════════════════════
   // ENCABEZADO DE TABLA
