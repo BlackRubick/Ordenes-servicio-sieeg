@@ -146,6 +146,21 @@ const bodyY = gy + 8;
   const tValCol   = TC[5];
   let totY = footerY;
 
+  // Observaciones: caja a la izquierda de los totales
+  const obsX = MX;
+  const obsW = tLabelCol.x - MX;
+  const obsY = footerY;
+  const obsH = tRowH * 3;
+  fill(LIGHT_BOX); stroke('#bbbbbb');
+  doc.setLineWidth(0.3);
+  doc.rect(obsX, obsY, obsW, obsH, 'FD');
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); color(BLACK);
+  const obsText = quote.observaciones || quote.observacion || quote.obs || '';
+  if (obsText && String(obsText).trim() !== '') {
+    const obsLines = doc.splitTextToSize(String(obsText), obsW - 8);
+    doc.text(obsLines, obsX + 6, obsY + 12);
+  }
+
   [
     { label: 'SUBTOTAL', value: subtotal },
     { label: 'IVA',      value: iva      },
