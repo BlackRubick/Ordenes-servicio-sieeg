@@ -519,7 +519,7 @@ export default function Quotes() {
         >
           {/* Se eliminó el campo 'Texto de introducción'. Solo se usa 'Observaciones' editable para el PDF. */}
           <div className="mt-4 pt-4 border-t border-gray-100">
-            <Field label="Observaciones (para el cuadro en el PDF)">
+            <Field label="Observaciones">
               <textarea
                 name="observaciones"
                 value={form.observaciones}

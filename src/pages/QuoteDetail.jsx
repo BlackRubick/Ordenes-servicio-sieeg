@@ -135,8 +135,8 @@ export default function QuoteDetail() {
           </div>
         </div>
         <div className="mb-6">
-          <div className="text-xs text-gray-400 font-semibold mb-1">Descripción general</div>
-          <div className="text-gray-700 italic">{quote.descripcionGeneral || 'Sin descripción'}</div>
+          <div className="text-xs text-gray-400 font-semibold mb-1">Observaciones</div>
+          <div className="text-gray-700 italic whitespace-pre-wrap">{quote.observaciones || 'Sin observaciones'}</div>
         </div>
         <div className="mb-6">
           <div className="text-xs text-gray-400 font-semibold mb-2">Partidas</div>
