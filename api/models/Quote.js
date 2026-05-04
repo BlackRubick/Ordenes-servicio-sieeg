@@ -22,5 +22,6 @@ const Quote = sequelize.define('Quote', {
   otro: { type: DataTypes.TEXT, allowNull: true },
   observaciones: { type: DataTypes.TEXT, allowNull: true },
   emisor: { type: DataTypes.STRING, allowNull: true },
+});
 
 module.exports = Quote;
