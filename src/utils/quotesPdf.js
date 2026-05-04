@@ -253,6 +253,23 @@ const bodyY = gy + 8;
   doc.line(MX, ry, MX + tableW, ry);
 
   // ══════════════════════════════════════════════════════════
+  // TEXTO DE PRUEBA DE RENDIMIENTO EN LA MITAD DEL PDF
+  // Se muestra solo cuando el checkbox está activo
+  // ══════════════════════════════════════════════════════════
+  if (quote.pruebaRendimiento) {
+    const rendimientoText = 'Pruebas Foráneas. Se describe el alcance y condiciones del servicio de validación, pruebas de rendimiento y/o certificación de cableado estructurado realizadas con equipo certificador Fluke DSX2-5000. LasPruebas de rendimiento al interior de la República Mexicana, Se realiza 1 prueba por nodo para validación y 1 prueba extra en caso de no pasar. Se requiere 1 técnico de parte del cliente para apoyar en la identificación de los servicios';
+    const rendimientoLines = doc.splitTextToSize(rendimientoText, tableW - 24);
+    const rendimientoLineH = 12;
+    const rendimientoH = rendimientoLines.length * rendimientoLineH;
+    const rendimientoY = Math.max(ry + 22, ry + ((footerY - ry - rendimientoH) / 2));
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    color(BLACK);
+    doc.text(rendimientoLines, MX + 12, rendimientoY);
+  }
+
+  // ══════════════════════════════════════════════════════════
   // DATOS BANCARIOS SEGÚN EMISOR
   // ══════════════════════════════════════════════════════════
   // Asegurar que los datos bancarios queden al final, justo debajo de los totales
