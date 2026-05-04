@@ -228,6 +228,7 @@ export default function Quotes() {
 
         if (active) {
           setForm(formFromQuote(data));
+          setEmisorSelect(data?.emisor || '');
         }
       } catch (error) {
         if (active) {
