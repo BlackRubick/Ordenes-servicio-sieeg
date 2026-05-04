@@ -22,6 +22,7 @@ FORMA DE PAGO: TRANSFERENCIA ELECTRONICA DE FONDOS(03)
 USO DE MCÍA.:G03 -GASTOS EN GENERAL
 MÉTODO DE PAGO: PAGO EN UNA SOLA EXHIBICIÓN
 UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
+  pruebaRendimiento: false,
   status: 'Borrador',
   partidas: [
     { cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '' }
@@ -92,6 +93,7 @@ FORMA DE PAGO: TRANSFERENCIA ELECTRONICA DE FONDOS(03)
 USO DE MCÍA.:G03 -GASTOSEN GENERAL
 MÉTODO DE PAGO:PAGO EN UNA SOLA EXHIBICIÓN
 UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
+  pruebaRendimiento: Boolean(quote?.pruebaRendimiento),
   status: quote?.status || 'Borrador',
   partidas: Array.isArray(quote?.partidas) && quote.partidas.length > 0
     ? quote.partidas.map((partida) => ({
@@ -547,7 +549,6 @@ export default function Quotes() {
                 className={`${inputCls} min-h-[60px] resize-y`}
                 placeholder="Ej: Incluir garantía, condiciones especiales, etc."
               />
-              <p className="text-xs text-gray-400">Estos datos aparecerán en el cuadro de observaciones al lado de los totales</p>
             </Field>
           </div>
         </SectionCard>
@@ -662,6 +663,18 @@ export default function Quotes() {
                 ${total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-dashed border-gray-200 flex items-center gap-3">
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={Boolean(form.pruebaRendimiento)}
+                onChange={(e) => setForm({ ...form, pruebaRendimiento: e.target.checked })}
+                className="h-5 w-5 rounded border-gray-300 text-primary-500 focus:ring-primary-400"
+              />
+              <span className="text-sm font-semibold text-gray-700">Prueba de rendimiento</span>
+            </label>
           </div>
         </SectionCard>
 
