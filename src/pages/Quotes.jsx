@@ -360,7 +360,13 @@ export default function Quotes() {
 
             const savedQuote = data?.quote || data;
             console.log('DEBUG: savedQuote before PDF', savedQuote);
-            const doc = await generateQuotePdfDoc({ ...savedQuote, partidas: Array.isArray(savedQuote.partidas) ? savedQuote.partidas : partidas });
+            const pdfQuote = {
+              ...savedQuote,
+              ...payload,
+              partidas: Array.isArray(savedQuote.partidas) ? savedQuote.partidas : partidas,
+              pruebaRendimiento: Boolean(payload.pruebaRendimiento),
+            };
+            const doc = await generateQuotePdfDoc(pdfQuote);
             doc.save(`Cotizacion_${savedQuote.numeroCotizacion || form.numeroCotizacion || 'nueva'}.pdf`);
             Swal.fire(isEditMode ? 'Cotización actualizada' : 'Cotización guardada', isEditMode ? 'Los cambios se guardaron en la base de datos y el PDF fue generado.' : 'La cotización se guardó en la base de datos y el PDF fue generado.', 'success');
             navigate(isEditMode ? `/admin/quotes/${savedQuote.id}` : '/admin/quotes');
