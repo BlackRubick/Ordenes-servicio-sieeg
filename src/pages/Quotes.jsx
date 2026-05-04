@@ -322,18 +322,21 @@ export default function Quotes() {
             return;
           }
 
-          try {
+            try {
             const partidas = normalizePartidas(form.partidas);
             const total = partidas.reduce((sum, partida) => sum + (Number(partida.importe) || 0), 0);
+            const payload = {
+              ...form,
+              partidas,
+              total,
+              status: isEditMode ? (form.status || 'Borrador') : 'Borrador',
+            };
+            // Debug: comprobar que `observaciones` está presente antes de enviar
+            console.log('DEBUG: saving quote payload', payload);
             const response = await fetch(isEditMode ? `/api/quotes/${id}` : '/api/quotes', {
               method: isEditMode ? 'PUT' : 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                ...form,
-                partidas,
-                total,
-                status: isEditMode ? (form.status || 'Borrador') : 'Borrador',
-              }),
+              body: JSON.stringify(payload),
             });
             const data = await response.json();
             if (!response.ok) {

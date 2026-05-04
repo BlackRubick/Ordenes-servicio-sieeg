@@ -155,20 +155,15 @@ const bodyY = gy + 8;
   doc.setLineWidth(0.3);
   doc.rect(obsX, obsY, obsW, obsH, 'FD');
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); color(BLACK);
-  const DEFAULT_OBS = `OBSERVACIONES
-FORMA DE PAGO: TRANSFERENCIA ELECTRONICA DE FONDOS(03)
-USO DE MCÍA.:G03 -GASTOS EN GENERAL
-MÉTODO DE PAGO: PAGO EN UNA SOLA EXHIBICIÓN
-UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`;
-
-  // Preferir el campo específico `observaciones`, si no existe usar `descripcionGeneral`,
-  // y si tampoco existe, usar el texto por defecto.
-  const obsText = (quote.observaciones && String(quote.observaciones).trim())
-    || (quote.descripcionGeneral && String(quote.descripcionGeneral).trim())
-    || DEFAULT_OBS;
-  const obsLines = doc.splitTextToSize(String(obsText), obsW - 12);
-  // dibujar el texto dentro del cuadro con un pequeño padding
-  doc.text(obsLines, obsX + 6, obsY + 12);
+  // Usar únicamente el campo `observaciones` proporcionado por el formulario.
+  const obsText = quote.observaciones && String(quote.observaciones).trim()
+    ? String(quote.observaciones)
+    : '';
+  if (obsText !== '') {
+    const obsLines = doc.splitTextToSize(obsText, obsW - 12);
+    // dibujar el texto dentro del cuadro con un pequeño padding
+    doc.text(obsLines, obsX + 6, obsY + 12);
+  }
 
   [
     { label: 'SUBTOTAL', value: subtotal },
