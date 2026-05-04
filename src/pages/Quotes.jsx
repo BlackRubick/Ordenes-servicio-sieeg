@@ -339,11 +339,13 @@ export default function Quotes() {
               body: JSON.stringify(payload),
             });
             const data = await response.json();
+            console.log('DEBUG: save response', data);
             if (!response.ok) {
               throw new Error(data?.error || 'No se pudo guardar la cotización');
             }
 
             const savedQuote = data?.quote || data;
+            console.log('DEBUG: savedQuote before PDF', savedQuote);
             const doc = await generateQuotePdfDoc({ ...savedQuote, partidas: Array.isArray(savedQuote.partidas) ? savedQuote.partidas : partidas });
             doc.save(`Cotizacion_${savedQuote.numeroCotizacion || form.numeroCotizacion || 'nueva'}.pdf`);
             Swal.fire(isEditMode ? 'Cotización actualizada' : 'Cotización guardada', isEditMode ? 'Los cambios se guardaron en la base de datos y el PDF fue generado.' : 'La cotización se guardó en la base de datos y el PDF fue generado.', 'success');
