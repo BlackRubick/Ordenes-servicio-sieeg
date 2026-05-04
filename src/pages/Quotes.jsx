@@ -150,12 +150,21 @@ export default function Quotes() {
     const val = e.target.value;
     setEmisorSelect(val);
     if (!val) {
-      setForm(f => ({ ...f, direccion: '', razonSocial: '', rfc: '', repse: '', numeroCotizacion: '' }));
+      setForm(f => ({
+        ...f,
+        emisor: '',
+        direccion: '',
+        razonSocial: '',
+        rfc: '',
+        repse: '',
+        numeroCotizacion: '',
+      }));
       return;
     }
     const emisor = EMISORES.find(e => e.key === val);
     setForm(f => ({
       ...f,
+      emisor: val,
       direccion: emisor.direccion,
       razonSocial: emisor.razonSocial,
       rfc: emisor.rfc,
