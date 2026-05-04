@@ -169,9 +169,9 @@ export default function Quotes() {
       razonSocial: emisor.razonSocial,
       rfc: emisor.rfc,
       repse: emisor.repse || '',
-      numeroCotizacion: generarNumeroCotizacion(val),
+      // No generar número aquí; el servidor lo hará automáticamente
     }));
-    setCotCounter(c => c + 1);
+    // No incrementar cotCounter; el servidor genera números únicos
   };
 
   const handleChange = (e) => {
@@ -308,7 +308,8 @@ export default function Quotes() {
             form.direccion,
             form.razonSocial,
             form.rfc,
-            form.numeroCotizacion,
+            // numeroCotizacion será generado automáticamente por el servidor en creación
+            ...(isEditMode ? [form.numeroCotizacion] : []),
             form.fecha,
             form.vigencia,
             form.telefono,
@@ -435,7 +436,16 @@ export default function Quotes() {
               </Field>
             )}
             <Field label="Número de cotización">
-              <input name="numeroCotizacion" value={form.numeroCotizacion} onChange={handleChange} className={requiredInputClass(form.numeroCotizacion)} placeholder="COT-2024-001" required />
+              <input
+                name="numeroCotizacion"
+                value={form.numeroCotizacion}
+                onChange={handleChange}
+                readOnly={!isEditMode}
+                className={`${inputCls} ${!isEditMode ? 'bg-gray-100 text-gray-600 cursor-not-allowed' : requiredInputClass(form.numeroCotizacion)}`}
+                placeholder={isEditMode ? 'COT-2024-001' : 'Se generará automáticamente al guardar'}
+                required={isEditMode}
+              />
+              {!isEditMode && <p className="text-xs text-gray-400 mt-1">El número se generará automáticamente cuando guardes la cotización</p>}
             </Field>
           </div>
         </SectionCard>

@@ -64,10 +64,6 @@ router.post('/', async (req, res) => {
   } = req.body;
 
   try {
-    if (!numeroCotizacion) {
-      return res.status(400).json({ error: 'numeroCotizacion es requerido' });
-    }
-
     const normalizedPartidas = Array.isArray(partidas) ? partidas.map(normalizePartida) : [];
     const parsedVigencia = vigencia !== undefined && vigencia !== null && vigencia !== ''
       ? parseInt(vigencia, 10)
@@ -76,8 +72,19 @@ router.post('/', async (req, res) => {
       ? Number(total)
       : calculateTotal(normalizedPartidas);
 
+    // Generar número de cotización automáticamente si no se proporciona
+    let finalNumeroCotizacion = numeroCotizacion;
+    if (!finalNumeroCotizacion || finalNumeroCotizacion.trim() === '') {
+      // Obtener el último ID para generar el siguiente número
+      const lastQuote = await Quote.findOne({ order: [['id', 'DESC']] });
+      const nextId = (lastQuote?.id || 0) + 1;
+      const prefix = emisor === 'sieeg' ? 'SIEEG' : emisor === 'sinar' ? 'SINAR' : 'COT';
+      const year = new Date().getFullYear();
+      finalNumeroCotizacion = `${prefix}-${year}-${String(nextId).padStart(4, '0')}`;
+    }
+
     const quote = await Quote.create({
-      numeroCotizacion,
+      numeroCotizacion: finalNumeroCotizacion,
       fecha,
       vigencia: Number.isFinite(parsedVigencia) ? parsedVigencia : null,
       telefono,
