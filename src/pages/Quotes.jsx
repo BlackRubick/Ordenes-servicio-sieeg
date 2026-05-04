@@ -17,12 +17,11 @@ const initialData = {
   empresa: '',
   cliente: '',
   correo: '',
-  descripcionGeneral: `OBSERVACIONES : 
+  observaciones: `OBSERVACIONES
 FORMA DE PAGO: TRANSFERENCIA ELECTRONICA DE FONDOS(03)
 USO DE MCÍA.:G03 -GASTOS EN GENERAL
 MÉTODO DE PAGO: PAGO EN UNA SOLA EXHIBICIÓN
 UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
-  observaciones: '',
   status: 'Borrador',
   partidas: [
     { cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '' }
@@ -86,12 +85,13 @@ const formFromQuote = (quote) => ({
   empresa: quote?.empresa || '',
   cliente: quote?.cliente || '',
   correo: quote?.correo || '',
-  descripcionGeneral: `OBSERVACIONES
+  observaciones: quote?.observaciones && String(quote.observaciones).trim() !== ''
+    ? quote.observaciones
+    : `OBSERVACIONES
 FORMA DE PAGO: TRANSFERENCIA ELECTRONICA DE FONDOS(03)
 USO DE MCÍA.:G03 -GASTOSEN GENERAL
 MÉTODO DE PAGO:PAGO EN UNA SOLA EXHIBICIÓN
 UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
-  observaciones: quote?.observaciones || '',
   status: quote?.status || 'Borrador',
   partidas: Array.isArray(quote?.partidas) && quote.partidas.length > 0
     ? quote.partidas.map((partida) => ({
@@ -306,7 +306,6 @@ export default function Quotes() {
             form.empresa,
             form.cliente,
             form.correo,
-            form.descripcionGeneral,
             form.status,
           ].some(isEmpty);
           // observaciones es opcional
@@ -513,17 +512,7 @@ export default function Quotes() {
             </svg>
           }
         >
-          <Field label="Texto de introducción">
-            <textarea
-              name="descripcionGeneral"
-              value={form.descripcionGeneral}
-              onChange={handleChange}
-              className={`${requiredInputClass(form.descripcionGeneral)} min-h-[80px] resize-y`}
-              placeholder="Observaciones automáticas"
-              required
-            />
-            <p className="text-xs text-gray-400">datos agregados automaticamente pero puedes modificarlos si es necesario</p>
-          </Field>
+          {/* Se eliminó el campo 'Texto de introducción'. Solo se usa 'Observaciones' editable para el PDF. */}
           <div className="mt-4 pt-4 border-t border-gray-100">
             <Field label="Observaciones (para el cuadro en el PDF)">
               <textarea
