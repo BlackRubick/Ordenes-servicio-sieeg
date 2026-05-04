@@ -342,6 +342,7 @@ export default function Quotes() {
               ...form,
               partidas,
               total,
+              pruebaRendimiento: Boolean(form.pruebaRendimiento),
               status: isEditMode ? (form.status || 'Borrador') : 'Borrador',
             };
             // Debug: comprobar que `observaciones` está presente antes de enviar
