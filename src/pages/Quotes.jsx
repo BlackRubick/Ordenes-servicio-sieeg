@@ -22,6 +22,7 @@ FORMA DE PAGO: TRANSFERENCIA ELECTRONICA DE FONDOS(03)
 USO DE MCÍA.:G03 -GASTOS EN GENERAL
 MÉTODO DE PAGO: PAGO EN UNA SOLA EXHIBICIÓN
 UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
+  observaciones: '',
   status: 'Borrador',
   partidas: [
     { cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '' }
@@ -90,6 +91,7 @@ FORMA DE PAGO: TRANSFERENCIA ELECTRONICA DE FONDOS(03)
 USO DE MCÍA.:G03 -GASTOSEN GENERAL
 MÉTODO DE PAGO:PAGO EN UNA SOLA EXHIBICIÓN
 UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
+  observaciones: quote?.observaciones || '',
   status: quote?.status || 'Borrador',
   partidas: Array.isArray(quote?.partidas) && quote.partidas.length > 0
     ? quote.partidas.map((partida) => ({
@@ -307,6 +309,7 @@ export default function Quotes() {
             form.descripcionGeneral,
             form.status,
           ].some(isEmpty);
+          // observaciones es opcional
 
           const requiereEmisor = !isEditMode && !emisorSelect;
           const requiereRepse = emisorSelect !== 'sieeg' && isEmpty(form.repse);
@@ -521,6 +524,18 @@ export default function Quotes() {
             />
             <p className="text-xs text-gray-400">datos agregados automaticamente pero puedes modificarlos si es necesario</p>
           </Field>
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <Field label="Observaciones (para el cuadro en el PDF)">
+              <textarea
+                name="observaciones"
+                value={form.observaciones}
+                onChange={handleChange}
+                className={`${inputCls} min-h-[60px] resize-y`}
+                placeholder="Ej: Incluir garantía, condiciones especiales, etc."
+              />
+              <p className="text-xs text-gray-400">Estos datos aparecerán en el cuadro de observaciones al lado de los totales</p>
+            </Field>
+          </div>
         </SectionCard>
 
         {/* Detalle del servicio */}

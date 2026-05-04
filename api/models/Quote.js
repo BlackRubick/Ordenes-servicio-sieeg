@@ -20,6 +20,7 @@ const Quote = sequelize.define('Quote', {
   total: { type: DataTypes.FLOAT, allowNull: true },
   status: { type: DataTypes.STRING, allowNull: true, defaultValue: 'Borrador' },
   otro: { type: DataTypes.TEXT, allowNull: true },
+  observaciones: { type: DataTypes.TEXT, allowNull: true },
 });
 
 module.exports = Quote;

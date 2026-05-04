@@ -55,6 +55,7 @@ router.post('/', async (req, res) => {
     rfc,
     repse,
     descripcionGeneral,
+    observaciones,
     partidas,
     total,
     status,
@@ -88,6 +89,7 @@ router.post('/', async (req, res) => {
       rfc,
       repse,
       descripcionGeneral,
+      observaciones,
       partidas: normalizedPartidas,
       total: Number.isFinite(parsedTotal) ? parsedTotal : calculateTotal(normalizedPartidas),
       status: status || 'Borrador',
@@ -107,7 +109,7 @@ router.put('/:id', async (req, res) => {
 
     const fields = [
       'numeroCotizacion', 'fecha', 'vigencia', 'telefono', 'direccionCliente', 'empresa', 'cliente',
-      'correo', 'direccion', 'razonSocial', 'rfc', 'repse', 'descripcionGeneral', 'partidas', 'total',
+      'correo', 'direccion', 'razonSocial', 'rfc', 'repse', 'descripcionGeneral', 'observaciones', 'partidas', 'total',
       'status', 'otro',
     ];
 
