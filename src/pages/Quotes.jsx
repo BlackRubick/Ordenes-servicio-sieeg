@@ -59,6 +59,48 @@ const statusOptions = [
   'Cancelada',
 ];
 
+const unitOptions = [
+  'PZA',
+  'SERVICIO',
+  'Lote',
+  'Juego',
+  'Kit',
+  'Paquete',
+  'Caja',
+  'Bolsa',
+  'Rollo',
+  'Metro',
+  'Metro lineal',
+  'Metro cuadrado',
+  'Metro cúbico',
+  'Centímetro',
+  'Centímetro cuadrado',
+  'Centímetro cúbico',
+  'Milímetro',
+  'Kilogramo',
+  'Gramo',
+  'Litro',
+  'Mililitro',
+  'Hora',
+  'Minuto',
+  'Día',
+  'Semana',
+  'Mes',
+  'Año',
+  'Par',
+  'Docena',
+  'Tonelada',
+  'Tarro',
+  'Tambor',
+  'Bulto',
+  'Envase',
+  'Botella',
+  'Saco',
+  'Caja chica',
+  'Caja grande',
+  'Unidad',
+];
+
 const normalizePartidas = (partidas) => partidas.map((partida) => ({
   cantidad: partida.cantidad !== '' && partida.cantidad !== null && partida.cantidad !== undefined
     ? Number(partida.cantidad)
@@ -606,14 +648,20 @@ export default function Quotes() {
                         required
                       />
                     </td>
-                    <td className="py-2 px-1 w-16">
-                      <input
+                    <td className="py-2 px-1 w-44">
+                      <select
                         className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.unidad) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
                         value={p.unidad}
-                        placeholder="pza"
                         onChange={e => handlePartidaChange(idx, 'unidad', e.target.value)}
                         required
-                      />
+                      >
+                        <option value="">Selecciona</option>
+                        {unitOptions.map((unidad) => (
+                          <option key={unidad} value={unidad}>
+                            {unidad}
+                          </option>
+                        ))}
+                      </select>
                     </td>
                     <td className="py-2 px-1 w-24">
                       <input
