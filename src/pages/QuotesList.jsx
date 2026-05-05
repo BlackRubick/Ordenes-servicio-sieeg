@@ -6,11 +6,108 @@ import { generateQuotePdfDoc } from '../utils/quotesPdf';
 
 const statusOptions = ['Borrador', 'Pendiente', 'Aprobado', 'Cancelada'];
 
+const unitOptions = [
+  'PZA',
+  'SERVICIO',
+  'Lote',
+  'Juego',
+  'Kit',
+  'Paquete',
+  'Caja',
+  'Bolsa',
+  'Rollo',
+  'Metro',
+  'Metro lineal',
+  'Metro cuadrado',
+  'Metro cúbico',
+  'Centímetro',
+  'Centímetro cuadrado',
+  'Centímetro cúbico',
+  'Milímetro',
+  'Kilogramo',
+  'Gramo',
+  'Litro',
+  'Mililitro',
+  'Hora',
+  'Minuto',
+  'Día',
+  'Semana',
+  'Mes',
+  'Año',
+  'Par',
+  'Docena',
+  'Tonelada',
+  'Tarro',
+  'Tambor',
+  'Bulto',
+  'Envase',
+  'Botella',
+  'Saco',
+  'Caja chica',
+  'Caja grande',
+  'Unidad',
+];
+
+const initialProductForm = {
+  descripcion: '',
+  cantidad: '',
+  unidad: '',
+  precioUnitario: '',
+};
+
 export default function QuotesList() {
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [productForm, setProductForm] = useState(initialProductForm);
+  const [productValidationAttempted, setProductValidationAttempted] = useState(false);
   const navigate = useNavigate();
+
+  const isEmpty = (value) => String(value ?? '').trim() === '';
+
+  const handleOpenProductModal = () => {
+    setProductForm(initialProductForm);
+    setProductValidationAttempted(false);
+    setShowProductModal(true);
+  };
+
+  const handleCloseProductModal = () => {
+    setShowProductModal(false);
+    setProductForm(initialProductForm);
+    setProductValidationAttempted(false);
+  };
+
+  const handleProductChange = (event) => {
+    const { name, value } = event.target;
+    setProductForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleProductSubmit = async (event) => {
+    event.preventDefault();
+    setProductValidationAttempted(true);
+
+    const isInvalid = Object.values(productForm).some(isEmpty);
+    if (isInvalid) {
+      await Swal.fire({
+        title: 'Faltan datos obligatorios',
+        text: 'Completa descripción, cantidad, unidad y precio unitario.',
+        icon: 'warning',
+      });
+      return;
+    }
+
+    const normalizedProduct = {
+      cantidad: Number(productForm.cantidad),
+      descripcion: productForm.descripcion.trim(),
+      unidad: productForm.unidad,
+      precioUnitario: Number(productForm.precioUnitario),
+      importe: Number(productForm.cantidad) * Number(productForm.precioUnitario),
+    };
+
+    setShowProductModal(false);
+    navigate('/admin/quotes/create', { state: { preloadedPartida: normalizedProduct } });
+  };
 
   const handleDeleteQuote = async (quote) => {
     try {
@@ -113,7 +210,7 @@ export default function QuotesList() {
         <div className="flex flex-wrap gap-3">
           <button
             className="px-5 py-2 rounded-xl border border-primary-200 bg-white text-primary-600 font-bold shadow-sm hover:bg-primary-50 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300 transition-all"
-            onClick={() => navigate('/admin/quotes/create')}
+            onClick={handleOpenProductModal}
           >
             Alta Producto
           </button>
@@ -125,6 +222,88 @@ export default function QuotesList() {
           </button>
         </div>
       </div>
+
+      {showProductModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
+          <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-primary-500 to-secondary-500 text-white">
+              <h3 className="text-lg font-extrabold">Alta Producto</h3>
+              <p className="text-sm text-white/90">Captura la partida para agregarla a una cotización.</p>
+            </div>
+            <form className="p-6 space-y-4" onSubmit={handleProductSubmit}>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Descripción</label>
+                <input
+                  name="descripcion"
+                  value={productForm.descripcion}
+                  onChange={handleProductChange}
+                  className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.descripcion) ? 'border-red-400' : 'border-gray-200'}`}
+                  placeholder="Descripción del producto o servicio"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Cantidad</label>
+                  <input
+                    name="cantidad"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={productForm.cantidad}
+                    onChange={handleProductChange}
+                    className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.cantidad) ? 'border-red-400' : 'border-gray-200'}`}
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">P. Unitario</label>
+                  <input
+                    name="precioUnitario"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={productForm.precioUnitario}
+                    onChange={handleProductChange}
+                    className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.precioUnitario) ? 'border-red-400' : 'border-gray-200'}`}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Unidad</label>
+                <select
+                  name="unidad"
+                  value={productForm.unidad}
+                  onChange={handleProductChange}
+                  className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.unidad) ? 'border-red-400' : 'border-gray-200'}`}
+                >
+                  <option value="">Selecciona una unidad</option>
+                  {unitOptions.map((unidad) => (
+                    <option key={unidad} value={unidad}>
+                      {unidad}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  className="flex-1 px-4 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
+                  onClick={handleCloseProductModal}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-[2] px-4 py-3 rounded-2xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white text-sm font-bold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
+                >
+                  Continuar a cotización
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       <div className="rounded-2xl bg-gradient-to-tr from-primary-100 to-blue-50 shadow-lg p-1 overflow-x-auto animate-fade-in">
         <table className="min-w-full text-base border-separate border-spacing-0">
           <thead>

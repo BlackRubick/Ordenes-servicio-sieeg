@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { generateQuotePdfDoc } from '../utils/quotesPdf';
 import Swal from 'sweetalert2';
@@ -150,9 +150,27 @@ UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
 
 export default function Quotes() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const isEditMode = Boolean(id);
-  const [form, setForm] = useState(initialData);
+  const preloadedPartida = location.state?.preloadedPartida;
+  const [form, setForm] = useState(() => {
+    if (preloadedPartida && !isEditMode) {
+      return {
+        ...initialData,
+        partidas: [{
+          ...initialData.partidas[0],
+          cantidad: preloadedPartida.cantidad !== undefined && preloadedPartida.cantidad !== null ? String(preloadedPartida.cantidad) : '',
+          descripcion: preloadedPartida.descripcion || '',
+          unidad: preloadedPartida.unidad || '',
+          precioUnitario: preloadedPartida.precioUnitario !== undefined && preloadedPartida.precioUnitario !== null ? String(preloadedPartida.precioUnitario) : '',
+          importe: preloadedPartida.importe !== undefined && preloadedPartida.importe !== null ? String(preloadedPartida.importe) : '',
+        }],
+      };
+    }
+
+    return initialData;
+  });
   const [loadingQuote, setLoadingQuote] = useState(isEditMode);
   const [emisorSelect, setEmisorSelect] = useState('');
   const [validationAttempted, setValidationAttempted] = useState(false);
