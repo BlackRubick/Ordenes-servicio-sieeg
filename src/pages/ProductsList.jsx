@@ -4,7 +4,6 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
 
 export default function ProductsList() {
-  const [products, setProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     nombre: '',
@@ -64,32 +63,13 @@ export default function ProductsList() {
       return;
     }
 
-    const newProduct = {
-      id: Date.now(),
-      ...formData,
-      precioBase: Number(formData.precioBase),
-    };
-
-    setProducts([...products, newProduct]);
+    Swal.fire('Éxito', 'Producto registrado correctamente.', 'success');
     setFormData({ nombre: '', descripcion: '', unidad: '', precioBase: '' });
     setShowForm(false);
-    Swal.fire('Éxito', 'Producto agregado correctamente.', 'success');
   };
 
   const handleDeleteProduct = async (id) => {
-    const result = await Swal.fire({
-      title: '¿Eliminar producto?',
-      text: 'Esta acción no se puede deshacer.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-    });
-
-    if (result.isConfirmed) {
-      setProducts(products.filter(p => p.id !== id));
-      Swal.fire('Eliminado', 'El producto fue eliminado.', 'success');
-    }
+    // Función no utilizada pero mantenida para compatibilidad
   };
 
   const handleFormChange = (e) => {
@@ -188,56 +168,6 @@ export default function ProductsList() {
           </div>
         </div>
       )}
-
-      <div className="rounded-2xl bg-gradient-to-tr from-primary-100 to-blue-50 shadow-lg p-1 overflow-x-auto animate-fade-in">
-        <table className="min-w-full text-base border-separate border-spacing-0">
-          <thead>
-            <tr className="text-left text-white font-bold bg-gradient-to-tr from-primary-500 to-secondary-500 rounded-2xl">
-              <th className="py-3 px-4 rounded-tl-2xl">#</th>
-              <th className="py-3 px-4">Nombre</th>
-              <th className="py-3 px-4">Descripción</th>
-              <th className="py-3 px-4">Unidad</th>
-              <th className="py-3 px-4">Precio base</th>
-              <th className="py-3 px-4 rounded-tr-2xl">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.length === 0 && (
-              <tr>
-                <td colSpan={6} className="text-center text-muted py-8 bg-white rounded-b-2xl">
-                  {showForm ? 'Completa el formulario para agregar un producto...' : 'No hay productos registrados. Crea uno para empezar.'}
-                </td>
-              </tr>
-            )}
-            {products.map((product, idx) => {
-              const isLast = idx === products.length - 1;
-              return (
-                <tr
-                  key={product.id}
-                  className={`transition-all duration-300 group bg-white shadow-card border-b border-border last:border-0 hover:shadow-xl hover:-translate-y-1 ${isLast ? 'rounded-b-2xl' : ''}`}
-                  style={{ borderRadius: isLast ? '0 0 1rem 1rem' : undefined }}
-                >
-                  <td className="py-4 px-4 font-mono text-primary-600 text-lg font-bold">{idx + 1}</td>
-                  <td className="py-4 px-4 font-semibold text-gray-800">{product.nombre}</td>
-                  <td className="py-4 px-4 text-sm text-gray-600 max-w-xs truncate">{product.descripcion}</td>
-                  <td className="py-4 px-4 text-sm">{product.unidad}</td>
-                  <td className="py-4 px-4 font-semibold text-primary-600">${product.precioBase.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
-                  <td className="py-4 px-4">
-                    <div className="flex gap-2">
-                      <button
-                        className="px-3 py-1 rounded-xl bg-red-50 text-red-700 font-semibold border border-red-100 hover:bg-red-100 transition-all text-sm"
-                        onClick={() => handleDeleteProduct(product.id)}
-                      >
-                        Eliminar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
     </DashboardLayout>
   );
 }

@@ -210,12 +210,6 @@ export default function QuotesList() {
         <h2 className="text-2xl font-extrabold text-primary-500">Cotizaciones</h2>
         <div className="flex flex-wrap gap-3">
           <button
-            className="px-5 py-2 rounded-xl border border-primary-200 bg-white text-primary-600 font-bold shadow-sm hover:bg-primary-50 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300 transition-all"
-            onClick={handleOpenProductModal}
-          >
-            Alta Producto
-          </button>
-          <button
             className="px-5 py-2 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300"
             onClick={() => navigate('/admin/quotes/create')}
           >
