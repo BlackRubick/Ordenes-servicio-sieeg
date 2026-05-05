@@ -110,12 +110,20 @@ export default function QuotesList() {
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-extrabold text-primary-500">Cotizaciones</h2>
-        <button
-          className="px-5 py-2 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300"
-          onClick={() => navigate('/admin/quotes/create')}
-        >
-          + Nueva cotización
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            className="px-5 py-2 rounded-xl border border-primary-200 bg-white text-primary-600 font-bold shadow-sm hover:bg-primary-50 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300 transition-all"
+            onClick={() => navigate('/admin/quotes/create')}
+          >
+            Alta Producto
+          </button>
+          <button
+            className="px-5 py-2 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300"
+            onClick={() => navigate('/admin/quotes/create')}
+          >
+            + Nueva cotización
+          </button>
+        </div>
       </div>
       <div className="rounded-2xl bg-gradient-to-tr from-primary-100 to-blue-50 shadow-lg p-1 overflow-x-auto animate-fade-in">
         <table className="min-w-full text-base border-separate border-spacing-0">
