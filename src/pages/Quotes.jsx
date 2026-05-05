@@ -156,8 +156,10 @@ export default function Quotes() {
   const preloadedPartida = location.state?.preloadedPartida;
   const [form, setForm] = useState(() => {
     if (preloadedPartida && !isEditMode) {
+      const modalObservaciones = String(preloadedPartida.observaciones || '').trim();
       return {
         ...initialData,
+        observaciones: modalObservaciones || initialData.observaciones,
         partidas: [{
           ...initialData.partidas[0],
           cantidad: preloadedPartida.cantidad !== undefined && preloadedPartida.cantidad !== null ? String(preloadedPartida.cantidad) : '',

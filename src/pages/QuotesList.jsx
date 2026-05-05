@@ -50,7 +50,7 @@ const unitOptions = [
 
 const initialProductForm = {
   descripcion: '',
-  cantidad: '',
+  observaciones: '',
   unidad: '',
   precioUnitario: '',
 };
@@ -91,18 +91,19 @@ export default function QuotesList() {
     if (isInvalid) {
       await Swal.fire({
         title: 'Faltan datos obligatorios',
-        text: 'Completa descripción, cantidad, unidad y precio unitario.',
+        text: 'Completa descripción, observaciones, unidad y precio unitario.',
         icon: 'warning',
       });
       return;
     }
 
     const normalizedProduct = {
-      cantidad: Number(productForm.cantidad),
+      cantidad: 1,
       descripcion: productForm.descripcion.trim(),
+      observaciones: productForm.observaciones.trim(),
       unidad: productForm.unidad,
       precioUnitario: Number(productForm.precioUnitario),
-      importe: Number(productForm.cantidad) * Number(productForm.precioUnitario),
+      importe: Number(productForm.precioUnitario),
     };
 
     setShowProductModal(false);
@@ -241,33 +242,15 @@ export default function QuotesList() {
                   placeholder="Descripción del producto o servicio"
                 />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Cantidad</label>
-                  <input
-                    name="cantidad"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={productForm.cantidad}
-                    onChange={handleProductChange}
-                    className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.cantidad) ? 'border-red-400' : 'border-gray-200'}`}
-                    placeholder="0"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">P. Unitario</label>
-                  <input
-                    name="precioUnitario"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={productForm.precioUnitario}
-                    onChange={handleProductChange}
-                    className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.precioUnitario) ? 'border-red-400' : 'border-gray-200'}`}
-                    placeholder="0.00"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Observaciones</label>
+                <textarea
+                  name="observaciones"
+                  value={productForm.observaciones}
+                  onChange={handleProductChange}
+                  className={`w-full min-h-[110px] px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 resize-y ${productValidationAttempted && isEmpty(productForm.observaciones) ? 'border-red-400' : 'border-gray-200'}`}
+                  placeholder="Escribe observaciones del producto o servicio"
+                />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Unidad</label>
@@ -284,6 +267,19 @@ export default function QuotesList() {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">P. Unitario</label>
+                <input
+                  name="precioUnitario"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={productForm.precioUnitario}
+                  onChange={handleProductChange}
+                  className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.precioUnitario) ? 'border-red-400' : 'border-gray-200'}`}
+                  placeholder="0.00"
+                />
               </div>
               <div className="flex gap-3 pt-2">
                 <button
