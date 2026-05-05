@@ -13,7 +13,7 @@ export default function ProductsList() {
       precioBase: 950,
     },
   ]);
-  const [showForm, setShowForm] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProductId, setEditingProductId] = useState(null);
   const [formData, setFormData] = useState({
@@ -72,6 +72,11 @@ export default function ProductsList() {
     setFormData({ nombre: '', descripcion: '', unidad: '', precioBase: '' });
   };
 
+  const closeAddModal = () => {
+    setShowAddModal(false);
+    resetForm();
+  };
+
   const handleAddProduct = () => {
     if (Object.values(formData).some(isEmpty)) {
       Swal.fire('Faltan datos', 'Completa todos los campos del producto.', 'warning');
@@ -89,7 +94,7 @@ export default function ProductsList() {
     setProducts((current) => [newProduct, ...current]);
     Swal.fire('Éxito', 'Producto registrado correctamente.', 'success');
     resetForm();
-    setShowForm(false);
+    setShowAddModal(false);
   };
 
   const handleOpenEditModal = (product) => {
@@ -163,82 +168,88 @@ export default function ProductsList() {
             className="px-5 py-2 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95"
             onClick={() => {
               resetForm();
-              setShowForm(!showForm);
+              setShowAddModal(true);
             }}
           >
-            {showForm ? '✕ Cancelar' : '+ Nuevo producto'}
+            + Nuevo producto
           </button>
         </div>
       </div>
 
-      {showForm && (
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
-          <h3 className="text-lg font-bold text-gray-800 mb-4">Agregar nuevo producto</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Nombre</label>
-              <input
-                name="nombre"
-                value={formData.nombre}
-                onChange={handleFormChange}
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200"
-                placeholder="Nombre del producto o servicio"
-              />
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
+          <div className="w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-primary-500 to-secondary-500 text-white">
+              <h3 className="text-lg font-extrabold">Agregar producto / servicio</h3>
+              <p className="text-sm text-white/90">Captura la información para registrar un nuevo producto o servicio.</p>
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Unidad</label>
-              <select
-                name="unidad"
-                value={formData.unidad}
-                onChange={handleFormChange}
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200"
-              >
-                <option value="">Selecciona</option>
-                {unitOptions.map((u) => (
-                  <option key={u} value={u}>{u}</option>
-                ))}
-              </select>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Nombre</label>
+                  <input
+                    name="nombre"
+                    value={formData.nombre}
+                    onChange={handleFormChange}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200"
+                    placeholder="Nombre del producto o servicio"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Unidad</label>
+                  <select
+                    name="unidad"
+                    value={formData.unidad}
+                    onChange={handleFormChange}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200"
+                  >
+                    <option value="">Selecciona</option>
+                    {unitOptions.map((u) => (
+                      <option key={u} value={u}>{u}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Precio base</label>
+                  <input
+                    name="precioBase"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.precioBase}
+                    onChange={handleFormChange}
+                    className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Descripción</label>
+                <textarea
+                  name="descripcion"
+                  value={formData.descripcion}
+                  onChange={handleFormChange}
+                  className="w-full min-h-[120px] px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 resize-y"
+                  placeholder="Descripción detallada"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  className="flex-1 px-4 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
+                  onClick={closeAddModal}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="flex-1 px-4 py-3 rounded-2xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white text-sm font-bold shadow-lg hover:scale-[1.02] transition-all"
+                  onClick={handleAddProduct}
+                >
+                  Guardar producto
+                </button>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1">Precio base</label>
-              <input
-                name="precioBase"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.precioBase}
-                onChange={handleFormChange}
-                className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200"
-                placeholder="0.00"
-              />
-            </div>
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-700 mb-1">Descripción</label>
-            <textarea
-              name="descripcion"
-              value={formData.descripcion}
-              onChange={handleFormChange}
-              className="w-full min-h-[100px] px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 resize-y"
-              placeholder="Descripción detallada"
-            />
-          </div>
-          <div className="flex gap-3">
-            <button
-              className="flex-1 px-4 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
-              onClick={() => {
-                setShowForm(false);
-                resetForm();
-              }}
-            >
-              Cancelar
-            </button>
-            <button
-              className="flex-1 px-4 py-3 rounded-2xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white text-sm font-bold shadow-lg hover:scale-[1.02] transition-all"
-              onClick={handleAddProduct}
-            >
-              Guardar producto
-            </button>
           </div>
         </div>
       )}
