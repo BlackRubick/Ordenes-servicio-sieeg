@@ -1,0 +1,243 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import DashboardLayout from '../layouts/DashboardLayout';
+import Swal from 'sweetalert2';
+
+export default function ProductsList() {
+  const [products, setProducts] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    nombre: '',
+    descripcion: '',
+    unidad: '',
+    precioBase: '',
+  });
+  const navigate = useNavigate();
+
+  const unitOptions = [
+    'PZA',
+    'SERVICIO',
+    'Lote',
+    'Juego',
+    'Kit',
+    'Paquete',
+    'Caja',
+    'Bolsa',
+    'Rollo',
+    'Metro',
+    'Metro lineal',
+    'Metro cuadrado',
+    'Metro cúbico',
+    'Centímetro',
+    'Centímetro cuadrado',
+    'Centímetro cúbico',
+    'Milímetro',
+    'Kilogramo',
+    'Gramo',
+    'Litro',
+    'Mililitro',
+    'Hora',
+    'Minuto',
+    'Día',
+    'Semana',
+    'Mes',
+    'Año',
+    'Par',
+    'Docena',
+    'Tonelada',
+    'Tarro',
+    'Tambor',
+    'Bulto',
+    'Envase',
+    'Botella',
+    'Saco',
+    'Caja chica',
+    'Caja grande',
+    'Unidad',
+  ];
+
+  const isEmpty = (value) => String(value ?? '').trim() === '';
+
+  const handleAddProduct = () => {
+    if (Object.values(formData).some(isEmpty)) {
+      Swal.fire('Faltan datos', 'Completa todos los campos del producto.', 'warning');
+      return;
+    }
+
+    const newProduct = {
+      id: Date.now(),
+      ...formData,
+      precioBase: Number(formData.precioBase),
+    };
+
+    setProducts([...products, newProduct]);
+    setFormData({ nombre: '', descripcion: '', unidad: '', precioBase: '' });
+    setShowForm(false);
+    Swal.fire('Éxito', 'Producto agregado correctamente.', 'success');
+  };
+
+  const handleDeleteProduct = async (id) => {
+    const result = await Swal.fire({
+      title: '¿Eliminar producto?',
+      text: 'Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    });
+
+    if (result.isConfirmed) {
+      setProducts(products.filter(p => p.id !== id));
+      Swal.fire('Eliminado', 'El producto fue eliminado.', 'success');
+    }
+  };
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(current => ({ ...current, [name]: value }));
+  };
+
+  return (
+    <DashboardLayout>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-extrabold text-primary-500">Productos / Servicios</h2>
+        <div className="flex gap-3">
+          <button
+            className="px-5 py-2 rounded-xl border border-gray-200 bg-white text-gray-600 font-bold shadow-sm hover:bg-gray-50 transition-all"
+            onClick={() => navigate('/admin/quotes')}
+          >
+            ← Volver a cotizaciones
+          </button>
+          <button
+            className="px-5 py-2 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95"
+            onClick={() => {
+              setFormData({ nombre: '', descripcion: '', unidad: '', precioBase: '' });
+              setShowForm(!showForm);
+            }}
+          >
+            {showForm ? '✕ Cancelar' : '+ Nuevo producto'}
+          </button>
+        </div>
+      </div>
+
+      {showForm && (
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
+          <h3 className="text-lg font-bold text-gray-800 mb-4">Agregar nuevo producto</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Nombre</label>
+              <input
+                name="nombre"
+                value={formData.nombre}
+                onChange={handleFormChange}
+                className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200"
+                placeholder="Nombre del producto o servicio"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Unidad</label>
+              <select
+                name="unidad"
+                value={formData.unidad}
+                onChange={handleFormChange}
+                className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200"
+              >
+                <option value="">Selecciona</option>
+                {unitOptions.map((u) => (
+                  <option key={u} value={u}>{u}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Precio base</label>
+              <input
+                name="precioBase"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.precioBase}
+                onChange={handleFormChange}
+                className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">Descripción</label>
+            <textarea
+              name="descripcion"
+              value={formData.descripcion}
+              onChange={handleFormChange}
+              className="w-full min-h-[100px] px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 resize-y"
+              placeholder="Descripción detallada"
+            />
+          </div>
+          <div className="flex gap-3">
+            <button
+              className="flex-1 px-4 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
+              onClick={() => setShowForm(false)}
+            >
+              Cancelar
+            </button>
+            <button
+              className="flex-1 px-4 py-3 rounded-2xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white text-sm font-bold shadow-lg hover:scale-[1.02] transition-all"
+              onClick={handleAddProduct}
+            >
+              Guardar producto
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="rounded-2xl bg-gradient-to-tr from-primary-100 to-blue-50 shadow-lg p-1 overflow-x-auto animate-fade-in">
+        <table className="min-w-full text-base border-separate border-spacing-0">
+          <thead>
+            <tr className="text-left text-white font-bold bg-gradient-to-tr from-primary-500 to-secondary-500 rounded-2xl">
+              <th className="py-3 px-4 rounded-tl-2xl">#</th>
+              <th className="py-3 px-4">Nombre</th>
+              <th className="py-3 px-4">Descripción</th>
+              <th className="py-3 px-4">Unidad</th>
+              <th className="py-3 px-4">Precio base</th>
+              <th className="py-3 px-4 rounded-tr-2xl">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {products.length === 0 && (
+              <tr>
+                <td colSpan={6} className="text-center text-muted py-8 bg-white rounded-b-2xl">
+                  {showForm ? 'Completa el formulario para agregar un producto...' : 'No hay productos registrados. Crea uno para empezar.'}
+                </td>
+              </tr>
+            )}
+            {products.map((product, idx) => {
+              const isLast = idx === products.length - 1;
+              return (
+                <tr
+                  key={product.id}
+                  className={`transition-all duration-300 group bg-white shadow-card border-b border-border last:border-0 hover:shadow-xl hover:-translate-y-1 ${isLast ? 'rounded-b-2xl' : ''}`}
+                  style={{ borderRadius: isLast ? '0 0 1rem 1rem' : undefined }}
+                >
+                  <td className="py-4 px-4 font-mono text-primary-600 text-lg font-bold">{idx + 1}</td>
+                  <td className="py-4 px-4 font-semibold text-gray-800">{product.nombre}</td>
+                  <td className="py-4 px-4 text-sm text-gray-600 max-w-xs truncate">{product.descripcion}</td>
+                  <td className="py-4 px-4 text-sm">{product.unidad}</td>
+                  <td className="py-4 px-4 font-semibold text-primary-600">${product.precioBase.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                  <td className="py-4 px-4">
+                    <div className="flex gap-2">
+                      <button
+                        className="px-3 py-1 rounded-xl bg-red-50 text-red-700 font-semibold border border-red-100 hover:bg-red-100 transition-all text-sm"
+                        onClick={() => handleDeleteProduct(product.id)}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </DashboardLayout>
+  );
+}
