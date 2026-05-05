@@ -224,13 +224,13 @@ export default function ProductsList() {
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Descripción</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Observaciones</label>
                 <textarea
                   name="descripcion"
                   value={formData.descripcion}
                   onChange={handleFormChange}
                   className="w-full min-h-[120px] px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 resize-y"
-                  placeholder="Descripción detallada"
+                  placeholder="Escribe observaciones del producto o servicio"
                 />
               </div>
               <div className="flex gap-3">
@@ -302,13 +302,13 @@ export default function ProductsList() {
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Descripción</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Observaciones</label>
                 <textarea
                   name="descripcion"
                   value={formData.descripcion}
                   onChange={handleFormChange}
                   className="w-full min-h-[120px] px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 resize-y"
-                  placeholder="Descripción detallada"
+                  placeholder="Escribe observaciones del producto o servicio"
                 />
               </div>
               <div className="flex gap-3">
