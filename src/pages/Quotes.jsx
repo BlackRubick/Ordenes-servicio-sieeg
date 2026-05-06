@@ -348,6 +348,42 @@ export default function Quotes() {
     handleProductSelect(idx, product.id);
   };
 
+  const observationCatalog = Array.from(new Set(
+    products
+      .map((product) => String(product.descripcion || '').trim())
+      .filter(Boolean)
+  ));
+
+  const handleObservationChange = (idx, value) => {
+    setForm((prev) => {
+      const partidas = prev.partidas.map((p, i) => {
+        if (i !== idx) return p;
+        return {
+          ...p,
+          observaciones: value,
+          obsShowSuggestions: true,
+          obsSuggestionIndex: 0,
+        };
+      });
+      return { ...prev, partidas };
+    });
+  };
+
+  const handleSelectObservationSuggestion = (idx, text) => {
+    setForm((prev) => {
+      const partidas = prev.partidas.map((p, i) => {
+        if (i !== idx) return p;
+        return {
+          ...p,
+          observaciones: text,
+          obsShowSuggestions: false,
+          obsSuggestionIndex: -1,
+        };
+      });
+      return { ...prev, partidas };
+    });
+  };
+
   const addPartida = () => {
     setForm({
       ...form,
@@ -900,15 +936,109 @@ export default function Quotes() {
                     />
                   </div>
 
-                  <div>
+                  <div className="relative">
                     <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Obs</label>
                     <textarea
                       className="w-full px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all resize-none"
                       value={p.observaciones || ''}
-                      placeholder="Notas específicas de este producto..."
-                      onChange={e => handlePartidaChange(idx, 'observaciones', e.target.value)}
+                      placeholder="Escribe o busca una observación..."
+                      onChange={e => handleObservationChange(idx, e.target.value)}
+                      onKeyDown={(e) => {
+                        const q = String(p.observaciones || '').trim().toLowerCase();
+                        const matches = observationCatalog.filter(text => text.toLowerCase().includes(q)).slice(0, 6);
+
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const current = p.obsSuggestionIndex ?? -1;
+                          const next = Math.min(current + 1, Math.max(matches.length - 1, 0));
+                          setForm(prev => ({
+                            ...prev,
+                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, obsSuggestionIndex: next, obsShowSuggestions: true } : pp)
+                          }));
+                          setTimeout(() => {
+                            const el = document.getElementById(`obs-sugg-${idx}-${next}`);
+                            if (el) el.scrollIntoView({ block: 'nearest' });
+                          }, 0);
+                          return;
+                        }
+
+                        if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          const current = p.obsSuggestionIndex ?? 0;
+                          const prevIndex = Math.max(current - 1, 0);
+                          setForm(prev => ({
+                            ...prev,
+                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, obsSuggestionIndex: prevIndex, obsShowSuggestions: true } : pp)
+                          }));
+                          setTimeout(() => {
+                            const el = document.getElementById(`obs-sugg-${idx}-${prevIndex}`);
+                            if (el) el.scrollIntoView({ block: 'nearest' });
+                          }, 0);
+                          return;
+                        }
+
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          const si = p.obsSuggestionIndex ?? -1;
+                          if (si >= 0 && matches[si]) {
+                            handleSelectObservationSuggestion(idx, matches[si]);
+                          } else if (matches.length) {
+                            handleSelectObservationSuggestion(idx, matches[0]);
+                          }
+                          return;
+                        }
+
+                        if (e.key === 'Escape') {
+                          setForm(prev => ({
+                            ...prev,
+                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, obsShowSuggestions: false, obsSuggestionIndex: -1 } : pp)
+                          }));
+                        }
+                      }}
+                      onFocus={() => {
+                        setForm(prev => ({
+                          ...prev,
+                          partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, obsShowSuggestions: true } : pp)
+                        }));
+                      }}
+                      onBlur={() => {
+                        setTimeout(() => {
+                          setForm(prev => ({
+                            ...prev,
+                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, obsShowSuggestions: false, obsSuggestionIndex: -1 } : pp)
+                          }));
+                        }, 120);
+                      }}
                       rows="2"
                     />
+
+                    {(String(p.observaciones || '').trim().length > 0 && p.obsShowSuggestions !== false && observationCatalog.filter(text => text.toLowerCase().includes(String(p.observaciones || '').trim().toLowerCase())).slice(0, 6).length > 0) && (
+                      <ul className="absolute z-40 left-0 right-0 bg-white border border-gray-100 rounded-md mt-1 max-h-40 overflow-auto text-sm shadow-lg">
+                        {observationCatalog.filter(text => text.toLowerCase().includes(String(p.observaciones || '').trim().toLowerCase())).slice(0, 6).map((text, sidx) => (
+                          <li
+                            id={`obs-sugg-${idx}-${sidx}`}
+                            key={`obs-sugg-${idx}-${sidx}`}
+                            className={`px-3 py-2 cursor-pointer ${p.obsSuggestionIndex === sidx ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                            onMouseEnter={() => {
+                              setForm(prev => ({
+                                ...prev,
+                                partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, obsSuggestionIndex: sidx } : pp)
+                              }));
+                              setTimeout(() => {
+                                const el = document.getElementById(`obs-sugg-${idx}-${sidx}`);
+                                if (el) el.scrollIntoView({ block: 'nearest' });
+                              }, 0);
+                            }}
+                            onMouseDown={(ev) => {
+                              ev.preventDefault();
+                              handleSelectObservationSuggestion(idx, text);
+                            }}
+                          >
+                            <div className="font-medium text-gray-800 whitespace-pre-wrap">{text}</div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 </div>
               </div>
