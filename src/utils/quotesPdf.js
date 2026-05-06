@@ -257,17 +257,17 @@ const bodyY = gy + 8;
         // Verificar si cabe
         if (ry + obsH > tableEndY) return;
 
-        // Texto de observaciones: negrita, pequeño y en color gris-azulado
-        doc.setFont('helvetica', 'bold'); doc.setFontSize(6); color('#3b556f');
-        const textX = TC[1].x + 6;
-        let textY = ry + 6;
-        obsLines.forEach((ln) => {
-          doc.text(ln, textX, textY);
-          textY += 8;
-        });
+          // Texto de observaciones: negrita, color negro, directo debajo de la fila del producto
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(7); color(BLACK);
+          const textX = TC[1].x + 4;
+          let textY = ry + 4; // comenzamos justo debajo de la fila
+          obsLines.forEach((ln) => {
+            doc.text(ln, textX, textY);
+            textY += 9;
+          });
 
-        // Espacio después de observaciones
-        ry += obsH + 4;
+          // Ajustar el cursor y espacio mínimo después
+          ry += obsLines.length * 9 + 6;
       }
   });
 
