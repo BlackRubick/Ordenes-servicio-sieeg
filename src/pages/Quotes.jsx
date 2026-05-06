@@ -697,6 +697,7 @@ export default function Quotes() {
               </thead>
               <tbody>
                 {form.partidas.map((p, idx) => (
+                  <>
                   <tr key={idx} className="border-b border-gray-50 last:border-0">
                     <td className="py-2 px-2 text-xs text-gray-400 font-medium w-6">{idx + 1}</td>
                     <td className="py-2 px-1 w-48">
@@ -713,20 +714,6 @@ export default function Quotes() {
                         ))}
                       </select>
                     </td>
-                                      <tr key={`obs-${idx}`} className="border-b border-gray-50 last:border-0">
-                                        <td colSpan="8" className="py-2 px-3">
-                                          <div className="flex items-center gap-2">
-                                            <label className="text-xs font-medium text-gray-500 whitespace-nowrap">Observaciones:</label>
-                                            <textarea
-                                              className="flex-1 px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all resize-none"
-                                              value={p.observaciones || ''}
-                                              placeholder="Notas o detalles específicos de este producto..."
-                                              onChange={e => handlePartidaChange(idx, 'observaciones', e.target.value)}
-                                              rows="2"
-                                            />
-                                          </div>
-                                        </td>
-                                      </tr>
                     <td className="py-2 px-1">
                       <input
                         className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.descripcion) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
@@ -793,6 +780,21 @@ export default function Quotes() {
                       )}
                     </td>
                   </tr>
+                  <tr key={`obs-${idx}`} className="border-b border-gray-50">
+                    <td colSpan="8" className="py-2 px-3 bg-gray-25">
+                      <div className="flex items-start gap-2">
+                        <label className="text-xs font-medium text-gray-500 whitespace-nowrap pt-1.5">Obs:</label>
+                        <textarea
+                          className="flex-1 px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all resize-none"
+                          value={p.observaciones || ''}
+                          placeholder="Notas específicas de este producto..."
+                          onChange={e => handlePartidaChange(idx, 'observaciones', e.target.value)}
+                          rows="2"
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                </>
                 ))}
               </tbody>
             </table>
