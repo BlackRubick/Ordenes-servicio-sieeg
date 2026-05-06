@@ -270,9 +270,13 @@ export default function Quotes() {
       if (i !== idx) return p;
       const updated = { ...p, [field]: value };
       if (field === 'cantidad' || field === 'precioUnitario') {
-        const c = parseFloat(field === 'cantidad' ? value : updated.cantidad) || 0;
-        const u = parseFloat(field === 'precioUnitario' ? value : updated.precioUnitario) || 0;
-        updated.importe = (c * u).toFixed(2);
+        const rawC = field === 'cantidad' ? value : updated.cantidad;
+        const rawU = field === 'precioUnitario' ? value : updated.precioUnitario;
+        const c = parseFloat(rawC);
+        const u = parseFloat(rawU);
+        const qty = (!isNaN(c) && c > 0) ? c : 1; // si cantidad vacía o 0 usar 1
+        const price = (!isNaN(u) ? u : 0);
+        updated.importe = (qty * price).toFixed(2);
       }
       return updated;
     });
@@ -288,14 +292,15 @@ export default function Quotes() {
     setForm((prev) => {
       const partidas = prev.partidas.map((p, i) => {
         if (i !== idx) return p;
-        const c = parseFloat(p.cantidad) || 0;
+        const c = parseFloat(p.cantidad);
         const u = parseFloat(product.precioBase) || 0;
+        const qty = (!isNaN(c) && c > 0) ? c : 1; // si no hay cantidad usar 1
         return {
           ...p,
           descripcion: product.nombre,
           unidad: product.unidad,
           precioUnitario: String(product.precioBase),
-          importe: (c * u).toFixed(2),
+          importe: (qty * u).toFixed(2),
         };
       });
 
