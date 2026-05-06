@@ -331,6 +331,7 @@ export default function Quotes() {
           ...p,
           productId: null,
           productSearch: value,
+          showSuggestions: true,
           // usar el texto escrito como descripcion provisional
           descripcion: value,
         };
@@ -742,7 +743,6 @@ export default function Quotes() {
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
-                          // si hay sugerencias, seleccionar la primera; si no, usar texto tal cual (ya queda en descripcion)
                           const q = (p.productSearch || '').trim();
                           const matches = products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes(q.toLowerCase()));
                           if (matches.length) {
@@ -750,9 +750,24 @@ export default function Quotes() {
                           }
                         }
                       }}
+                      onFocus={() => {
+                        setForm(prev => ({
+                          ...prev,
+                          partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, showSuggestions: true } : pp)
+                        }));
+                      }}
+                      onBlur={() => {
+                        // Defer hiding to allow click on suggestion (onMouseDown)
+                        setTimeout(() => {
+                          setForm(prev => ({
+                            ...prev,
+                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, showSuggestions: false } : pp)
+                          }));
+                        }, 120);
+                      }}
                     />
                     {/* Suggestions */}
-                    {(p.productSearch || '').length > 0 && products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes((p.productSearch||'').toLowerCase())).slice(0,6).length > 0 && (
+                    {(p.productSearch || '').length > 0 && p.showSuggestions !== false && products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes((p.productSearch||'').toLowerCase())).slice(0,6).length > 0 && (
                       <ul className="absolute z-40 left-0 right-0 bg-white border border-gray-100 rounded-md mt-1 max-h-48 overflow-auto text-sm shadow-lg">
                         {products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes((p.productSearch||'').toLowerCase())).slice(0,6).map((prod) => (
                           <li
