@@ -689,120 +689,116 @@ export default function Quotes() {
             </svg>
           }
         >
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  {['#', 'Producto', 'Descripción', 'Cantidad', 'Unidad', 'P. Unitario', 'Importe', ''].map((h, i) => (
-                    <th key={i} className="py-2 px-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {form.partidas.map((p, idx) => (
-                  <>
-                  <tr key={idx} className="border-b border-gray-50 last:border-0">
-                    <td className="py-2 px-2 text-xs text-gray-400 font-medium w-6">{idx + 1}</td>
-                    <td className="py-2 px-1 w-48">
-                      <select
-                        className="w-full px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
-                        onChange={(e) => handleProductSelect(idx, e.target.value)}
-                        defaultValue=""
-                      >
-                        <option value="">Selecciona producto...</option>
-                        {products.map((product) => (
-                          <option key={product.id} value={product.id}>
-                            {product.nombre}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="py-2 px-1">
-                      <input
-                        className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.descripcion) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
-                        value={p.descripcion}
-                        placeholder="Descripción..."
-                        onChange={e => handlePartidaChange(idx, 'descripcion', e.target.value)}
-                        required
-                      />
-                    </td>
-                    <td className="py-2 px-1 w-20">
-                      <input
-                        type="number" min="0"
-                        className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.cantidad) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
-                        value={p.cantidad}
-                        placeholder="0"
-                        onChange={e => handlePartidaChange(idx, 'cantidad', e.target.value)}
-                        required
-                      />
-                    </td>
-                    <td className="py-2 px-1 w-44">
-                      <select
-                        className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.unidad) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
-                        value={p.unidad}
-                        onChange={e => handlePartidaChange(idx, 'unidad', e.target.value)}
-                        required
-                      >
-                        <option value="">Selecciona</option>
-                        {unitOptions.map((unidad) => (
-                          <option key={unidad} value={unidad}>
-                            {unidad}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="py-2 px-1 w-24">
-                      <input
-                        type="number" min="0" step="0.01"
-                        className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.precioUnitario) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
-                        value={p.precioUnitario}
-                        placeholder="0.00"
-                        onChange={e => handlePartidaChange(idx, 'precioUnitario', e.target.value)}
-                        required
-                      />
-                    </td>
-                    <td className="py-2 px-1 w-24">
-                      <input
-                        type="number" min="0" step="0.01"
-                        className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.importe) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
-                        value={p.importe}
-                        placeholder="0.00"
-                        onChange={e => handlePartidaChange(idx, 'importe', e.target.value)}
-                        required
-                      />
-                    </td>
-                    <td className="py-2 px-1 w-8 text-center">
-                      {form.partidas.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removePartida(idx)}
-                          className="w-6 h-6 rounded-full border border-red-200 text-red-400 hover:bg-red-50 flex items-center justify-center transition-all text-base leading-none"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                  <tr key={`obs-${idx}`} className="border-b border-gray-50">
-                    <td colSpan="8" className="py-2 px-3 bg-gray-25">
-                      <div className="flex items-start gap-2">
-                        <label className="text-xs font-medium text-gray-500 whitespace-nowrap pt-1.5">Obs:</label>
-                        <textarea
-                          className="flex-1 px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all resize-none"
-                          value={p.observaciones || ''}
-                          placeholder="Notas específicas de este producto..."
-                          onChange={e => handlePartidaChange(idx, 'observaciones', e.target.value)}
-                          rows="2"
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                </>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-3">
+            {form.partidas.map((p, idx) => (
+              <div key={`partida-${idx}`} className="rounded-xl border border-gray-100 bg-gray-50/60 p-3">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Partida #{idx + 1}</span>
+                  {form.partidas.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removePartida(idx)}
+                      className="w-6 h-6 rounded-full border border-red-200 text-red-400 hover:bg-red-50 flex items-center justify-center transition-all text-base leading-none"
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Producto</label>
+                    <select
+                      className="w-full px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
+                      onChange={(e) => handleProductSelect(idx, e.target.value)}
+                      defaultValue=""
+                    >
+                      <option value="">Selecciona producto...</option>
+                      {products.map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Descripción</label>
+                    <input
+                      className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.descripcion) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
+                      value={p.descripcion}
+                      placeholder="Descripción..."
+                      onChange={e => handlePartidaChange(idx, 'descripcion', e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Cantidad</label>
+                    <input
+                      type="number" min="0"
+                      className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.cantidad) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
+                      value={p.cantidad}
+                      placeholder="0"
+                      onChange={e => handlePartidaChange(idx, 'cantidad', e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Unidad</label>
+                    <select
+                      className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.unidad) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
+                      value={p.unidad}
+                      onChange={e => handlePartidaChange(idx, 'unidad', e.target.value)}
+                      required
+                    >
+                      <option value="">Selecciona</option>
+                      {unitOptions.map((unidad) => (
+                        <option key={unidad} value={unidad}>
+                          {unidad}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">P. Unitario</label>
+                    <input
+                      type="number" min="0" step="0.01"
+                      className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.precioUnitario) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
+                      value={p.precioUnitario}
+                      placeholder="0.00"
+                      onChange={e => handlePartidaChange(idx, 'precioUnitario', e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Importe</label>
+                    <input
+                      type="number" min="0" step="0.01"
+                      className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.importe) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
+                      value={p.importe}
+                      placeholder="0.00"
+                      onChange={e => handlePartidaChange(idx, 'importe', e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Obs</label>
+                    <textarea
+                      className="w-full px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all resize-none"
+                      value={p.observaciones || ''}
+                      placeholder="Notas específicas de este producto..."
+                      onChange={e => handlePartidaChange(idx, 'observaciones', e.target.value)}
+                      rows="2"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Footer tabla */}
