@@ -748,18 +748,31 @@ export default function Quotes() {
                         const matches = products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes(q.toLowerCase())).slice(0,6);
                         if (e.key === 'ArrowDown') {
                           e.preventDefault();
+                          const current = p.suggestionIndex ?? -1;
+                          const next = Math.min(current + 1, Math.max(matches.length - 1, 0));
                           setForm(prev => ({
                             ...prev,
-                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, suggestionIndex: Math.min(((pp.suggestionIndex ?? -1) + 1), Math.max(matches.length - 1, 0)), showSuggestions: true } : pp)
+                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, suggestionIndex: next, showSuggestions: true } : pp)
                           }));
+                          // scroll into view
+                          setTimeout(() => {
+                            const el = document.getElementById(`sugg-${idx}-${next}`);
+                            if (el) el.scrollIntoView({ block: 'nearest' });
+                          }, 0);
                           return;
                         }
                         if (e.key === 'ArrowUp') {
                           e.preventDefault();
+                          const current = p.suggestionIndex ?? 0;
+                          const prevIndex = Math.max(current - 1, 0);
                           setForm(prev => ({
                             ...prev,
-                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, suggestionIndex: Math.max(((pp.suggestionIndex ?? 0) - 1), 0), showSuggestions: true } : pp)
+                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, suggestionIndex: prevIndex, showSuggestions: true } : pp)
                           }));
+                          setTimeout(() => {
+                            const el = document.getElementById(`sugg-${idx}-${prevIndex}`);
+                            if (el) el.scrollIntoView({ block: 'nearest' });
+                          }, 0);
                           return;
                         }
                         if (e.key === 'Enter') {
@@ -800,6 +813,7 @@ export default function Quotes() {
                       <ul className="absolute z-40 left-0 right-0 bg-white border border-gray-100 rounded-md mt-1 max-h-48 overflow-auto text-sm shadow-lg">
                         {products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes((p.productSearch||'').toLowerCase())).slice(0,6).map((prod, sidx) => (
                           <li
+                            id={`sugg-${idx}-${sidx}`}
                             key={`sugg-${prod.id}`}
                             className={`px-3 py-2 cursor-pointer ${p.suggestionIndex === sidx ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
                             onMouseEnter={() => {
@@ -807,6 +821,10 @@ export default function Quotes() {
                                 ...prev,
                                 partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, suggestionIndex: sidx } : pp)
                               }));
+                              setTimeout(() => {
+                                const el = document.getElementById(`sugg-${idx}-${sidx}`);
+                                if (el) el.scrollIntoView({ block: 'nearest' });
+                              }, 0);
                             }}
                             onMouseDown={(ev) => { ev.preventDefault(); handleSelectSuggestion(idx, prod); }}
                           >
