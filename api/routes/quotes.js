@@ -15,6 +15,7 @@ const normalizePartida = (partida = {}) => ({
   importe: partida.importe !== undefined && partida.importe !== null && partida.importe !== ''
     ? Number(partida.importe)
     : '',
+  observaciones: partida.observaciones || '',
 });
 
 const calculateTotal = (partidas) => (Array.isArray(partidas) ? partidas : []).reduce(
