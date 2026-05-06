@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Quote } = require('../models');
+const { Op } = require('sequelize');
 
 const normalizePartida = (partida = {}) => ({
   cantidad: partida.cantidad !== undefined && partida.cantidad !== null && partida.cantidad !== ''
@@ -20,6 +21,22 @@ const calculateTotal = (partidas) => (Array.isArray(partidas) ? partidas : []).r
   (sum, partida) => sum + (Number(partida?.importe) || 0),
   0
 );
+
+const getPeriodo = (fecha) => {
+  if (typeof fecha === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+    return `${fecha.slice(0, 4)}${fecha.slice(5, 7)}`;
+  }
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  return `${now.getFullYear()}${month}`;
+};
+
+const getPrefixByEmisor = (emisor) => {
+  const normalized = String(emisor || '').toLowerCase().trim();
+  if (normalized === 'sinar') return 'PF';
+  if (normalized === 'sieeg') return 'PM';
+  return 'PM';
+};
 
 router.get('/', async (req, res) => {
   try {
@@ -76,12 +93,28 @@ router.post('/', async (req, res) => {
     // Generar número de cotización automáticamente si no se proporciona
     let finalNumeroCotizacion = numeroCotizacion;
     if (!finalNumeroCotizacion || finalNumeroCotizacion.trim() === '') {
-      // Obtener el último ID para generar el siguiente número
-      const lastQuote = await Quote.findOne({ order: [['id', 'DESC']] });
-      const nextId = (lastQuote?.id || 0) + 1;
-      const prefix = emisor === 'sieeg' ? 'SIEEG' : emisor === 'sinar' ? 'SINAR' : 'COT';
-      const year = new Date().getFullYear();
-      finalNumeroCotizacion = `${prefix}-${year}-${String(nextId).padStart(4, '0')}`;
+      const prefix = getPrefixByEmisor(emisor);
+      const periodo = getPeriodo(fecha);
+      const pattern = `${prefix}${periodo}/%`;
+      const lastQuote = await Quote.findOne({
+        where: {
+          numeroCotizacion: {
+            [Op.like]: pattern,
+          },
+        },
+        order: [['numeroCotizacion', 'DESC']],
+      });
+
+      let nextConsecutive = 1;
+      if (lastQuote?.numeroCotizacion) {
+        const lastPart = String(lastQuote.numeroCotizacion).split('/')[1] || '';
+        const lastNumber = parseInt(lastPart, 10);
+        if (Number.isFinite(lastNumber)) {
+          nextConsecutive = lastNumber + 1;
+        }
+      }
+
+      finalNumeroCotizacion = `${prefix}${periodo}/${String(nextConsecutive).padStart(4, '0')}`;
     }
 
     const quote = await Quote.create({
