@@ -26,7 +26,10 @@ app.get('/', (req, res) => {
   res.send('API NEWORDERS funcionando');
 });
 
-sequelize.sync({ alter: true }).then(() => {
+// Avoid automatic schema alteration in production environments — it can
+// produce problematic ALTER statements (see ER_TOO_MANY_KEYS). Use
+// migrations instead. For now, start without `alter` to prevent the error.
+sequelize.sync().then(() => {
   app.listen(PORT, () => {
     console.log(`Servidor API escuchando en puerto ${PORT}`);
   });
