@@ -304,6 +304,7 @@ export default function Quotes() {
           ...p,
           productId: product.id,
           productSearch: product.nombre,
+          showSuggestions: false,
           suggestionIndex: -1,
           cantidad: '1',
           descripcion: product.nombre,
@@ -743,13 +744,39 @@ export default function Quotes() {
                       placeholder="Escribe para buscar o crear producto..."
                       onChange={e => handleProductNameChange(idx, e.target.value)}
                       onKeyDown={(e) => {
+                        const q = (p.productSearch || '').trim();
+                        const matches = products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes(q.toLowerCase())).slice(0,6);
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          setForm(prev => ({
+                            ...prev,
+                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, suggestionIndex: Math.min(((pp.suggestionIndex ?? -1) + 1), Math.max(matches.length - 1, 0)), showSuggestions: true } : pp)
+                          }));
+                          return;
+                        }
+                        if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          setForm(prev => ({
+                            ...prev,
+                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, suggestionIndex: Math.max(((pp.suggestionIndex ?? 0) - 1), 0), showSuggestions: true } : pp)
+                          }));
+                          return;
+                        }
                         if (e.key === 'Enter') {
                           e.preventDefault();
-                          const q = (p.productSearch || '').trim();
-                          const matches = products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes(q.toLowerCase()));
-                          if (matches.length) {
+                          const si = p.suggestionIndex ?? -1;
+                          if (si >= 0 && matches[si]) {
+                            handleSelectSuggestion(idx, matches[si]);
+                          } else if (matches.length) {
                             handleSelectSuggestion(idx, matches[0]);
                           }
+                          return;
+                        }
+                        if (e.key === 'Escape') {
+                          setForm(prev => ({
+                            ...prev,
+                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, showSuggestions: false, suggestionIndex: -1 } : pp)
+                          }));
                         }
                       }}
                       onFocus={() => {
@@ -771,10 +798,16 @@ export default function Quotes() {
                     {/* Suggestions */}
                     {(p.productSearch || '').length > 0 && p.showSuggestions !== false && products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes((p.productSearch||'').toLowerCase())).slice(0,6).length > 0 && (
                       <ul className="absolute z-40 left-0 right-0 bg-white border border-gray-100 rounded-md mt-1 max-h-48 overflow-auto text-sm shadow-lg">
-                        {products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes((p.productSearch||'').toLowerCase())).slice(0,6).map((prod) => (
+                        {products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes((p.productSearch||'').toLowerCase())).slice(0,6).map((prod, sidx) => (
                           <li
                             key={`sugg-${prod.id}`}
-                            className="px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                            className={`px-3 py-2 cursor-pointer ${p.suggestionIndex === sidx ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                            onMouseEnter={() => {
+                              setForm(prev => ({
+                                ...prev,
+                                partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, suggestionIndex: sidx } : pp)
+                              }));
+                            }}
                             onMouseDown={(ev) => { ev.preventDefault(); handleSelectSuggestion(idx, prod); }}
                           >
                             <div className="font-medium text-gray-800">{prod.nombre}</div>
