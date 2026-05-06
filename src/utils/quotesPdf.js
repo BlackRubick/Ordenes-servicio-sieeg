@@ -142,8 +142,8 @@ const bodyY = gy + 8;
   const iva      = subtotal * 0.16;
   const total    = subtotal + iva;
 
-  const tLabelCol = TC[4];
-  const tValCol   = TC[5];
+  const tLabelCol = TC[3];
+  const tValCol   = TC[4];
   let totY = footerY;
 
   // Observaciones: caja a la izquierda de los totales
