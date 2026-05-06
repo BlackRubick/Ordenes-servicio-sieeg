@@ -289,6 +289,7 @@ export default function Quotes() {
     if (!productId) return;
     const product = products.find(p => p.id === parseInt(productId));
     if (!product) return;
+    console.log('Product selected:', product);
 
     // Usar el estado anterior para evitar datos stale y recalcular importe/total
     setForm((prev) => {
