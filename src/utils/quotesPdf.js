@@ -236,7 +236,7 @@ const bodyY = gy + 8;
 
     const row = {
       cantidad:       String(p.cantidad || ''),
-      descripcion:    combinedText,
+      descripcion:    String(p.descripcion || ''),
       unidad:         String(p.unidad || ''),
       precioUnitario: '$' + (Number(p.precioUnitario)||0).toLocaleString('es-MX', { minimumFractionDigits: 2 }),
       importe:        '$' + (Number(p.importe)       ||0).toLocaleString('es-MX', { minimumFractionDigits: 2 }),
