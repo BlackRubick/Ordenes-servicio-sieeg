@@ -249,37 +249,26 @@ const bodyY = gy + 8;
     ry += dynH;
 
     // ─ Si hay observaciones, dibuja una fila adicional debajo ─
-    const hasObservaciones = p.observaciones && String(p.observaciones).trim() !== '';
-    if (hasObservaciones) {
-      const obsLines = doc.splitTextToSize(String(p.observaciones), TC[1].w - 12);
-      const obsH = Math.max(14, obsLines.length * 9 + 10);
+      const hasObservaciones = p.observaciones && String(p.observaciones).trim() !== '';
+      if (hasObservaciones) {
+        const obsLines = doc.splitTextToSize(String(p.observaciones), TC[1].w - 12);
+        const obsH = Math.max(12, obsLines.length * 8 + 8);
 
-      // Verificar si cabe
-      if (ry + obsH > tableEndY) return;
+        // Verificar si cabe
+        if (ry + obsH > tableEndY) return;
 
-      // Dibujar dos líneas sutiles (superior e inferior) y colocar el texto entre ellas
-      doc.setLineWidth(0.6);
-      stroke('#cfcfcf');
-      const lineX1 = MX + 8;
-      const lineX2 = MX + tableW - 8;
-      const topLineY = ry + 6;
-      const bottomLineY = ry + obsH - 6;
-      doc.line(lineX1, topLineY, lineX2, topLineY);
-      doc.line(lineX1, bottomLineY, lineX2, bottomLineY);
+        // Texto de observaciones: negrita, pequeño y en color gris-azulado
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(6); color('#3b556f');
+        const textX = TC[1].x + 6;
+        let textY = ry + 6;
+        obsLines.forEach((ln) => {
+          doc.text(ln, textX, textY);
+          textY += 8;
+        });
 
-      // Texto de observaciones: itálica, pequeño (5pt) y en color gris-azulado
-      doc.setFont('helvetica', 'italic'); doc.setFontSize(5); color('#3b556f');
-      // Dibujar texto empezando ligeramente indentado bajo la columna DESCRIPCION
-      const textX = TC[1].x + 6;
-      let textY = topLineY + 8;
-      obsLines.forEach((ln) => {
-        doc.text(ln, textX, textY);
-        textY += 9;
-      });
-
-      // Añadir un pequeño espacio después de las observaciones
-      ry += obsH;
-    }
+        // Espacio después de observaciones
+        ry += obsH + 4;
+      }
   });
 
   // ══════════════════════════════════════════════════════════
