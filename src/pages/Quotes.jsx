@@ -25,7 +25,7 @@ UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
   pruebaRendimiento: false,
   status: 'Borrador',
   partidas: [
-    { cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '' }
+    { cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '', observaciones: '' }
   ]
 };
 
@@ -144,6 +144,7 @@ UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
         unidad: partida?.unidad || '',
         precioUnitario: partida?.precioUnitario !== undefined && partida?.precioUnitario !== null && String(partida?.precioUnitario) !== '' ? String(partida.precioUnitario) : '',
         importe: partida?.importe !== undefined && partida?.importe !== null && String(partida?.importe) !== '' ? String(partida.importe) : '',
+               observaciones: partida?.observaciones || '',
       }))
     : [{ cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '' }],
 });
@@ -168,6 +169,7 @@ export default function Quotes() {
           unidad: preloadedPartida.unidad || '',
           precioUnitario: preloadedPartida.precioUnitario !== undefined && preloadedPartida.precioUnitario !== null ? String(preloadedPartida.precioUnitario) : '',
           importe: preloadedPartida.importe !== undefined && preloadedPartida.importe !== null ? String(preloadedPartida.importe) : '',
+          observaciones: preloadedPartida.observaciones || '',
         }],
       };
     }
@@ -318,11 +320,14 @@ export default function Quotes() {
       partidas: [...form.partidas, { cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '' }]
     });
   };
-
+  
   const removePartida = (idx) => {
     setForm({ ...form, partidas: form.partidas.filter((_, i) => i !== idx) });
   };
-
+  
+  const removePartida = (idx) => {
+    setForm({ ...form, partidas: form.partidas.filter((_, i) => i !== idx) });
+  };
   const total = form.partidas.reduce((sum, p) => sum + (parseFloat(p.importe) || 0), 0);
 
   useEffect(() => {
@@ -712,6 +717,20 @@ export default function Quotes() {
                         ))}
                       </select>
                     </td>
+                                      <tr key={`obs-${idx}`} className="border-b border-gray-50 last:border-0">
+                                        <td colSpan="8" className="py-2 px-3">
+                                          <div className="flex items-center gap-2">
+                                            <label className="text-xs font-medium text-gray-500 whitespace-nowrap">Observaciones:</label>
+                                            <textarea
+                                              className="flex-1 px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all resize-none"
+                                              value={p.observaciones || ''}
+                                              placeholder="Notas o detalles específicos de este producto..."
+                                              onChange={e => handlePartidaChange(idx, 'observaciones', e.target.value)}
+                                              rows="2"
+                                            />
+                                          </div>
+                                        </td>
+                                      </tr>
                     <td className="py-2 px-1">
                       <input
                         className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.descripcion) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
