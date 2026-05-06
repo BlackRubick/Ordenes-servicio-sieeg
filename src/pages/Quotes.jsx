@@ -154,6 +154,7 @@ export default function Quotes() {
   const navigate = useNavigate();
   const isEditMode = Boolean(id);
   const preloadedPartida = location.state?.preloadedPartida;
+  const [products, setProducts] = useState([]);
   const [form, setForm] = useState(() => {
     if (preloadedPartida && !isEditMode) {
       const modalObservaciones = String(preloadedPartida.observaciones || '').trim();
@@ -176,8 +177,23 @@ export default function Quotes() {
   const [loadingQuote, setLoadingQuote] = useState(isEditMode);
   const [emisorSelect, setEmisorSelect] = useState('');
   const [validationAttempted, setValidationAttempted] = useState(false);
-  // Simular autoincremento simple (en real, vendría de backend)
   const [cotCounter, setCotCounter] = useState(1);
+
+  // Cargar productos al montar el componente
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const response = await fetch('/api/products');
+        const data = await response.json();
+        if (response.ok) {
+          setProducts(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        console.error('Error cargando productos:', error);
+      }
+    };
+    loadProducts();
+  }, []);
 
   const EMISORES = [
     {
@@ -261,6 +277,16 @@ export default function Quotes() {
       return updated;
     });
     setForm({ ...form, partidas });
+  };
+
+  const handleProductSelect = (idx, productId) => {
+    if (!productId) return;
+    const product = products.find(p => p.id === parseInt(productId));
+    if (!product) return;
+    
+    handlePartidaChange(idx, 'descripcion', product.nombre);
+    handlePartidaChange(idx, 'unidad', product.unidad);
+    handlePartidaChange(idx, 'precioUnitario', String(product.precioBase));
   };
 
   const addPartida = () => {
@@ -638,7 +664,7 @@ export default function Quotes() {
             <table className="w-full text-sm border-collapse">
               <thead>
                 <tr className="border-b border-gray-100">
-                  {['#', 'Descripción', 'Cantidad', 'Unidad', 'P. Unitario', 'Importe', ''].map((h, i) => (
+                  {['#', 'Producto', 'Descripción', 'Cantidad', 'Unidad', 'P. Unitario', 'Importe', ''].map((h, i) => (
                     <th key={i} className="py-2 px-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">
                       {h}
                     </th>
@@ -649,6 +675,20 @@ export default function Quotes() {
                 {form.partidas.map((p, idx) => (
                   <tr key={idx} className="border-b border-gray-50 last:border-0">
                     <td className="py-2 px-2 text-xs text-gray-400 font-medium w-6">{idx + 1}</td>
+                    <td className="py-2 px-1 w-48">
+                      <select
+                        className="w-full px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
+                        onChange={(e) => handleProductSelect(idx, e.target.value)}
+                        defaultValue=""
+                      >
+                        <option value="">Selecciona producto...</option>
+                        {products.map((product) => (
+                          <option key={product.id} value={product.id}>
+                            {product.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="py-2 px-1">
                       <input
                         className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-gray-50 focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.descripcion) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
