@@ -113,6 +113,7 @@ const normalizePartidas = (partidas) => partidas.map((partida) => ({
   importe: partida.importe !== '' && partida.importe !== null && partida.importe !== undefined
     ? Number(partida.importe)
     : '',
+  observaciones: partida.observaciones || '',
 }));
 
 const formFromQuote = (quote) => ({
