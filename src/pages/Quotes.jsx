@@ -287,6 +287,11 @@ export default function Quotes() {
     handlePartidaChange(idx, 'descripcion', product.nombre);
     handlePartidaChange(idx, 'unidad', product.unidad);
     handlePartidaChange(idx, 'precioUnitario', String(product.precioBase));
+    // Copiar las observaciones del producto al campo de observaciones generales
+    setForm(f => ({
+      ...f,
+      observaciones: product.descripcion || ''
+    }));
   };
 
   const addPartida = () => {
