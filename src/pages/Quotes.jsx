@@ -302,6 +302,8 @@ export default function Quotes() {
         const qty = 1;
         return {
           ...p,
+          productId: product.id,
+          productSearch: product.nombre,
           cantidad: '1',
           descripcion: product.nombre,
           unidad: product.unidad,
