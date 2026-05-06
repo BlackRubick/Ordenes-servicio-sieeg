@@ -155,7 +155,7 @@ const bodyY = gy + 8;
   fill(LIGHT_BOX);
   doc.setLineWidth(0.3);
   doc.rect(obsX, obsY, obsW, obsH, 'F');
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); color(BLACK);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(5); color(BLACK);
   // Usar únicamente el campo `observaciones` proporcionado por el formulario.
   const obsText = quote.observaciones && String(quote.observaciones).trim()
     ? String(quote.observaciones)
@@ -267,8 +267,8 @@ const bodyY = gy + 8;
       doc.line(lineX1, topLineY, lineX2, topLineY);
       doc.line(lineX1, bottomLineY, lineX2, bottomLineY);
 
-      // Texto de observaciones: itálica, un poco más grande y en color gris-azulado
-      doc.setFont('helvetica', 'italic'); doc.setFontSize(8); color('#3b556f');
+      // Texto de observaciones: itálica, pequeño (5pt) y en color gris-azulado
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(5); color('#3b556f');
       // Dibujar texto empezando ligeramente indentado bajo la columna DESCRIPCION
       const textX = TC[1].x + 6;
       let textY = topLineY + 8;
