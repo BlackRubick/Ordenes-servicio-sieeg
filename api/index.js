@@ -20,6 +20,7 @@ app.use('/api/orders', require('./routes/orders'));
 app.use('/api/technicians', require('./routes/technicians'));
 app.use('/api/clients', require('./routes/clients'));
 app.use('/api/quotes', require('./routes/quotes'));
+app.use('/api/products', require('./routes/products'));
 
 app.get('/', (req, res) => {
   res.send('API NEWORDERS funcionando');

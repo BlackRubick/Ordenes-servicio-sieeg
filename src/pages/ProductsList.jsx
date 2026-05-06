@@ -1,18 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
 
 export default function ProductsList() {
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      nombre: 'Mantenimiento preventivo',
-      descripcion: 'Servicio preventivo para equipo de cómputo',
-      unidad: 'SERVICIO',
-      precioBase: 950,
-    },
-  ]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProductId, setEditingProductId] = useState(null);
@@ -68,6 +61,28 @@ export default function ProductsList() {
 
   const isEmpty = (value) => String(value ?? '').trim() === '';
 
+  // Cargar productos al montar el componente
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/products');
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || 'No se pudieron cargar los productos');
+      }
+      setProducts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      Swal.fire('Error', error.message || 'No se pudieron cargar los productos', 'error');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({ nombre: '', descripcion: '', unidad: '', precioBase: '' });
   };
@@ -77,24 +92,38 @@ export default function ProductsList() {
     resetForm();
   };
 
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     if (Object.values(formData).some(isEmpty)) {
       Swal.fire('Faltan datos', 'Completa todos los campos del producto.', 'warning');
       return;
     }
 
-    const newProduct = {
-      id: Date.now(),
-      nombre: formData.nombre.trim(),
-      descripcion: formData.descripcion.trim(),
-      unidad: formData.unidad,
-      precioBase: Number(formData.precioBase),
-    };
+    try {
+      const payload = {
+        nombre: formData.nombre.trim(),
+        descripcion: formData.descripcion.trim(),
+        unidad: formData.unidad,
+        precioBase: Number(formData.precioBase),
+      };
 
-    setProducts((current) => [newProduct, ...current]);
-    Swal.fire('Éxito', 'Producto registrado correctamente.', 'success');
-    resetForm();
-    setShowAddModal(false);
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || 'No se pudo crear el producto');
+      }
+
+      setProducts((current) => [data.product, ...current]);
+      Swal.fire('Éxito', 'Producto registrado correctamente.', 'success');
+      resetForm();
+      setShowAddModal(false);
+    } catch (error) {
+      Swal.fire('Error', error.message || 'No se pudo crear el producto', 'error');
+    }
   };
 
   const handleOpenEditModal = (product) => {
@@ -108,28 +137,42 @@ export default function ProductsList() {
     setShowEditModal(true);
   };
 
-  const handleUpdateProduct = () => {
+  const handleUpdateProduct = async () => {
     if (Object.values(formData).some(isEmpty)) {
       Swal.fire('Faltan datos', 'Completa todos los campos del producto.', 'warning');
       return;
     }
 
-    setProducts((current) => current.map((product) => (
-      product.id === editingProductId
-        ? {
-            ...product,
-            nombre: formData.nombre.trim(),
-            descripcion: formData.descripcion.trim(),
-            unidad: formData.unidad,
-            precioBase: Number(formData.precioBase),
-          }
-        : product
-    )));
+    try {
+      const payload = {
+        nombre: formData.nombre.trim(),
+        descripcion: formData.descripcion.trim(),
+        unidad: formData.unidad,
+        precioBase: Number(formData.precioBase),
+      };
 
-    Swal.fire('Éxito', 'Producto actualizado correctamente.', 'success');
-    setShowEditModal(false);
-    setEditingProductId(null);
-    resetForm();
+      const response = await fetch(`/api/products/${editingProductId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || 'No se pudo actualizar el producto');
+      }
+
+      setProducts((current) =>
+        current.map((product) => (product.id === editingProductId ? data.product : product))
+      );
+
+      Swal.fire('Éxito', 'Producto actualizado correctamente.', 'success');
+      setShowEditModal(false);
+      setEditingProductId(null);
+      resetForm();
+    } catch (error) {
+      Swal.fire('Error', error.message || 'No se pudo actualizar el producto', 'error');
+    }
   };
 
   const handleDeleteProduct = async (id) => {
@@ -144,13 +187,23 @@ export default function ProductsList() {
 
     if (!result.isConfirmed) return;
 
-    setProducts((current) => current.filter((product) => product.id !== id));
-    Swal.fire('Eliminado', 'El producto fue eliminado.', 'success');
+    try {
+      const response = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.error || 'No se pudo eliminar el producto');
+      }
+
+      setProducts((current) => current.filter((product) => product.id !== id));
+      Swal.fire('Eliminado', 'El producto fue eliminado.', 'success');
+    } catch (error) {
+      Swal.fire('Error', error.message || 'No se pudo eliminar el producto', 'error');
+    }
   };
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-    setFormData(current => ({ ...current, [name]: value }));
+    setFormData((current) => ({ ...current, [name]: value }));
   };
 
   return (
@@ -337,25 +390,30 @@ export default function ProductsList() {
       )}
 
       <div className="rounded-2xl bg-gradient-to-tr from-primary-100 to-blue-50 shadow-lg p-1 overflow-x-auto animate-fade-in">
-        <table className="min-w-full text-base border-separate border-spacing-0">
-          <thead>
-            <tr className="text-left text-white font-bold bg-gradient-to-tr from-primary-500 to-secondary-500 rounded-2xl">
-              <th className="py-3 px-4 rounded-tl-2xl">#</th>
-              <th className="py-3 px-4">Nombre</th>
-              <th className="py-3 px-4">Descripción</th>
-              <th className="py-3 px-4">Unidad</th>
-              <th className="py-3 px-4">Precio base</th>
-              <th className="py-3 px-4 rounded-tr-2xl">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.length === 0 && (
-              <tr>
-                <td colSpan={6} className="text-center text-muted py-8 bg-white rounded-b-2xl">
-                  No hay productos registrados. Crea uno para empezar.
-                </td>
+        {loading ? (
+          <div className="text-center py-8 bg-white rounded-2xl">
+            <p className="text-gray-500 font-semibold">Cargando productos...</p>
+          </div>
+        ) : (
+          <table className="min-w-full text-base border-separate border-spacing-0">
+            <thead>
+              <tr className="text-left text-white font-bold bg-gradient-to-tr from-primary-500 to-secondary-500 rounded-2xl">
+                <th className="py-3 px-4 rounded-tl-2xl">#</th>
+                <th className="py-3 px-4">Nombre</th>
+                <th className="py-3 px-4">Descripción</th>
+                <th className="py-3 px-4">Unidad</th>
+                <th className="py-3 px-4">Precio base</th>
+                <th className="py-3 px-4 rounded-tr-2xl">Acciones</th>
               </tr>
-            )}
+            </thead>
+            <tbody>
+              {products.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="text-center text-muted py-8 bg-white rounded-b-2xl">
+                    No hay productos registrados. Crea uno para empezar.
+                  </td>
+                </tr>
+              )}
             {products.map((product, idx) => {
               const isLast = idx === products.length - 1;
               return (
@@ -392,6 +450,7 @@ export default function ProductsList() {
             })}
           </tbody>
         </table>
+        )}
       </div>
     </DashboardLayout>
   );
