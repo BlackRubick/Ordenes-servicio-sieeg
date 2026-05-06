@@ -292,11 +292,11 @@ export default function Quotes() {
     setForm((prev) => {
       const partidas = prev.partidas.map((p, i) => {
         if (i !== idx) return p;
-        const c = parseFloat(p.cantidad);
         const u = parseFloat(product.precioBase) || 0;
-        const qty = (!isNaN(c) && c > 0) ? c : 1; // si no hay cantidad usar 1
+        const qty = 1;
         return {
           ...p,
+          cantidad: '1',
           descripcion: product.nombre,
           unidad: product.unidad,
           precioUnitario: String(product.precioBase),
@@ -472,8 +472,8 @@ export default function Quotes() {
             const savedQuote = data?.quote || data;
             console.log('DEBUG: savedQuote before PDF', savedQuote);
             const pdfQuote = {
-              ...savedQuote,
               ...payload,
+              ...savedQuote,
               partidas: Array.isArray(savedQuote.partidas) ? savedQuote.partidas : partidas,
               pruebaRendimiento: Boolean(payload.pruebaRendimiento),
             };
