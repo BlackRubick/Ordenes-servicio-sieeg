@@ -215,7 +215,6 @@ const bodyY = gy + 8;
   let ry = bodyY + thH;
 
   partidas.forEach((p, i) => {
-    console.log('DEBUG PDF Partida ' + i + ':', JSON.stringify(p));
     const descLines = doc.splitTextToSize(String(p.descripcion || ''), TC[1].w - 6);
     const dynH = Math.max(rowH, descLines.length * 11 + 10);
 
@@ -247,10 +246,10 @@ const bodyY = gy + 8;
 
     ry += dynH;
 
-    // ─ Si hay observaciones, dibuja una fila adicional debajo ─
-    const hasObservaciones = p.observaciones && String(p.observaciones).trim() !== '';
+    // ─ Si hay descripción, dibuja una fila adicional debajo ─
+    const hasObservaciones = p.descripcion && String(p.descripcion).trim() !== '';
     if (hasObservaciones) {
-      const obsLines = doc.splitTextToSize(String(p.observaciones), TC[1].w - 6);
+      const obsLines = doc.splitTextToSize(String(p.descripcion), TC[1].w - 6);
       const obsH = Math.max(16, obsLines.length * 9 + 6);
 
       // Verificar si cabe
