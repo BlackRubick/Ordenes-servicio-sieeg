@@ -119,12 +119,11 @@ const bodyY = gy + 8;
   // COLUMNAS DE LA TABLA
   // ══════════════════════════════════════════════════════════
   const TC = [
-    { label: 'PARTIDA',          key: 'idx',            x: MX,      w: 46  },
-    { label: 'CANTIDAD',         key: 'cantidad',       x: MX+46,   w: 55  },
-    { label: 'DESCRIPCION',      key: 'descripcion',    x: MX+101,  w: 210 },
-    { label: 'UNIDAD',           key: 'unidad',         x: MX+311,  w: 58  },
-    { label: 'PRECIO\nUNITARIO', key: 'precioUnitario', x: MX+369,  w: 82  },
-    { label: 'IMPORTE',          key: 'importe',        x: MX+451,  w: tableW - 451 },
+    { label: 'CANTIDAD',         key: 'cantidad',       x: MX,      w: 55  },
+    { label: 'DESCRIPCION',      key: 'descripcion',    x: MX+55,   w: 210 },
+    { label: 'UNIDAD',           key: 'unidad',         x: MX+265,  w: 58  },
+    { label: 'PRECIO\nUNITARIO', key: 'precioUnitario', x: MX+323,  w: 82  },
+    { label: 'IMPORTE',          key: 'importe',        x: MX+405,  w: tableW - 405 },
   ];
 
   const thH  = 32;
@@ -215,7 +214,7 @@ const bodyY = gy + 8;
   let ry = bodyY + thH;
 
   partidas.forEach((p, i) => {
-    const descLines = doc.splitTextToSize(String(p.descripcion || ''), TC[2].w - 6);
+    const descLines = doc.splitTextToSize(String(p.descripcion || ''), TC[1].w - 6);
     const dynH = Math.max(rowH, descLines.length * 11 + 10);
 
     // Si no cabe en la zona disponible, parar (evitar solaparse con totales)
@@ -228,7 +227,6 @@ const bodyY = gy + 8;
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(BLACK);
 
     const row = {
-      idx:            String(i + 1),
       cantidad:       String(p.cantidad || ''),
       descripcion:    String(p.descripcion || ''),
       unidad:         String(p.unidad || ''),
