@@ -308,6 +308,7 @@ export default function Quotes() {
         };
       });
 
+      console.log('DEBUG - Partidas después de seleccionar producto:', partidas);
       return {
         ...prev,
         partidas,
@@ -458,8 +459,7 @@ export default function Quotes() {
               pruebaRendimiento: Boolean(form.pruebaRendimiento),
               status: isEditMode ? (form.status || 'Borrador') : 'Borrador',
             };
-            // Debug: comprobar que `observaciones` está presente antes de enviar
-            console.log('DEBUG: saving quote payload', payload);
+            console.log('DEBUG: Partidas a enviar al servidor:', JSON.stringify(partidas, null, 2));
             const response = await fetch(isEditMode ? `/api/quotes/${id}` : '/api/quotes', {
               method: isEditMode ? 'PUT' : 'POST',
               headers: { 'Content-Type': 'application/json' },
