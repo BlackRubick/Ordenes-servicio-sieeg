@@ -9,6 +9,7 @@ export default function ProductsList() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingProductId, setEditingProductId] = useState(null);
+  const [includeObservaciones, setIncludeObservaciones] = useState(false);
   const [formData, setFormData] = useState({
     nombre: '',
     descripcion: '',
@@ -84,6 +85,7 @@ export default function ProductsList() {
   };
 
   const resetForm = () => {
+    setIncludeObservaciones(false);
     setFormData({ nombre: '', descripcion: '', unidad: '', precioBase: '' });
   };
 
@@ -93,15 +95,15 @@ export default function ProductsList() {
   };
 
   const handleAddProduct = async () => {
-    if (Object.values(formData).some(isEmpty)) {
-      Swal.fire('Faltan datos', 'Completa todos los campos del producto.', 'warning');
+    if ([formData.nombre, formData.unidad, formData.precioBase].some(isEmpty)) {
+      Swal.fire('Faltan datos', 'Completa nombre, unidad y precio base del producto.', 'warning');
       return;
     }
 
     try {
       const payload = {
         nombre: formData.nombre.trim(),
-        descripcion: formData.descripcion.trim(),
+        descripcion: includeObservaciones ? formData.descripcion.trim() : '',
         unidad: formData.unidad,
         precioBase: Number(formData.precioBase),
       };
@@ -128,9 +130,11 @@ export default function ProductsList() {
 
   const handleOpenEditModal = (product) => {
     setEditingProductId(product.id);
+    const descripcionActual = product.descripcion || '';
+    setIncludeObservaciones(String(descripcionActual).trim() !== '');
     setFormData({
       nombre: product.nombre || '',
-      descripcion: product.descripcion || '',
+      descripcion: descripcionActual,
       unidad: product.unidad || '',
       precioBase: String(product.precioBase ?? ''),
     });
@@ -138,15 +142,15 @@ export default function ProductsList() {
   };
 
   const handleUpdateProduct = async () => {
-    if (Object.values(formData).some(isEmpty)) {
-      Swal.fire('Faltan datos', 'Completa todos los campos del producto.', 'warning');
+    if ([formData.nombre, formData.unidad, formData.precioBase].some(isEmpty)) {
+      Swal.fire('Faltan datos', 'Completa nombre, unidad y precio base del producto.', 'warning');
       return;
     }
 
     try {
       const payload = {
         nombre: formData.nombre.trim(),
-        descripcion: formData.descripcion.trim(),
+        descripcion: includeObservaciones ? formData.descripcion.trim() : '',
         unidad: formData.unidad,
         precioBase: Number(formData.precioBase),
       };
@@ -204,6 +208,13 @@ export default function ProductsList() {
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setFormData((current) => ({ ...current, [name]: value }));
+  };
+
+  const handleToggleObservaciones = (checked) => {
+    setIncludeObservaciones(checked);
+    if (!checked) {
+      setFormData((current) => ({ ...current, descripcion: '' }));
+    }
   };
 
   return (
@@ -277,14 +288,24 @@ export default function ProductsList() {
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Observaciones</label>
-                <textarea
-                  name="descripcion"
-                  value={formData.descripcion}
-                  onChange={handleFormChange}
-                  className="w-full min-h-[120px] px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 resize-y"
-                  placeholder="Escribe observaciones del producto o servicio"
-                />
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <input
+                    type="checkbox"
+                    checked={includeObservaciones}
+                    onChange={(e) => handleToggleObservaciones(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-400"
+                  />
+                  Agregar observaciones
+                </label>
+                {includeObservaciones && (
+                  <textarea
+                    name="descripcion"
+                    value={formData.descripcion}
+                    onChange={handleFormChange}
+                    className="w-full min-h-[120px] px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 resize-y"
+                    placeholder="Escribe observaciones del producto o servicio"
+                  />
+                )}
               </div>
               <div className="flex gap-3">
                 <button
@@ -355,14 +376,24 @@ export default function ProductsList() {
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Observaciones</label>
-                <textarea
-                  name="descripcion"
-                  value={formData.descripcion}
-                  onChange={handleFormChange}
-                  className="w-full min-h-[120px] px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 resize-y"
-                  placeholder="Escribe observaciones del producto o servicio"
-                />
+                <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <input
+                    type="checkbox"
+                    checked={includeObservaciones}
+                    onChange={(e) => handleToggleObservaciones(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-400"
+                  />
+                  Agregar observaciones
+                </label>
+                {includeObservaciones && (
+                  <textarea
+                    name="descripcion"
+                    value={formData.descripcion}
+                    onChange={handleFormChange}
+                    className="w-full min-h-[120px] px-3 py-2 rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 resize-y"
+                    placeholder="Escribe observaciones del producto o servicio"
+                  />
+                )}
               </div>
               <div className="flex gap-3">
                 <button
