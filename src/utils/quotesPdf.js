@@ -217,28 +217,14 @@ const bodyY = gy + 8;
 
   partidas.forEach((p, i) => {
     console.log(`DEBUG PDF: Partida ${i}:`, JSON.stringify(p, null, 2));
-    const descLines = doc.splitTextToSize(String(p.descripcion || ''), TC[1].w - 6);
+    // Combinar descripción + observaciones dentro de la misma celda de DESCRIPCIÓN
+    const obsText = p.observaciones && String(p.observaciones).trim() !== '' ? String(p.observaciones) : '';
+    const combinedText = obsText ? `${String(p.descripcion || '')}\n${obsText}` : String(p.descripcion || '');
+    const descLines = doc.splitTextToSize(combinedText, TC[1].w - 6);
     const dynH = Math.max(rowH, descLines.length * 11 + 10);
 
-    const hasObservaciones = p.observaciones && String(p.observaciones).trim() !== '';
-    const obsLines = hasObservaciones ? doc.splitTextToSize(String(p.observaciones), TC[1].w - 12) : [];
-    const obsH = hasObservaciones ? Math.max(12, obsLines.length * 8 + 8) : 0;
-
-    // Verificar si cabe (observaciones + producto)
-    if (ry + obsH + dynH > tableEndY) return;
-
-    // Si hay observaciones, dibujarlas en renglón propio ANTES del producto
-    if (hasObservaciones) {
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(7); color(BLACK);
-      const textX = TC[1].x + 4;
-      let textY = ry + 6;
-      obsLines.forEach((ln) => {
-        doc.text(ln, textX, textY);
-        textY += 9;
-      });
-      // Espacio después de observaciones
-      ry += obsH + 4;
-    }
+    // Verificar si cabe (producto con su descripción/observaciones)
+    if (ry + dynH > tableEndY) return;
 
     // ─ Dibujar fila del producto ─
     fill(i % 2 === 0 ? GRAY_ROW : WHITE);
@@ -249,7 +235,7 @@ const bodyY = gy + 8;
 
     const row = {
       cantidad:       String(p.cantidad || ''),
-      descripcion:    String(p.descripcion || ''),
+      descripcion:    combinedText,
       unidad:         String(p.unidad || ''),
       precioUnitario: '$' + (Number(p.precioUnitario)||0).toLocaleString('es-MX', { minimumFractionDigits: 2 }),
       importe:        '$' + (Number(p.importe)       ||0).toLocaleString('es-MX', { minimumFractionDigits: 2 }),
@@ -257,7 +243,23 @@ const bodyY = gy + 8;
 
     TC.forEach(({ key, x, w }) => {
       if (key === 'descripcion') {
+        // Renderizar líneas; aplicar estilo: hacer las líneas de observaciones en negrita si existen
+        // Para simplicidad, renderizamos todo en normal, luego re-renderizamos observaciones en bold
         doc.text(descLines, x + 4, ry + 9);
+        if (obsText) {
+          // Calcular cuántas líneas ocupa la descripción original para poner observaciones en negrita
+          const descOnlyLines = doc.splitTextToSize(String(p.descripcion || ''), TC[1].w - 6);
+          const obsOnlyLines = doc.splitTextToSize(obsText, TC[1].w - 6);
+          const obsStartY = ry + 9 + (descOnlyLines.length * 11);
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(8); color(BLACK);
+          let oy = obsStartY;
+          obsOnlyLines.forEach((ln) => {
+            doc.text(ln, x + 4, oy);
+            oy += 11;
+          });
+          // restore font for other cells
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(BLACK);
+        }
       } else {
         doc.text(row[key], x + w / 2, ry + dynH / 2 + 3, { align: 'center' });
       }
