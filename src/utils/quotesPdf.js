@@ -220,8 +220,25 @@ const bodyY = gy + 8;
     const descLines = doc.splitTextToSize(String(p.descripcion || ''), TC[1].w - 6);
     const dynH = Math.max(rowH, descLines.length * 11 + 10);
 
-    // Si no cabe en la zona disponible, parar (evitar solaparse con totales)
-    if (ry + dynH > tableEndY) return;
+    const hasObservaciones = p.observaciones && String(p.observaciones).trim() !== '';
+    const obsLines = hasObservaciones ? doc.splitTextToSize(String(p.observaciones), TC[1].w - 12) : [];
+    const obsH = hasObservaciones ? Math.max(12, obsLines.length * 8 + 8) : 0;
+
+    // Verificar si cabe (observaciones + producto)
+    if (ry + obsH + dynH > tableEndY) return;
+
+    // Si hay observaciones, dibujarlas en renglón propio ANTES del producto
+    if (hasObservaciones) {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(7); color(BLACK);
+      const textX = TC[1].x + 4;
+      let textY = ry + 6;
+      obsLines.forEach((ln) => {
+        doc.text(ln, textX, textY);
+        textY += 9;
+      });
+      // Espacio después de observaciones
+      ry += obsH + 4;
+    }
 
     // ─ Dibujar fila del producto ─
     fill(i % 2 === 0 ? GRAY_ROW : WHITE);
@@ -247,28 +264,6 @@ const bodyY = gy + 8;
     });
 
     ry += dynH;
-
-    // ─ Si hay observaciones, dibuja una fila adicional debajo ─
-      const hasObservaciones = p.observaciones && String(p.observaciones).trim() !== '';
-      if (hasObservaciones) {
-        const obsLines = doc.splitTextToSize(String(p.observaciones), TC[1].w - 12);
-        const obsH = Math.max(12, obsLines.length * 8 + 8);
-
-        // Verificar si cabe
-        if (ry + obsH > tableEndY) return;
-
-          // Texto de observaciones: negrita, color negro, directo debajo de la fila del producto
-          doc.setFont('helvetica', 'bold'); doc.setFontSize(7); color(BLACK);
-          const textX = TC[1].x + 4;
-          let textY = ry + 4; // comenzamos justo debajo de la fila
-          obsLines.forEach((ln) => {
-            doc.text(ln, textX, textY);
-            textY += 9;
-          });
-
-          // Ajustar el cursor y espacio mínimo después
-          ry += obsLines.length * 9 + 6;
-      }
   });
 
   // ══════════════════════════════════════════════════════════
