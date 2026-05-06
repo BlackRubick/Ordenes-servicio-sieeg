@@ -208,6 +208,7 @@ const bodyY = gy + 8;
   // ══════════════════════════════════════════════════════════
   // FILAS DE PRODUCTOS — crecen hacia abajo desde el header
   // Se detienen antes de pisar los totales
+  // Incluyen observaciones debajo de cada producto si existen
   // ══════════════════════════════════════════════════════════
   const partidas    = quote.partidas || [];
   const tableEndY   = footerY - 6; // límite: no pisar totales
@@ -220,6 +221,7 @@ const bodyY = gy + 8;
     // Si no cabe en la zona disponible, parar (evitar solaparse con totales)
     if (ry + dynH > tableEndY) return;
 
+    // ─ Dibujar fila del producto ─
     fill(i % 2 === 0 ? GRAY_ROW : WHITE);
     doc.setLineWidth(0.3);
     TC.forEach(({ x, w }) => doc.rect(x, ry, w, dynH, 'F'));
@@ -243,6 +245,27 @@ const bodyY = gy + 8;
     });
 
     ry += dynH;
+
+    // ─ Si hay observaciones, dibuja una fila adicional debajo ─
+    const hasObservaciones = p.observaciones && String(p.observaciones).trim() !== '';
+    if (hasObservaciones) {
+      const obsLines = doc.splitTextToSize(String(p.observaciones), TC[1].w - 6);
+      const obsH = Math.max(16, obsLines.length * 9 + 6);
+
+      // Verificar si cabe
+      if (ry + obsH > tableEndY) return;
+
+      // Dibujar caja de observaciones con fondo ligeramente diferente
+      fill(i % 2 === 0 ? WHITE : GRAY_ROW);
+      doc.setLineWidth(0.3);
+      TC.forEach(({ x, w }) => doc.rect(x, ry, w, obsH, 'F'));
+
+      // Texto de observaciones en itálica, tamaño menor
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(7); color(BLACK);
+      doc.text(obsLines, TC[1].x + 4, ry + 6);
+
+      ry += obsH;
+    }
   });
 
   // ══════════════════════════════════════════════════════════
