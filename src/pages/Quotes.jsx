@@ -317,12 +317,8 @@ export default function Quotes() {
   const addPartida = () => {
     setForm({
       ...form,
-      partidas: [...form.partidas, { cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '' }]
+      partidas: [...form.partidas, { cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '', observaciones: '' }]
     });
-  };
-  
-  const removePartida = (idx) => {
-    setForm({ ...form, partidas: form.partidas.filter((_, i) => i !== idx) });
   };
   
   const removePartida = (idx) => {
