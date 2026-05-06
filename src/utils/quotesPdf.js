@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 
 export async function generateQuotePdfDoc(quote) {
+  console.log('DEBUG PDF: quote.partidas[0]:', quote.partidas?.[0]);
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
@@ -215,6 +216,7 @@ const bodyY = gy + 8;
   let ry = bodyY + thH;
 
   partidas.forEach((p, i) => {
+    console.log(`DEBUG PDF: Partida ${i}:`, JSON.stringify(p, null, 2));
     const descLines = doc.splitTextToSize(String(p.descripcion || ''), TC[1].w - 6);
     const dynH = Math.max(rowH, descLines.length * 11 + 10);
 

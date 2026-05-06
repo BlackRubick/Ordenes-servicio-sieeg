@@ -83,6 +83,7 @@ router.post('/', async (req, res) => {
 
   try {
     const normalizedPartidas = Array.isArray(partidas) ? partidas.map(normalizePartida) : [];
+    console.log('DEBUG API: normalizedPartidas before save:', JSON.stringify(normalizedPartidas, null, 2));
     const parsedVigencia = vigencia !== undefined && vigencia !== null && vigencia !== ''
       ? parseInt(vigencia, 10)
       : null;
@@ -137,6 +138,7 @@ router.post('/', async (req, res) => {
       otro,
     });
 
+    console.log('DEBUG API: quote created, partidas:', JSON.stringify(quote.partidas, null, 2));
     res.status(201).json(quote);
   } catch (error) {
     res.status(500).json({ error: error.message });

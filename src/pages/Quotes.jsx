@@ -473,6 +473,7 @@ export default function Quotes() {
 
             const savedQuote = data?.quote || data;
             console.log('DEBUG: savedQuote before PDF', savedQuote);
+            console.log('DEBUG: savedQuote.partidas[0]:', savedQuote.partidas?.[0]);
             const pdfQuote = {
               ...payload,
               ...savedQuote,
