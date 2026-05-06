@@ -64,8 +64,10 @@ export async function generateQuotePdfDoc(quote) {
   doc.setFont('helvetica', 'bold');
   doc.text(cnValue, cnX + cnLabelW + 10, 76);
 
-  // remove horizontal separator line under header to avoid extra line above the table
-  // previously: stroke('#bbbbbb'); doc.setLineWidth(0.6); doc.line(MX, 90, W - MX, 90);
+  // Removed header separator line (was drawing a thin horizontal line at y=90)
+  // stroke('#bbbbbb');
+  // doc.setLineWidth(0.6);
+  // doc.line(MX, 90, W - MX, 90);
 
   // ══════════════════════════════════════════════════════════
   // GRID DATOS GENERALES
