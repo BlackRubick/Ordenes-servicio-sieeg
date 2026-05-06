@@ -59,7 +59,6 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const {
-    numeroCotizacion,
     fecha,
     vigencia,
     telefono,
@@ -90,32 +89,29 @@ router.post('/', async (req, res) => {
       ? Number(total)
       : calculateTotal(normalizedPartidas);
 
-    // Generar número de cotización automáticamente si no se proporciona
-    let finalNumeroCotizacion = numeroCotizacion;
-    if (!finalNumeroCotizacion || finalNumeroCotizacion.trim() === '') {
-      const prefix = getPrefixByEmisor(emisor);
-      const periodo = getPeriodo(fecha);
-      const pattern = `${prefix}${periodo}/%`;
-      const lastQuote = await Quote.findOne({
-        where: {
-          numeroCotizacion: {
-            [Op.like]: pattern,
-          },
+    // En creación siempre se genera el folio en servidor para evitar formatos viejos.
+    const prefix = getPrefixByEmisor(emisor);
+    const periodo = getPeriodo(fecha);
+    const pattern = `${prefix}${periodo}/%`;
+    const lastQuote = await Quote.findOne({
+      where: {
+        numeroCotizacion: {
+          [Op.like]: pattern,
         },
-        order: [['numeroCotizacion', 'DESC']],
-      });
+      },
+      order: [['numeroCotizacion', 'DESC']],
+    });
 
-      let nextConsecutive = 1;
-      if (lastQuote?.numeroCotizacion) {
-        const lastPart = String(lastQuote.numeroCotizacion).split('/')[1] || '';
-        const lastNumber = parseInt(lastPart, 10);
-        if (Number.isFinite(lastNumber)) {
-          nextConsecutive = lastNumber + 1;
-        }
+    let nextConsecutive = 1;
+    if (lastQuote?.numeroCotizacion) {
+      const lastPart = String(lastQuote.numeroCotizacion).split('/')[1] || '';
+      const lastNumber = parseInt(lastPart, 10);
+      if (Number.isFinite(lastNumber)) {
+        nextConsecutive = lastNumber + 1;
       }
-
-      finalNumeroCotizacion = `${prefix}${periodo}/${String(nextConsecutive).padStart(4, '0')}`;
     }
+
+    const finalNumeroCotizacion = `${prefix}${periodo}/${String(nextConsecutive).padStart(4, '0')}`;
 
     const quote = await Quote.create({
       numeroCotizacion: finalNumeroCotizacion,
