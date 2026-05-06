@@ -289,7 +289,6 @@ export default function Quotes() {
     if (!productId) return;
     const product = products.find(p => p.id === parseInt(productId));
     if (!product) return;
-    console.log('Product selected:', product);
 
     // Usar el estado anterior para evitar datos stale y recalcular importe/total
     setForm((prev) => {
@@ -304,7 +303,7 @@ export default function Quotes() {
           unidad: product.unidad,
           precioUnitario: String(product.precioBase),
           importe: (qty * u).toFixed(2),
-          observaciones: product.observaciones || '',
+          observaciones: product.descripcion || '',
         };
       });
 
