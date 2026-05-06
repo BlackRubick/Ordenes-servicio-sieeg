@@ -301,13 +301,13 @@ export default function Quotes() {
           unidad: product.unidad,
           precioUnitario: String(product.precioBase),
           importe: (qty * u).toFixed(2),
+          observaciones: product.observaciones || '',
         };
       });
 
       return {
         ...prev,
         partidas,
-        observaciones: product.descripcion || prev.observaciones || '',
       };
     });
   };
