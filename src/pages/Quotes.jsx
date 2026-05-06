@@ -26,6 +26,7 @@ USO DE MCÍA :G03 - GASTOS EN GENERAL
 MÉTODO DE PAGO: PAGO EN UNA SOLA EXHIBICIÓN
 UNA VEZ REALIZADO EL PAGO SE PROCEDE A LIBERAR O AGENDAR EL SERVICIO`,
   pruebaRendimiento: false,
+  observacionesExtra: '',
   status: 'Borrador',
   partidas: [
     { cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '', observaciones: '' }
@@ -140,6 +141,7 @@ USO DE MCÍA.:G03 -GASTOSEN GENERAL
 MÉTODO DE PAGO:PAGO EN UNA SOLA EXHIBICIÓN
 UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
   pruebaRendimiento: Boolean(quote?.pruebaRendimiento),
+  observacionesExtra: quote?.observacionesExtra || '',
   status: quote?.status || 'Borrador',
   partidas: Array.isArray(quote?.partidas) && quote.partidas.length > 0
     ? quote.partidas.map((partida) => ({
@@ -1065,7 +1067,7 @@ export default function Quotes() {
             </div>
           </div>
 
-          <div className="mt-4 pt-4 border-t border-dashed border-gray-200 flex items-center gap-3">
+          <div className="mt-4 pt-4 border-t border-dashed border-gray-200 space-y-3">
             <label className="flex items-center gap-3 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -1073,8 +1075,19 @@ export default function Quotes() {
                 onChange={(e) => setForm({ ...form, pruebaRendimiento: e.target.checked })}
                 className="h-5 w-5 rounded border-gray-300 text-primary-500 focus:ring-primary-400"
               />
-              <span className="text-sm font-semibold text-gray-700">Prueba de rendimiento</span>
+              <span className="text-sm font-semibold text-gray-700">Observaciones extra</span>
             </label>
+
+            {Boolean(form.pruebaRendimiento) && (
+              <Field label="Observaciones extra">
+                <textarea
+                  value={form.observacionesExtra}
+                  onChange={(e) => setForm({ ...form, observacionesExtra: e.target.value })}
+                  className={`${inputCls} min-h-[90px] resize-y`}
+                  placeholder="Escribe aquí lo que debe aparecer en el PDF..."
+                />
+              </Field>
+            )}
           </div>
         </SectionCard>
 

@@ -270,29 +270,22 @@ const bodyY = gy + 8;
   });
 
   // ══════════════════════════════════════════════════════════
-  // TEXTO DE PRUEBA DE RENDIMIENTO EN LA MITAD DEL PDF
-  // Se muestra solo cuando el checkbox está activo
+  // OBSERVACIONES EXTRA EN LA MITAD DEL PDF
+  // Se muestran solo cuando el checkbox está activo y hay texto capturado
   // ══════════════════════════════════════════════════════════
-  if (quote.pruebaRendimiento) {
-    const rendimientoParagraphs = [
-      'Pruebas Foráneas. Se describe el alcance y condiciones del servicio de validación, pruebas de rendimiento y/o certificación de cableado estructurado realizadas con equipo certificador Fluke DSX2-5000.',
-      'Las pruebas de rendimiento al interior de la República Mexicana, se realiza 1 prueba por nodo para validación y 1 prueba extra en caso de no pasar. Se requiere 1 técnico de parte del cliente para apoyar en la identificación de los servicios.',
-    ];
-    const rendimientoBoxWidth = Math.min(320, tableW - 120);
-    const rendimientoX = MX + (tableW - rendimientoBoxWidth) / 2;
-    const rendimientoLineH = 11;
-    const rendimientoGap = 8;
-    const rendimientoWrapped = rendimientoParagraphs.map((paragraph) => doc.splitTextToSize(paragraph, rendimientoBoxWidth));
-    const rendimientoH = rendimientoWrapped.reduce((sum, lines) => sum + (lines.length * rendimientoLineH), 0) + rendimientoGap;
-    let rendimientoY = Math.max(ry + 24, ry + ((footerY - ry - rendimientoH) / 2));
+  const observacionesExtra = String(quote.observacionesExtra || '').trim();
+  if (quote.pruebaRendimiento && observacionesExtra) {
+    const boxWidth = Math.min(380, tableW - 80);
+    const boxX = MX + (tableW - boxWidth) / 2;
+    const lineH = 11;
+    const wrapped = doc.splitTextToSize(observacionesExtra, boxWidth);
+    const boxH = wrapped.length * lineH;
+    const boxY = Math.max(ry + 24, ry + ((footerY - ry - boxH) / 2));
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.5);
     color(BLACK);
-    rendimientoWrapped.forEach((lines, index) => {
-      doc.text(lines, rendimientoX, rendimientoY);
-      rendimientoY += lines.length * rendimientoLineH + (index === 0 ? rendimientoGap : 0);
-    });
+    doc.text(wrapped, boxX, boxY);
   }
 
   // ══════════════════════════════════════════════════════════
