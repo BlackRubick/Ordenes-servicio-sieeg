@@ -94,18 +94,18 @@ export async function generateQuotePdfDoc(quote) {
   gridRows.forEach((row) => {
     row.forEach(({ label }, i) => {
       const x = MX + i * colW;
-      fill(LIGHT_BOX); stroke('#cccccc');
+      fill(LIGHT_BOX);
       doc.setLineWidth(0.4);
-      doc.rect(x, gy, colW, hH, 'FD');
+      doc.rect(x, gy, colW, hH, 'F');
       doc.setFont('helvetica', 'bold'); doc.setFontSize(9); color(NAVY);
       doc.text(label, x + colW / 2, gy + hH / 2 + 3.5, { align: 'center' });
     });
     gy += hH;
     row.forEach(({ value }, i) => {
       const x = MX + i * colW;
-      fill(WHITE); stroke('#cccccc');
+      fill(WHITE);
       doc.setLineWidth(0.4);
-      doc.rect(x, gy, colW, vH, 'FD');
+      doc.rect(x, gy, colW, vH, 'F');
       doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); color(BLACK);
       doc.text(doc.splitTextToSize(value, colW - 8)[0] || '', x + colW / 2, gy + vH / 2 + 3, { align: 'center' });
     });
@@ -152,9 +152,9 @@ const bodyY = gy + 8;
   const obsW = tLabelCol.x - MX;
   const obsY = footerY;
   const obsH = tRowH * 3;
-  fill(LIGHT_BOX); stroke('#bbbbbb');
+  fill(LIGHT_BOX);
   doc.setLineWidth(0.3);
-  doc.rect(obsX, obsY, obsW, obsH, 'FD');
+  doc.rect(obsX, obsY, obsW, obsH, 'F');
   doc.setFont('helvetica', 'normal'); doc.setFontSize(9); color(BLACK);
   // Usar únicamente el campo `observaciones` proporcionado por el formulario.
   const obsText = quote.observaciones && String(quote.observaciones).trim()
@@ -171,10 +171,10 @@ const bodyY = gy + 8;
     { label: 'IVA',      value: iva      },
     { label: 'TOTAL',    value: total    },
   ].forEach(({ label, value }) => {
-    fill(LIGHT_BOX); stroke('#bbbbbb');
+    fill(LIGHT_BOX);
     doc.setLineWidth(0.3);
-    doc.rect(tLabelCol.x, totY, tLabelCol.w, tRowH, 'FD');
-    doc.rect(tValCol.x,   totY, tValCol.w,   tRowH, 'FD');
+    doc.rect(tLabelCol.x, totY, tLabelCol.w, tRowH, 'F');
+    doc.rect(tValCol.x,   totY, tValCol.w,   tRowH, 'F');
     doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); color(BLACK);
     doc.text(label, tLabelCol.x + tLabelCol.w / 2, totY + tRowH / 2 + 3, { align: 'center' });
     doc.text(
@@ -191,9 +191,9 @@ const bodyY = gy + 8;
   // ENCABEZADO DE TABLA
   // ══════════════════════════════════════════════════════════
   TC.forEach(({ x, w }) => {
-    fill(NAVY); stroke(NAVY);
+    fill(NAVY);
     doc.setLineWidth(0.3);
-    doc.rect(x, bodyY, w, thH, 'FD');
+    doc.rect(x, bodyY, w, thH, 'F');
   });
   doc.setFont('helvetica', 'bold'); doc.setFontSize(8); color(WHITE);
   TC.forEach(({ label, x, w }) => {
@@ -222,9 +222,8 @@ const bodyY = gy + 8;
     if (ry + dynH > tableEndY) return;
 
     fill(i % 2 === 0 ? GRAY_ROW : WHITE);
-    stroke('#bbbbbb');
     doc.setLineWidth(0.3);
-    TC.forEach(({ x, w }) => doc.rect(x, ry, w, dynH, 'FD'));
+    TC.forEach(({ x, w }) => doc.rect(x, ry, w, dynH, 'F'));
 
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(BLACK);
 
@@ -247,11 +246,6 @@ const bodyY = gy + 8;
 
     ry += dynH;
   });
-
-  // Línea de cierre justo debajo del último producto
-  stroke('#888888');
-  doc.setLineWidth(0.5);
-  doc.line(MX, ry, MX + tableW, ry);
 
   // ══════════════════════════════════════════════════════════
   // TEXTO DE PRUEBA DE RENDIMIENTO EN LA MITAD DEL PDF
