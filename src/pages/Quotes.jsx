@@ -283,25 +283,28 @@ export default function Quotes() {
     if (!productId) return;
     const product = products.find(p => p.id === parseInt(productId));
     if (!product) return;
-    
-    // Actualizar todo de una sola vez
-    const partidas = form.partidas.map((p, i) => {
-      if (i !== idx) return p;
-      const c = parseFloat(p.cantidad) || 0;
-      const u = parseFloat(product.precioBase) || 0;
+
+    // Usar el estado anterior para evitar datos stale y recalcular importe/total
+    setForm((prev) => {
+      const partidas = prev.partidas.map((p, i) => {
+        if (i !== idx) return p;
+        const c = parseFloat(p.cantidad) || 0;
+        const u = parseFloat(product.precioBase) || 0;
+        return {
+          ...p,
+          descripcion: product.nombre,
+          unidad: product.unidad,
+          precioUnitario: String(product.precioBase),
+          importe: (c * u).toFixed(2),
+        };
+      });
+
       return {
-        ...p,
-        descripcion: product.nombre,
-        unidad: product.unidad,
-        precioUnitario: String(product.precioBase),
-        importe: (c * u).toFixed(2)
+        ...prev,
+        partidas,
+        observaciones: product.descripcion || prev.observaciones || '',
       };
     });
-    setForm(f => ({
-      ...f,
-      partidas,
-      observaciones: product.descripcion || ''
-    }));
   };
 
   const addPartida = () => {
