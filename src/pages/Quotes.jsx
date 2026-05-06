@@ -319,6 +319,29 @@ export default function Quotes() {
     });
   };
 
+  // Cuando el usuario escribe el nombre del producto (autocomplete libre)
+  const handleProductNameChange = (idx, value) => {
+    setForm((prev) => {
+      const partidas = prev.partidas.map((p, i) => {
+        if (i !== idx) return p;
+        // Marcar que no viene de un producto seleccionado
+        return {
+          ...p,
+          productId: null,
+          productSearch: value,
+          // usar el texto escrito como descripcion provisional
+          descripcion: value,
+        };
+      });
+      return { ...prev, partidas };
+    });
+  };
+
+  const handleSelectSuggestion = (idx, product) => {
+    // Reuse existing handler to set full product fields
+    handleProductSelect(idx, product.id);
+  };
+
   const addPartida = () => {
     setForm({
       ...form,
@@ -706,20 +729,41 @@ export default function Quotes() {
                 </div>
 
                 <div className="space-y-3">
-                  <div>
+                  <div className="relative">
                     <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Producto</label>
-                    <select
-                      className="w-full px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
-                      onChange={(e) => handleProductSelect(idx, e.target.value)}
-                      defaultValue=""
-                    >
-                      <option value="">Selecciona producto...</option>
-                      {products.map((product) => (
-                        <option key={product.id} value={product.id}>
-                          {product.nombre}
-                        </option>
-                      ))}
-                    </select>
+                    <input
+                      type="text"
+                      className={`w-full px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all`}
+                      value={p.productSearch || ''}
+                      placeholder="Escribe para buscar o crear producto..."
+                      onChange={e => handleProductNameChange(idx, e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          // si hay sugerencias, seleccionar la primera; si no, usar texto tal cual (ya queda en descripcion)
+                          const q = (p.productSearch || '').trim();
+                          const matches = products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes(q.toLowerCase()));
+                          if (matches.length) {
+                            handleSelectSuggestion(idx, matches[0]);
+                          }
+                        }
+                      }}
+                    />
+                    {/* Suggestions */}
+                    {(p.productSearch || '').length > 0 && products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes((p.productSearch||'').toLowerCase())).slice(0,6).length > 0 && (
+                      <ul className="absolute z-40 left-0 right-0 bg-white border border-gray-100 rounded-md mt-1 max-h-48 overflow-auto text-sm shadow-lg">
+                        {products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes((p.productSearch||'').toLowerCase())).slice(0,6).map((prod) => (
+                          <li
+                            key={`sugg-${prod.id}`}
+                            className="px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                            onMouseDown={(ev) => { ev.preventDefault(); handleSelectSuggestion(idx, prod); }}
+                          >
+                            <div className="font-medium text-gray-800">{prod.nombre}</div>
+                            {prod.descripcion && <div className="text-xs text-gray-500">{prod.descripcion}</div>}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
 
                   <div>
