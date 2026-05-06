@@ -217,11 +217,12 @@ const bodyY = gy + 8;
 
   partidas.forEach((p, i) => {
     console.log(`DEBUG PDF: Partida ${i}:`, JSON.stringify(p, null, 2));
-    // Combinar descripción + observaciones dentro de la misma celda de DESCRIPCIÓN
+    // Separar descripción y observaciones y calcular la altura total de la celda
     const obsText = p.observaciones && String(p.observaciones).trim() !== '' ? String(p.observaciones) : '';
-    const combinedText = obsText ? `${String(p.descripcion || '')}\n${obsText}` : String(p.descripcion || '');
-    const descLines = doc.splitTextToSize(combinedText, TC[1].w - 6);
-    const dynH = Math.max(rowH, descLines.length * 11 + 10);
+    const descOnlyLines = doc.splitTextToSize(String(p.descripcion || ''), TC[1].w - 6);
+    const obsOnlyLines = obsText ? doc.splitTextToSize(obsText, TC[1].w - 6) : [];
+    const combinedLines = descOnlyLines.concat(obsOnlyLines);
+    const dynH = Math.max(rowH, combinedLines.length * 11 + 10);
 
     // Verificar si cabe (producto con su descripción/observaciones)
     if (ry + dynH > tableEndY) return;
@@ -243,21 +244,21 @@ const bodyY = gy + 8;
 
     TC.forEach(({ key, x, w }) => {
       if (key === 'descripcion') {
-        // Renderizar líneas; aplicar estilo: hacer las líneas de observaciones en negrita si existen
-        // Para simplicidad, renderizamos todo en normal, luego re-renderizamos observaciones en bold
-        doc.text(descLines, x + 4, ry + 9);
-        if (obsText) {
-          // Calcular cuántas líneas ocupa la descripción original para poner observaciones en negrita
-          const descOnlyLines = doc.splitTextToSize(String(p.descripcion || ''), TC[1].w - 6);
-          const obsOnlyLines = doc.splitTextToSize(obsText, TC[1].w - 6);
-          const obsStartY = ry + 9 + (descOnlyLines.length * 11);
+        // Renderizar descripción (normal)
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(BLACK);
+        let ly = ry + 9;
+        descOnlyLines.forEach((ln) => {
+          doc.text(ln, x + 4, ly);
+          ly += 11;
+        });
+        // Renderizar observaciones en negrita si existen
+        if (obsOnlyLines.length) {
           doc.setFont('helvetica', 'bold'); doc.setFontSize(8); color(BLACK);
-          let oy = obsStartY;
           obsOnlyLines.forEach((ln) => {
-            doc.text(ln, x + 4, oy);
-            oy += 11;
+            doc.text(ln, x + 4, ly);
+            ly += 11;
           });
-          // restore font for other cells
+          // restaurar fuente normal para las demás celdas
           doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(BLACK);
         }
       } else {
