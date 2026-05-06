@@ -658,7 +658,7 @@ export default function Quotes() {
           }
         >
           {/* Se eliminó el campo 'Texto de introducción'. Solo se usa 'Observaciones' editable para el PDF. */}
-          <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="mt-4 pt-4">
             <Field label="Observaciones">
               <textarea
                 name="observaciones"
