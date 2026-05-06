@@ -304,6 +304,7 @@ export default function Quotes() {
           ...p,
           productId: product.id,
           productSearch: product.nombre,
+          suggestionIndex: -1,
           cantidad: '1',
           descripcion: product.nombre,
           unidad: product.unidad,
@@ -332,6 +333,7 @@ export default function Quotes() {
           productId: null,
           productSearch: value,
           showSuggestions: true,
+          suggestionIndex: 0,
           // usar el texto escrito como descripcion provisional
           descripcion: value,
         };
