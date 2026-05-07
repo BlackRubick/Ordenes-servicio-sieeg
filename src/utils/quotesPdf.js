@@ -178,7 +178,7 @@ const bodyY = gy + 8;
     doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); color(BLACK);
     doc.text(label, tLabelCol.x + tLabelCol.w / 2, totY + tRowH / 2 + 3, { align: 'center' });
     doc.text(
-      '$' + value.toLocaleString('es-MX', { minimumFractionDigits: 2 }),
+      '$' + value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       tValCol.x + tValCol.w / 2, totY + tRowH / 2 + 3, { align: 'center' }
     );
     totY += tRowH;
@@ -238,8 +238,8 @@ const bodyY = gy + 8;
       cantidad:       String(p.cantidad || ''),
       descripcion:    String(p.descripcion || ''),
       unidad:         String(p.unidad || ''),
-      precioUnitario: '$' + (Number(p.precioUnitario)||0).toLocaleString('es-MX', { minimumFractionDigits: 2 }),
-      importe:        '$' + (Number(p.importe)       ||0).toLocaleString('es-MX', { minimumFractionDigits: 2 }),
+      precioUnitario: '$' + (Number(p.precioUnitario)||0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      importe:        '$' + (Number(p.importe)       ||0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     };
 
     TC.forEach(({ key, x, w }) => {
