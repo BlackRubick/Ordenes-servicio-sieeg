@@ -186,7 +186,19 @@ export default function Quotes() {
   const [emisorSelect, setEmisorSelect] = useState('');
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [cotCounter, setCotCounter] = useState(1);
-  const [currentPartida, setCurrentPartida] = useState({ cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '', observaciones: '' });
+  const [currentPartida, setCurrentPartida] = useState({ 
+    cantidad: '', 
+    descripcion: '', 
+    unidad: '', 
+    precioUnitario: '', 
+    importe: '', 
+    observaciones: '',
+    productSearch: '',
+    showSuggestions: false,
+    suggestionIndex: -1,
+    obsShowSuggestions: false,
+    obsSuggestionIndex: -1,
+  });
   const [editingIndex, setEditingIndex] = useState(null);
 
   // Cargar productos al montar el componente
@@ -399,6 +411,59 @@ export default function Quotes() {
     setCurrentPartida(updated);
   };
 
+  // Búsqueda de productos (autocomplete)
+  const handleProductNameChange = (value) => {
+    setCurrentPartida({
+      ...currentPartida,
+      productSearch: value,
+      showSuggestions: true,
+      suggestionIndex: 0,
+      descripcion: value,
+    });
+  };
+
+  // Seleccionar un producto del catálogo
+  const handleProductSelect = (product) => {
+    const u = parseFloat(product.precioBase) || 0;
+    const qty = 1;
+    setCurrentPartida({
+      ...currentPartida,
+      productSearch: product.nombre,
+      descripcion: product.nombre,
+      unidad: product.unidad,
+      precioUnitario: String(product.precioBase),
+      cantidad: '1',
+      importe: (qty * u).toFixed(2),
+      observaciones: product.descripcion || '',
+      showSuggestions: false,
+      suggestionIndex: -1,
+    });
+  };
+
+  const observationCatalog = Array.from(new Set(
+    products
+      .map((product) => String(product.descripcion || '').trim())
+      .filter(Boolean)
+  ));
+
+  const handleObservationChange = (value) => {
+    setCurrentPartida({
+      ...currentPartida,
+      observaciones: value,
+      obsShowSuggestions: true,
+      obsSuggestionIndex: 0,
+    });
+  };
+
+  const handleSelectObservationSuggestion = (text) => {
+    setCurrentPartida({
+      ...currentPartida,
+      observaciones: text,
+      obsShowSuggestions: false,
+      obsSuggestionIndex: -1,
+    });
+  };
+
   const isCurrentPartidaValid = () => {
     return !isEmpty(currentPartida.descripcion) &&
            !isEmpty(currentPartida.cantidad) &&
@@ -412,24 +477,58 @@ export default function Quotes() {
       return;
     }
 
+    const partida = {
+      cantidad: currentPartida.cantidad,
+      descripcion: currentPartida.descripcion,
+      unidad: currentPartida.unidad,
+      precioUnitario: currentPartida.precioUnitario,
+      importe: currentPartida.importe,
+      observaciones: currentPartida.observaciones,
+    };
+
     if (editingIndex !== null) {
       // Actualizar partida existente
-      const updated = form.partidas.map((p, i) => i === editingIndex ? { ...currentPartida } : p);
+      const updated = form.partidas.map((p, i) => i === editingIndex ? partida : p);
       setForm({ ...form, partidas: updated });
       setEditingIndex(null);
     } else {
       // Agregar nueva partida
       setForm({
         ...form,
-        partidas: [...form.partidas, { ...currentPartida }]
+        partidas: [...form.partidas, partida]
       });
     }
     // Resetear formulario
-    setCurrentPartida({ cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '', observaciones: '' });
+    setCurrentPartida({ 
+      cantidad: '', 
+      descripcion: '', 
+      unidad: '', 
+      precioUnitario: '', 
+      importe: '', 
+      observaciones: '',
+      productSearch: '',
+      showSuggestions: false,
+      suggestionIndex: -1,
+      obsShowSuggestions: false,
+      obsSuggestionIndex: -1,
+    });
   };
 
   const editPartida = (idx) => {
-    setCurrentPartida(form.partidas[idx]);
+    const p = form.partidas[idx];
+    setCurrentPartida({
+      cantidad: p.cantidad,
+      descripcion: p.descripcion,
+      unidad: p.unidad,
+      precioUnitario: p.precioUnitario,
+      importe: p.importe,
+      observaciones: p.observaciones,
+      productSearch: p.descripcion,
+      showSuggestions: false,
+      suggestionIndex: -1,
+      obsShowSuggestions: false,
+      obsSuggestionIndex: -1,
+    });
     setEditingIndex(idx);
     // Scroll al formulario
     setTimeout(() => {
@@ -439,7 +538,19 @@ export default function Quotes() {
 
   const cancelEdit = () => {
     setEditingIndex(null);
-    setCurrentPartida({ cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '', observaciones: '' });
+    setCurrentPartida({ 
+      cantidad: '', 
+      descripcion: '', 
+      unidad: '', 
+      precioUnitario: '', 
+      importe: '', 
+      observaciones: '',
+      productSearch: '',
+      showSuggestions: false,
+      suggestionIndex: -1,
+      obsShowSuggestions: false,
+      obsSuggestionIndex: -1,
+    });
   };
 
   const removePartida = (idx) => {
@@ -809,21 +920,96 @@ export default function Quotes() {
           <div data-partida-form className="mb-6 p-4 bg-gradient-to-br from-purple-50 to-transparent rounded-xl border border-purple-100">
             <div className="mb-4">
               <h3 className="text-sm font-semibold text-gray-700">
-                {editingIndex !== null ? 'Editar partida' : 'Agregar nueva partida'}
+                {editingIndex !== null ? 'Editar partida' : 'Producto / Servicio'}
               </h3>
             </div>
 
             <div className="space-y-3">
-              {/* Descripción */}
-              <div>
-                <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Descripción *</label>
+              {/* Búsqueda de Producto con Autocompletación */}
+              <div className="relative">
+                <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Producto *</label>
                 <input
                   type="text"
-                  className={`w-full px-3 py-2 text-sm rounded-lg border bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${!isCurrentPartidaValid() && currentPartida.descripcion === '' ? 'border-gray-200' : 'border-gray-200'}`}
-                  value={currentPartida.descripcion}
-                  placeholder="Descripción del producto o servicio..."
-                  onChange={e => handleCurrentPartidaChange('descripcion', e.target.value)}
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
+                  value={currentPartida.productSearch || ''}
+                  placeholder="Escribe para buscar o crear producto..."
+                  onChange={e => handleProductNameChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    const q = (currentPartida.productSearch || '').trim();
+                    const matches = products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes(q.toLowerCase())).slice(0, 6);
+                    
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      const current = currentPartida.suggestionIndex ?? -1;
+                      const next = Math.min(current + 1, Math.max(matches.length - 1, 0));
+                      setCurrentPartida(prev => ({ ...prev, suggestionIndex: next, showSuggestions: true }));
+                      setTimeout(() => {
+                        const el = document.getElementById(`prod-sugg-${next}`);
+                        if (el) el.scrollIntoView({ block: 'nearest' });
+                      }, 0);
+                      return;
+                    }
+                    
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      const current = currentPartida.suggestionIndex ?? 0;
+                      const prevIndex = Math.max(current - 1, 0);
+                      setCurrentPartida(prev => ({ ...prev, suggestionIndex: prevIndex, showSuggestions: true }));
+                      setTimeout(() => {
+                        const el = document.getElementById(`prod-sugg-${prevIndex}`);
+                        if (el) el.scrollIntoView({ block: 'nearest' });
+                      }, 0);
+                      return;
+                    }
+                    
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const si = currentPartida.suggestionIndex ?? -1;
+                      if (si >= 0 && matches[si]) {
+                        handleProductSelect(matches[si]);
+                      } else if (matches.length) {
+                        handleProductSelect(matches[0]);
+                      }
+                      return;
+                    }
+                    
+                    if (e.key === 'Escape') {
+                      setCurrentPartida(prev => ({ ...prev, showSuggestions: false, suggestionIndex: -1 }));
+                    }
+                  }}
+                  onFocus={() => {
+                    setCurrentPartida(prev => ({ ...prev, showSuggestions: true }));
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      setCurrentPartida(prev => ({ ...prev, showSuggestions: false }));
+                    }, 120);
+                  }}
                 />
+                
+                {/* Sugerencias de productos */}
+                {(currentPartida.productSearch || '').length > 0 && currentPartida.showSuggestions !== false && products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes((currentPartida.productSearch || '').toLowerCase())).slice(0, 6).length > 0 && (
+                  <ul className="absolute z-40 left-0 right-0 bg-white border border-gray-100 rounded-md mt-1 max-h-48 overflow-auto text-sm shadow-lg">
+                    {products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes((currentPartida.productSearch || '').toLowerCase())).slice(0, 6).map((prod, sidx) => (
+                      <li
+                        id={`prod-sugg-${sidx}`}
+                        key={`prod-sugg-${prod.id}`}
+                        className={`px-3 py-2 cursor-pointer ${currentPartida.suggestionIndex === sidx ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                        onMouseEnter={() => {
+                          setCurrentPartida(prev => ({ ...prev, suggestionIndex: sidx }));
+                          setTimeout(() => {
+                            const el = document.getElementById(`prod-sugg-${sidx}`);
+                            if (el) el.scrollIntoView({ block: 'nearest' });
+                          }, 0);
+                        }}
+                        onMouseDown={(ev) => { ev.preventDefault(); handleProductSelect(prod); }}
+                      >
+                        <div className="font-medium text-gray-800">{prod.nombre}</div>
+                        {prod.descripcion && <div className="text-xs text-gray-500">{prod.descripcion}</div>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               {/* Cantidad, Unidad, Precio en una fila */}
@@ -871,16 +1057,93 @@ export default function Quotes() {
                 </div>
               </div>
 
-              {/* Observaciones */}
-              <div>
+              {/* Observaciones con Autocompletación */}
+              <div className="relative">
                 <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Observaciones (opcional)</label>
                 <textarea
                   className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all resize-none"
                   value={currentPartida.observaciones}
-                  placeholder="Notas adicionales..."
-                  onChange={e => handleCurrentPartidaChange('observaciones', e.target.value)}
+                  placeholder="Escribe o busca una observación..."
+                  onChange={e => handleObservationChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    const q = String(currentPartida.observaciones || '').trim().toLowerCase();
+                    const matches = observationCatalog.filter(text => text.toLowerCase().includes(q)).slice(0, 6);
+
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      const current = currentPartida.obsSuggestionIndex ?? -1;
+                      const next = Math.min(current + 1, Math.max(matches.length - 1, 0));
+                      setCurrentPartida(prev => ({ ...prev, obsSuggestionIndex: next, obsShowSuggestions: true }));
+                      setTimeout(() => {
+                        const el = document.getElementById(`obs-sugg-${next}`);
+                        if (el) el.scrollIntoView({ block: 'nearest' });
+                      }, 0);
+                      return;
+                    }
+
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      const current = currentPartida.obsSuggestionIndex ?? 0;
+                      const prevIndex = Math.max(current - 1, 0);
+                      setCurrentPartida(prev => ({ ...prev, obsSuggestionIndex: prevIndex, obsShowSuggestions: true }));
+                      setTimeout(() => {
+                        const el = document.getElementById(`obs-sugg-${prevIndex}`);
+                        if (el) el.scrollIntoView({ block: 'nearest' });
+                      }, 0);
+                      return;
+                    }
+
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      const si = currentPartida.obsSuggestionIndex ?? -1;
+                      if (si >= 0 && matches[si]) {
+                        handleSelectObservationSuggestion(matches[si]);
+                      } else if (matches.length) {
+                        handleSelectObservationSuggestion(matches[0]);
+                      }
+                      return;
+                    }
+
+                    if (e.key === 'Escape') {
+                      setCurrentPartida(prev => ({ ...prev, obsShowSuggestions: false, obsSuggestionIndex: -1 }));
+                    }
+                  }}
+                  onFocus={() => {
+                    setCurrentPartida(prev => ({ ...prev, obsShowSuggestions: true }));
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      setCurrentPartida(prev => ({ ...prev, obsShowSuggestions: false, obsSuggestionIndex: -1 }));
+                    }, 120);
+                  }}
                   rows="2"
                 />
+
+                {/* Sugerencias de observaciones */}
+                {(String(currentPartida.observaciones || '').trim().length > 0 && currentPartida.obsShowSuggestions !== false && observationCatalog.filter(text => text.toLowerCase().includes(String(currentPartida.observaciones || '').trim().toLowerCase())).slice(0, 6).length > 0) && (
+                  <ul className="absolute z-40 left-0 right-0 bg-white border border-gray-100 rounded-md mt-1 max-h-40 overflow-auto text-sm shadow-lg">
+                    {observationCatalog.filter(text => text.toLowerCase().includes(String(currentPartida.observaciones || '').trim().toLowerCase())).slice(0, 6).map((text, sidx) => (
+                      <li
+                        id={`obs-sugg-${sidx}`}
+                        key={`obs-sugg-${sidx}`}
+                        className={`px-3 py-2 cursor-pointer ${currentPartida.obsSuggestionIndex === sidx ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                        onMouseEnter={() => {
+                          setCurrentPartida(prev => ({ ...prev, obsSuggestionIndex: sidx }));
+                          setTimeout(() => {
+                            const el = document.getElementById(`obs-sugg-${sidx}`);
+                            if (el) el.scrollIntoView({ block: 'nearest' });
+                          }, 0);
+                        }}
+                        onMouseDown={(ev) => {
+                          ev.preventDefault();
+                          handleSelectObservationSuggestion(text);
+                        }}
+                      >
+                        <div className="font-medium text-gray-800 whitespace-pre-wrap">{text}</div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               {/* Botones de acción */}
