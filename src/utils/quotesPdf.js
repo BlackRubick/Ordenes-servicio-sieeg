@@ -158,12 +158,12 @@ const bodyY = gy + 8;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(5); color(BLACK);
   // Usar únicamente el campo `observaciones` proporcionado por el formulario.
   const obsText = quote.observaciones && String(quote.observaciones).trim()
-    ? String(quote.observaciones)
+    ? String(quote.observaciones).trim()
     : '';
   if (obsText !== '') {
     const obsLines = doc.splitTextToSize(obsText, obsW - 12);
-    // dibujar el texto dentro del cuadro con un pequeño padding
-    doc.text(obsLines, obsX + 6, obsY + 12);
+    // dibujar el texto dentro del cuadro con un pequeño padding (reducido)
+    doc.text(obsLines, obsX + 6, obsY + 6);
   }
 
   [
