@@ -186,6 +186,8 @@ export default function Quotes() {
   const [emisorSelect, setEmisorSelect] = useState('');
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [cotCounter, setCotCounter] = useState(1);
+  const [currentPartida, setCurrentPartida] = useState({ cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '', observaciones: '' });
+  const [editingIndex, setEditingIndex] = useState(null);
 
   // Cargar productos al montar el componente
   useEffect(() => {
@@ -386,16 +388,64 @@ export default function Quotes() {
     });
   };
 
-  const addPartida = () => {
-    setForm({
-      ...form,
-      partidas: [...form.partidas, { cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '', observaciones: '' }]
-    });
+  // Funciones para manejar el formulario de entrada de partidas
+  const handleCurrentPartidaChange = (field, value) => {
+    const updated = { ...currentPartida, [field]: value };
+    if (field === 'cantidad' || field === 'precioUnitario') {
+      const c = parseFloat(field === 'cantidad' ? value : updated.cantidad) || 0;
+      const u = parseFloat(field === 'precioUnitario' ? value : updated.precioUnitario) || 0;
+      updated.importe = (c * u).toFixed(2);
+    }
+    setCurrentPartida(updated);
   };
-  
+
+  const isCurrentPartidaValid = () => {
+    return !isEmpty(currentPartida.descripcion) &&
+           !isEmpty(currentPartida.cantidad) &&
+           !isEmpty(currentPartida.unidad) &&
+           !isEmpty(currentPartida.precioUnitario);
+  };
+
+  const addOrUpdatePartida = () => {
+    if (!isCurrentPartidaValid()) {
+      Swal.fire('Datos incompletos', 'Completa todos los campos para agregar una partida', 'warning');
+      return;
+    }
+
+    if (editingIndex !== null) {
+      // Actualizar partida existente
+      const updated = form.partidas.map((p, i) => i === editingIndex ? { ...currentPartida } : p);
+      setForm({ ...form, partidas: updated });
+      setEditingIndex(null);
+    } else {
+      // Agregar nueva partida
+      setForm({
+        ...form,
+        partidas: [...form.partidas, { ...currentPartida }]
+      });
+    }
+    // Resetear formulario
+    setCurrentPartida({ cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '', observaciones: '' });
+  };
+
+  const editPartida = (idx) => {
+    setCurrentPartida(form.partidas[idx]);
+    setEditingIndex(idx);
+    // Scroll al formulario
+    setTimeout(() => {
+      document.querySelector('[data-partida-form]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 0);
+  };
+
+  const cancelEdit = () => {
+    setEditingIndex(null);
+    setCurrentPartida({ cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '', observaciones: '' });
+  };
+
   const removePartida = (idx) => {
     setForm({ ...form, partidas: form.partidas.filter((_, i) => i !== idx) });
   };
+
   const total = form.partidas.reduce((sum, p) => sum + (parseFloat(p.importe) || 0), 0);
 
   useEffect(() => {
@@ -482,12 +532,11 @@ export default function Quotes() {
           e.preventDefault();
           setValidationAttempted(true);
 
-          const partidasIncompletas = form.partidas.some((partida) => (
+          const partidasIncompletas = form.partidas.length === 0 || form.partidas.some((partida) => (
             isEmpty(partida.descripcion)
             || isEmpty(partida.cantidad)
             || isEmpty(partida.unidad)
             || isEmpty(partida.precioUnitario)
-            || isEmpty(partida.importe)
           ));
 
           const camposBaseObligatorios = [
@@ -756,312 +805,169 @@ export default function Quotes() {
             </svg>
           }
         >
-          <div className="space-y-3">
-            {form.partidas.map((p, idx) => (
-              <div key={`partida-${idx}`} className="rounded-xl border border-gray-100 bg-gray-50/60 p-3">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Partida #{idx + 1}</span>
-                  {form.partidas.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => removePartida(idx)}
-                      className="w-6 h-6 rounded-full border border-red-200 text-red-400 hover:bg-red-50 flex items-center justify-center transition-all text-base leading-none"
-                    >
-                      ×
-                    </button>
-                  )}
+          {/* Formulario de entrada de partida */}
+          <div data-partida-form className="mb-6 p-4 bg-gradient-to-br from-purple-50 to-transparent rounded-xl border border-purple-100">
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-gray-700">
+                {editingIndex !== null ? 'Editar partida' : 'Agregar nueva partida'}
+              </h3>
+            </div>
+
+            <div className="space-y-3">
+              {/* Descripción */}
+              <div>
+                <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Descripción *</label>
+                <input
+                  type="text"
+                  className={`w-full px-3 py-2 text-sm rounded-lg border bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${!isCurrentPartidaValid() && currentPartida.descripcion === '' ? 'border-gray-200' : 'border-gray-200'}`}
+                  value={currentPartida.descripcion}
+                  placeholder="Descripción del producto o servicio..."
+                  onChange={e => handleCurrentPartidaChange('descripcion', e.target.value)}
+                />
+              </div>
+
+              {/* Cantidad, Unidad, Precio en una fila */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Cantidad *</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
+                    value={currentPartida.cantidad}
+                    placeholder="0"
+                    onChange={e => handleCurrentPartidaChange('cantidad', e.target.value)}
+                  />
                 </div>
 
-                <div className="space-y-3">
-                  <div className="relative">
-                    <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Producto</label>
-                    <input
-                      type="text"
-                      className={`w-full px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all`}
-                      value={p.productSearch || ''}
-                      placeholder="Escribe para buscar o crear producto..."
-                      onChange={e => handleProductNameChange(idx, e.target.value)}
-                      onKeyDown={(e) => {
-                        const q = (p.productSearch || '').trim();
-                        const matches = products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes(q.toLowerCase())).slice(0,6);
-                        if (e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          const current = p.suggestionIndex ?? -1;
-                          const next = Math.min(current + 1, Math.max(matches.length - 1, 0));
-                          setForm(prev => ({
-                            ...prev,
-                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, suggestionIndex: next, showSuggestions: true } : pp)
-                          }));
-                          // scroll into view
-                          setTimeout(() => {
-                            const el = document.getElementById(`sugg-${idx}-${next}`);
-                            if (el) el.scrollIntoView({ block: 'nearest' });
-                          }, 0);
-                          return;
-                        }
-                        if (e.key === 'ArrowUp') {
-                          e.preventDefault();
-                          const current = p.suggestionIndex ?? 0;
-                          const prevIndex = Math.max(current - 1, 0);
-                          setForm(prev => ({
-                            ...prev,
-                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, suggestionIndex: prevIndex, showSuggestions: true } : pp)
-                          }));
-                          setTimeout(() => {
-                            const el = document.getElementById(`sugg-${idx}-${prevIndex}`);
-                            if (el) el.scrollIntoView({ block: 'nearest' });
-                          }, 0);
-                          return;
-                        }
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const si = p.suggestionIndex ?? -1;
-                          if (si >= 0 && matches[si]) {
-                            handleSelectSuggestion(idx, matches[si]);
-                          } else if (matches.length) {
-                            handleSelectSuggestion(idx, matches[0]);
-                          }
-                          return;
-                        }
-                        if (e.key === 'Escape') {
-                          setForm(prev => ({
-                            ...prev,
-                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, showSuggestions: false, suggestionIndex: -1 } : pp)
-                          }));
-                        }
-                      }}
-                      onFocus={() => {
-                        setForm(prev => ({
-                          ...prev,
-                          partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, showSuggestions: true } : pp)
-                        }));
-                      }}
-                      onBlur={() => {
-                        // Defer hiding to allow click on suggestion (onMouseDown)
-                        setTimeout(() => {
-                          setForm(prev => ({
-                            ...prev,
-                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, showSuggestions: false } : pp)
-                          }));
-                        }, 120);
-                      }}
-                    />
-                    {/* Suggestions */}
-                    {(p.productSearch || '').length > 0 && p.showSuggestions !== false && products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes((p.productSearch||'').toLowerCase())).slice(0,6).length > 0 && (
-                      <ul className="absolute z-40 left-0 right-0 bg-white border border-gray-100 rounded-md mt-1 max-h-48 overflow-auto text-sm shadow-lg">
-                        {products.filter(prod => prod.nombre && prod.nombre.toLowerCase().includes((p.productSearch||'').toLowerCase())).slice(0,6).map((prod, sidx) => (
-                          <li
-                            id={`sugg-${idx}-${sidx}`}
-                            key={`sugg-${prod.id}`}
-                            className={`px-3 py-2 cursor-pointer ${p.suggestionIndex === sidx ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
-                            onMouseEnter={() => {
-                              setForm(prev => ({
-                                ...prev,
-                                partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, suggestionIndex: sidx } : pp)
-                              }));
-                              setTimeout(() => {
-                                const el = document.getElementById(`sugg-${idx}-${sidx}`);
-                                if (el) el.scrollIntoView({ block: 'nearest' });
-                              }, 0);
-                            }}
-                            onMouseDown={(ev) => { ev.preventDefault(); handleSelectSuggestion(idx, prod); }}
-                          >
-                            <div className="font-medium text-gray-800">{prod.nombre}</div>
-                            {prod.descripcion && <div className="text-xs text-gray-500">{prod.descripcion}</div>}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                <div>
+                  <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Unidad *</label>
+                  <select
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
+                    value={currentPartida.unidad}
+                    onChange={e => handleCurrentPartidaChange('unidad', e.target.value)}
+                  >
+                    <option value="">Selecciona</option>
+                    {unitOptions.map((unidad) => (
+                      <option key={unidad} value={unidad}>
+                        {unidad}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                  <div>
-                    <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Descripción</label>
-                    <input
-                      className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.descripcion) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
-                      value={p.descripcion}
-                      placeholder="Descripción..."
-                      onChange={e => handlePartidaChange(idx, 'descripcion', e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Cantidad</label>
-                    <input
-                      type="number" min="0"
-                      className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.cantidad) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
-                      value={p.cantidad}
-                      placeholder="0"
-                      onChange={e => handlePartidaChange(idx, 'cantidad', e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Unidad</label>
-                    <select
-                      className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.unidad) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
-                      value={p.unidad}
-                      onChange={e => handlePartidaChange(idx, 'unidad', e.target.value)}
-                      required
-                    >
-                      <option value="">Selecciona</option>
-                      {unitOptions.map((unidad) => (
-                        <option key={unidad} value={unidad}>
-                          {unidad}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">P. Unitario</label>
-                    <input
-                      type="number" min="0" step="0.01"
-                      className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.precioUnitario) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
-                      value={p.precioUnitario}
-                      placeholder="0.00"
-                      onChange={e => handlePartidaChange(idx, 'precioUnitario', e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Importe</label>
-                    <input
-                      type="number" min="0" step="0.01"
-                      className={`w-full px-2 py-1.5 text-sm rounded-lg border bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all ${validationAttempted && isEmpty(p.importe) ? 'border-red-400 ring-2 ring-red-100 focus:border-red-400' : 'border-gray-100'}`}
-                      value={p.importe}
-                      placeholder="0.00"
-                      onChange={e => handlePartidaChange(idx, 'importe', e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="relative">
-                    <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Obs</label>
-                    <textarea
-                      className="w-full px-2 py-1.5 text-sm rounded-lg border border-gray-100 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all resize-none"
-                      value={p.observaciones || ''}
-                      placeholder="Escribe o busca una observación..."
-                      onChange={e => handleObservationChange(idx, e.target.value)}
-                      onKeyDown={(e) => {
-                        const q = String(p.observaciones || '').trim().toLowerCase();
-                        const matches = observationCatalog.filter(text => text.toLowerCase().includes(q)).slice(0, 6);
-
-                        if (e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          const current = p.obsSuggestionIndex ?? -1;
-                          const next = Math.min(current + 1, Math.max(matches.length - 1, 0));
-                          setForm(prev => ({
-                            ...prev,
-                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, obsSuggestionIndex: next, obsShowSuggestions: true } : pp)
-                          }));
-                          setTimeout(() => {
-                            const el = document.getElementById(`obs-sugg-${idx}-${next}`);
-                            if (el) el.scrollIntoView({ block: 'nearest' });
-                          }, 0);
-                          return;
-                        }
-
-                        if (e.key === 'ArrowUp') {
-                          e.preventDefault();
-                          const current = p.obsSuggestionIndex ?? 0;
-                          const prevIndex = Math.max(current - 1, 0);
-                          setForm(prev => ({
-                            ...prev,
-                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, obsSuggestionIndex: prevIndex, obsShowSuggestions: true } : pp)
-                          }));
-                          setTimeout(() => {
-                            const el = document.getElementById(`obs-sugg-${idx}-${prevIndex}`);
-                            if (el) el.scrollIntoView({ block: 'nearest' });
-                          }, 0);
-                          return;
-                        }
-
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          const si = p.obsSuggestionIndex ?? -1;
-                          if (si >= 0 && matches[si]) {
-                            handleSelectObservationSuggestion(idx, matches[si]);
-                          } else if (matches.length) {
-                            handleSelectObservationSuggestion(idx, matches[0]);
-                          }
-                          return;
-                        }
-
-                        if (e.key === 'Escape') {
-                          setForm(prev => ({
-                            ...prev,
-                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, obsShowSuggestions: false, obsSuggestionIndex: -1 } : pp)
-                          }));
-                        }
-                      }}
-                      onFocus={() => {
-                        setForm(prev => ({
-                          ...prev,
-                          partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, obsShowSuggestions: true } : pp)
-                        }));
-                      }}
-                      onBlur={() => {
-                        setTimeout(() => {
-                          setForm(prev => ({
-                            ...prev,
-                            partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, obsShowSuggestions: false, obsSuggestionIndex: -1 } : pp)
-                          }));
-                        }, 120);
-                      }}
-                      rows="2"
-                    />
-
-                    {(String(p.observaciones || '').trim().length > 0 && p.obsShowSuggestions !== false && observationCatalog.filter(text => text.toLowerCase().includes(String(p.observaciones || '').trim().toLowerCase())).slice(0, 6).length > 0) && (
-                      <ul className="absolute z-40 left-0 right-0 bg-white border border-gray-100 rounded-md mt-1 max-h-40 overflow-auto text-sm shadow-lg">
-                        {observationCatalog.filter(text => text.toLowerCase().includes(String(p.observaciones || '').trim().toLowerCase())).slice(0, 6).map((text, sidx) => (
-                          <li
-                            id={`obs-sugg-${idx}-${sidx}`}
-                            key={`obs-sugg-${idx}-${sidx}`}
-                            className={`px-3 py-2 cursor-pointer ${p.obsSuggestionIndex === sidx ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
-                            onMouseEnter={() => {
-                              setForm(prev => ({
-                                ...prev,
-                                partidas: prev.partidas.map((pp, ii) => ii === idx ? { ...pp, obsSuggestionIndex: sidx } : pp)
-                              }));
-                              setTimeout(() => {
-                                const el = document.getElementById(`obs-sugg-${idx}-${sidx}`);
-                                if (el) el.scrollIntoView({ block: 'nearest' });
-                              }, 0);
-                            }}
-                            onMouseDown={(ev) => {
-                              ev.preventDefault();
-                              handleSelectObservationSuggestion(idx, text);
-                            }}
-                          >
-                            <div className="font-medium text-gray-800 whitespace-pre-wrap">{text}</div>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                <div>
+                  <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">P. Unitario *</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
+                    value={currentPartida.precioUnitario}
+                    placeholder="0.00"
+                    onChange={e => handleCurrentPartidaChange('precioUnitario', e.target.value)}
+                  />
                 </div>
               </div>
-            ))}
+
+              {/* Observaciones */}
+              <div>
+                <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Observaciones (opcional)</label>
+                <textarea
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all resize-none"
+                  value={currentPartida.observaciones}
+                  placeholder="Notas adicionales..."
+                  onChange={e => handleCurrentPartidaChange('observaciones', e.target.value)}
+                  rows="2"
+                />
+              </div>
+
+              {/* Botones de acción */}
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={addOrUpdatePartida}
+                  className="flex-1 py-2 px-3 rounded-lg bg-gradient-to-tr from-primary-500 to-secondary-500 text-white text-sm font-semibold hover:shadow-lg transition-all"
+                >
+                  {editingIndex !== null ? 'Actualizar' : 'Agregar'}
+                </button>
+                {editingIndex !== null && (
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Footer tabla */}
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={addPartida}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all"
-            >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <path d="M6 1v10M1 6h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
-              Agregar
-            </button>
-            <div className="flex items-baseline gap-2 text-sm text-gray-400">
-              <span>Total</span>
-              <span className="text-lg font-semibold text-gray-900">
+          {/* Tabla de partidas agregadas */}
+          {form.partidas.length > 0 && (
+            <div className="mb-6 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700 text-xs uppercase tracking-wide">#</th>
+                    <th className="px-4 py-3 text-left font-semibold text-gray-700 text-xs uppercase tracking-wide">Descripción</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700 text-xs uppercase tracking-wide">Cant.</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700 text-xs uppercase tracking-wide">Unidad</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700 text-xs uppercase tracking-wide">P. Unit.</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700 text-xs uppercase tracking-wide">Importe</th>
+                    <th className="px-4 py-3 text-center font-semibold text-gray-700 text-xs uppercase tracking-wide">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {form.partidas.map((p, idx) => (
+                    <tr key={`partida-${idx}`} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3 text-gray-500 font-medium">{idx + 1}</td>
+                      <td className="px-4 py-3">
+                        <div className="text-gray-900 font-medium">{p.descripcion}</div>
+                        {p.observaciones && <div className="text-xs text-gray-500 mt-1">{p.observaciones}</div>}
+                      </td>
+                      <td className="px-4 py-3 text-center text-gray-900">{p.cantidad}</td>
+                      <td className="px-4 py-3 text-center text-gray-900">{p.unidad}</td>
+                      <td className="px-4 py-3 text-right text-gray-900">${parseFloat(p.precioUnitario || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-gray-900">${parseFloat(p.importe || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => editPartida(idx)}
+                            title="Editar"
+                            className="w-7 h-7 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition-all"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                              <path d="M11.33 2L14 4.67M2 14H5L13.5 5.5L10.5 2.5L2 11V14Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => removePartida(idx)}
+                            title="Eliminar"
+                            className="w-7 h-7 rounded-md bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-all"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                              <path d="M2 4h12M6.5 7v4M9.5 7v4M3 4l1 10.5a2 2 0 002 1.5h4a2 2 0 002-1.5L13 4M6 4V3a1 1 0 011-1h2a1 1 0 011 1v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Total y footer */}
+          <div className="flex items-center justify-end pt-4 border-t border-gray-100">
+            <div className="flex items-baseline gap-2">
+              <span className="text-sm font-semibold text-gray-600">Total:</span>
+              <span className="text-2xl font-bold text-primary-600">
                 ${total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
