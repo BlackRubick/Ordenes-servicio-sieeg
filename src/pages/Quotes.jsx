@@ -800,10 +800,9 @@ export default function Quotes() {
                       type="text"
                       value={otroText}
                       onChange={e => setOtroText(e.target.value)}
-                      placeholder="Escribe otro destinatario (solo para PDF)"
+                      placeholder="Escribe otro destinatario o información adicional..."
                       className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
                     />
-                    <p className="text-xs text-gray-400 mt-1">Este texto no se guardará en la base de datos, solo aparecerá en el PDF en el campo "Otro".</p>
                   </div>
                 )}
               </div>
