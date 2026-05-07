@@ -28,9 +28,7 @@ UNA VEZ REALIZADO EL PAGO SE PROCEDE A LIBERAR O AGENDAR EL SERVICIO`,
   pruebaRendimiento: false,
   observacionesExtra: '',
   status: 'Borrador',
-  partidas: [
-    { cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '', observaciones: '' }
-  ]
+  partidas: []
 };
 
 const SectionCard = ({ icon, title, subtitle, iconClass, children }) => (
@@ -169,7 +167,6 @@ export default function Quotes() {
         ...initialData,
         observaciones: modalObservaciones || initialData.observaciones,
         partidas: [{
-          ...initialData.partidas[0],
           cantidad: preloadedPartida.cantidad !== undefined && preloadedPartida.cantidad !== null ? String(preloadedPartida.cantidad) : '',
           descripcion: preloadedPartida.descripcion || '',
           unidad: preloadedPartida.unidad || '',
