@@ -196,6 +196,8 @@ export default function Quotes() {
     obsSuggestionIndex: -1,
   });
   const [editingIndex, setEditingIndex] = useState(null);
+  const [showOtroInput, setShowOtroInput] = useState(false);
+  const [otroText, setOtroText] = useState('');
 
   // Cargar productos al montar el componente
   useEffect(() => {
@@ -611,6 +613,12 @@ export default function Quotes() {
               partidas: Array.isArray(savedQuote.partidas) ? savedQuote.partidas : partidas,
               pruebaRendimiento: Boolean(payload.pruebaRendimiento),
             };
+            // Incluir texto temporal 'otro' solo para el PDF (no se guarda en la DB)
+            if (otroText && String(otroText).trim() !== '') {
+              pdfQuote.otro = String(otroText).trim();
+            } else if (savedQuote?.otro) {
+              pdfQuote.otro = savedQuote.otro;
+            }
             const doc = await generateQuotePdfDoc(pdfQuote);
             doc.save(`Cotizacion_${savedQuote.numeroCotizacion || form.numeroCotizacion || 'nueva'}.pdf`);
             Swal.fire(isEditMode ? 'Cotización actualizada' : 'Cotización guardada', isEditMode ? 'Los cambios se guardaron en la base de datos y el PDF fue generado.' : 'La cotización se guardó en la base de datos y el PDF fue generado.', 'success');
@@ -760,7 +768,28 @@ export default function Quotes() {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Field label="Empresa">
-              <input name="empresa" value={form.empresa} onChange={handleChange} className={requiredInputClass(form.empresa)} placeholder="Nombre de la empresa" required />
+              <div className="flex gap-2">
+                <input name="empresa" value={form.empresa} onChange={handleChange} className={requiredInputClass(form.empresa)} placeholder="Nombre de la empresa" required />
+                <button
+                  type="button"
+                  onClick={() => setShowOtroInput(s => !s)}
+                  className="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all"
+                >
+                  Otro
+                </button>
+              </div>
+              {showOtroInput && (
+                <div className="mt-2">
+                  <input
+                    type="text"
+                    value={otroText}
+                    onChange={e => setOtroText(e.target.value)}
+                    placeholder="Escribe otro destinatario (solo para PDF)"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Este texto no se guardará en la base de datos, solo aparecerá en el PDF en el campo "Otro".</p>
+                </div>
+              )}
             </Field>
             <Field label="Contacto">
               <input name="cliente" value={form.cliente} onChange={handleChange} className={requiredInputClass(form.cliente)} placeholder="Nombre completo" required />
