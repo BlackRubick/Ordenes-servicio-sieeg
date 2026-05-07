@@ -768,28 +768,7 @@ export default function Quotes() {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Field label="Empresa">
-              <div className="flex gap-2">
-                <input name="empresa" value={form.empresa} onChange={handleChange} className={requiredInputClass(form.empresa)} placeholder="Nombre de la empresa" required />
-                <button
-                  type="button"
-                  onClick={() => setShowOtroInput(s => !s)}
-                  className="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all"
-                >
-                  Otro
-                </button>
-              </div>
-              {showOtroInput && (
-                <div className="mt-2">
-                  <input
-                    type="text"
-                    value={otroText}
-                    onChange={e => setOtroText(e.target.value)}
-                    placeholder="Escribe otro destinatario (solo para PDF)"
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">Este texto no se guardará en la base de datos, solo aparecerá en el PDF en el campo "Otro".</p>
-                </div>
-              )}
+              <input name="empresa" value={form.empresa} onChange={handleChange} className={requiredInputClass(form.empresa)} placeholder="Nombre de la empresa" required />
             </Field>
             <Field label="Contacto">
               <input name="cliente" value={form.cliente} onChange={handleChange} className={requiredInputClass(form.cliente)} placeholder="Nombre completo" required />
@@ -806,6 +785,29 @@ export default function Quotes() {
                 ))}
               </select>
             </Field>
+            <div className="md:col-span-3">
+              <div className="flex items-start gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowOtroInput(s => !s)}
+                  className="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all"
+                >
+                  Otro
+                </button>
+                {showOtroInput && (
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={otroText}
+                      onChange={e => setOtroText(e.target.value)}
+                      placeholder="Escribe otro destinatario (solo para PDF)"
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Este texto no se guardará en la base de datos, solo aparecerá en el PDF en el campo "Otro".</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </SectionCard>
 
