@@ -318,6 +318,8 @@ const bodyY = gy + 8;
         }
       } else if (key === 'cantidad') {
         doc.text(row[key], x + w / 2, ry + dynH / 2 + 3, { align: 'center' });
+      } else if (key === 'unidad' || key === 'precioUnitario' || key === 'importe') {
+        doc.text(row[key], x + w / 2, ry + dynH / 2 + 3, { align: 'center' });
       } else {
         doc.text(row[key], x + w / 2, ry + 8, { align: 'center' });
       }
