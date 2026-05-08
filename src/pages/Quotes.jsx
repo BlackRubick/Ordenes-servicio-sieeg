@@ -26,7 +26,8 @@ UNA VEZ REALIZADO EL PAGO SE PROCEDE A LIBERAR O AGENDAR EL SERVICIO`,
   pruebaRendimiento: false,
   observacionesExtra: '',
   status: 'Borrador',
-  partidas: []
+  partidas: [],
+  otro: ''
 };
 
 const SectionCard = ({ icon, title, subtitle, iconClass, children }) => (
@@ -138,6 +139,7 @@ MÉTODO DE PAGO:PAGO EN UNA SOLA EXHIBICIÓN
 UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
   pruebaRendimiento: Boolean(quote?.pruebaRendimiento),
   observacionesExtra: quote?.observacionesExtra || '',
+  otro: quote?.otro || '',
   status: quote?.status || 'Borrador',
   partidas: Array.isArray(quote?.partidas) && quote.partidas.length > 0
     ? quote.partidas.map((partida) => ({
@@ -478,6 +480,7 @@ export default function Quotes() {
         if (active) {
           setForm(formFromQuote(data));
           setEmisorSelect(data?.emisor || '');
+          setOtroText(data?.otro || '');
         }
       } catch (error) {
         if (active) {
@@ -591,6 +594,12 @@ export default function Quotes() {
               pruebaRendimiento: Boolean(form.pruebaRendimiento),
               status: isEditMode ? (form.status || 'Borrador') : 'Borrador',
             };
+            // Asegurar que `otro` se envie al servidor si fue capturado en la UI
+            if (otroText && String(otroText).trim() !== '') {
+              payload.otro = String(otroText).trim();
+            } else if (form.otro) {
+              payload.otro = form.otro;
+            }
             console.log('DEBUG: Partidas a enviar al servidor:', JSON.stringify(partidas, null, 2));
             const response = await fetch(isEditMode ? `/api/quotes/${id}` : '/api/quotes', {
               method: isEditMode ? 'PUT' : 'POST',
@@ -612,9 +621,9 @@ export default function Quotes() {
               partidas: Array.isArray(savedQuote.partidas) ? savedQuote.partidas : partidas,
               pruebaRendimiento: Boolean(payload.pruebaRendimiento),
             };
-            // Incluir texto temporal 'otro' solo para el PDF (no se guarda en la DB)
-            if (otroText && String(otroText).trim() !== '') {
-              pdfQuote.otro = String(otroText).trim();
+            // Incluir texto 'otro' en el PDF (se guarda ahora en la DB cuando corresponde)
+            if (payload.otro && String(payload.otro).trim() !== '') {
+              pdfQuote.otro = String(payload.otro).trim();
             } else if (savedQuote?.otro) {
               pdfQuote.otro = savedQuote.otro;
             }
