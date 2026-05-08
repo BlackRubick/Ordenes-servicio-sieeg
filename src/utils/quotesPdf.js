@@ -277,7 +277,7 @@ const bodyY = gy + 8;
     const descOnlyLines = doc.splitTextToSize(String(p.descripcion || ''), TC[1].w - 6);
     const obsOnlyLines = obsText ? doc.splitTextToSize(obsText, TC[1].w - 6) : [];
     const combinedLines = descOnlyLines.concat(obsOnlyLines);
-    const dynH = Math.max(rowH, combinedLines.length * 11 + 10);
+    const dynH = Math.max(rowH, combinedLines.length * 9 + 8);
 
     // Verificar si cabe (producto con su descripción/observaciones)
     if (ry + dynH > tableEndY) return;
@@ -300,24 +300,24 @@ const bodyY = gy + 8;
     TC.forEach(({ key, x, w }) => {
       if (key === 'descripcion') {
         // Renderizar descripción (normal)
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(BLACK);
-        let ly = ry + 9;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); color(BLACK);
+        let ly = ry + 8;
         descOnlyLines.forEach((ln) => {
           doc.text(ln, x + 4, ly);
-          ly += 11;
+          ly += 9;
         });
         // Renderizar observaciones en negrita si existen
         if (obsOnlyLines.length) {
-          doc.setFont('helvetica', 'bold'); doc.setFontSize(8); color(BLACK);
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); color(BLACK);
           obsOnlyLines.forEach((ln) => {
             doc.text(ln, x + 4, ly);
-            ly += 11;
+            ly += 9;
           });
           // restaurar fuente normal para las demás celdas
-          doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(BLACK);
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); color(BLACK);
         }
       } else {
-        doc.text(row[key], x + w / 2, ry + dynH / 2 + 3, { align: 'center' });
+        doc.text(row[key], x + w / 2, ry + 8, { align: 'center' });
       }
     });
 
