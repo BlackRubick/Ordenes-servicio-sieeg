@@ -32,6 +32,30 @@ export async function generateQuotePdfDoc(quote) {
     return { text: cleanText, fontSize };
   };
 
+  const fitWrappedText = (text, maxWidth, maxFontSize = 8.5, minFontSize = 6.5, maxLines = 2) => {
+    const cleanText = String(text ?? '').trim();
+    if (!cleanText) return { lines: [], fontSize: maxFontSize };
+
+    let fontSize = maxFontSize;
+    let lines = [];
+
+    while (fontSize > minFontSize) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(fontSize);
+      lines = doc.splitTextToSize(cleanText, maxWidth);
+      if (lines.length <= maxLines) break;
+      fontSize -= 0.5;
+    }
+
+    if (lines.length > maxLines) {
+      lines = lines.slice(0, maxLines);
+      const lastIndex = lines.length - 1;
+      lines[lastIndex] = `${lines[lastIndex].replace(/\s+$/g, '')}...`;
+    }
+
+    return { lines, fontSize };
+  };
+
   // ── Logo ──────────────────────────────────────────────────
   const getLogoBase64 = (src) => new Promise((resolve) => {
     const img = new window.Image();
@@ -107,6 +131,9 @@ export async function generateQuotePdfDoc(quote) {
     ],
   ];
 
+  const valueLayout = gridRows.map((row) => row.map(({ value }) => fitWrappedText(value, colW - 8, 8.5, 6.5, 2)));
+  const valueHeights = valueLayout.map((row) => Math.max(vH, ...row.map((entry) => Math.max(vH, entry.lines.length * 9 + 8))));
+
   gridRows.forEach((row) => {
     row.forEach(({ label }, i) => {
       const x = MX + i * colW;
@@ -117,18 +144,28 @@ export async function generateQuotePdfDoc(quote) {
       doc.text(label, x + colW / 2, gy + hH / 2 + 3.5, { align: 'center' });
     });
     gy += hH;
+    const rowIndex = gridRows.indexOf(row);
+    const rowValueHeight = valueHeights[rowIndex] || vH;
     row.forEach(({ value }, i) => {
       const x = MX + i * colW;
       fill(WHITE);
       doc.setLineWidth(0.4);
-      doc.rect(x, gy, colW, vH, 'F');
-      const fitted = fitSingleLineText(value, colW - 8);
+      doc.rect(x, gy, colW, rowValueHeight, 'F');
+      const fitted = valueLayout[rowIndex][i];
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(fitted.fontSize);
       color(BLACK);
-      doc.text(fitted.text, x + colW / 2, gy + vH / 2 + 3, { align: 'center' });
+      if (fitted.lines.length <= 1) {
+        doc.text(fitted.lines[0] || '', x + colW / 2, gy + rowValueHeight / 2 + 3, { align: 'center' });
+      } else {
+        const lineGap = 9;
+        const startY = gy + (rowValueHeight - (fitted.lines.length - 1) * lineGap) / 2 + 3;
+        fitted.lines.forEach((line, lineIndex) => {
+          doc.text(line, x + colW / 2, startY + lineIndex * lineGap, { align: 'center' });
+        });
+      }
     });
-    gy += vH;
+    gy += rowValueHeight;
   });
 
   // ── Descripción ───────────────────────────────────────────
