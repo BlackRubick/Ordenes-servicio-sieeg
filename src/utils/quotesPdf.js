@@ -178,11 +178,11 @@ const bodyY = gy + 8;
     { label: 'CANTIDAD',         key: 'cantidad',       x: MX,      w: 55  },
     { label: 'DESCRIPCION',      key: 'descripcion',    x: MX+55,   w: 210 },
     { label: 'UNIDAD',           key: 'unidad',         x: MX+265,  w: 58  },
-    { label: 'PRECIO\nUNITARIO', key: 'precioUnitario', x: MX+323,  w: 82  },
+    { label: 'P/U',              key: 'precioUnitario', x: MX+323,  w: 82  },
     { label: 'IMPORTE',          key: 'importe',        x: MX+405,  w: tableW - 405 },
   ];
 
-  const thH  = 32;
+  const thH  = 26;
   const rowH = 22;
 
   // ══════════════════════════════════════════════════════════
@@ -250,14 +250,14 @@ const bodyY = gy + 8;
     doc.setLineWidth(0.3);
     doc.rect(x, bodyY, w, thH, 'F');
   });
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); color(WHITE);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); color(WHITE);
   TC.forEach(({ label, x, w }) => {
     const lines = label.split('\n');
     if (lines.length === 2) {
-      doc.text(lines[0], x + w / 2, bodyY + 12, { align: 'center' });
-      doc.text(lines[1], x + w / 2, bodyY + 23, { align: 'center' });
+      doc.text(lines[0], x + w / 2, bodyY + 10, { align: 'center' });
+      doc.text(lines[1], x + w / 2, bodyY + 18, { align: 'center' });
     } else {
-      doc.text(label, x + w / 2, bodyY + thH / 2 + 4, { align: 'center' });
+      doc.text(label, x + w / 2, bodyY + thH / 2 + 1, { align: 'center' });
     }
   });
 
