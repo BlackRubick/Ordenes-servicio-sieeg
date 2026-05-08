@@ -17,6 +17,21 @@ export async function generateQuotePdfDoc(quote) {
   const WHITE     = '#FFFFFF';
   const LIGHT_BOX = '#f0f4f8';
 
+  const fitSingleLineText = (text, maxWidth, maxFontSize = 8.5, minFontSize = 6.5) => {
+    const cleanText = String(text ?? '').trim();
+    if (!cleanText) return { text: '', fontSize: maxFontSize };
+
+    let fontSize = maxFontSize;
+    doc.setFont('helvetica', 'normal');
+    while (fontSize > minFontSize) {
+      doc.setFontSize(fontSize);
+      if (doc.getTextWidth(cleanText) <= maxWidth) break;
+      fontSize -= 0.5;
+    }
+
+    return { text: cleanText, fontSize };
+  };
+
   // ── Logo ──────────────────────────────────────────────────
   const getLogoBase64 = (src) => new Promise((resolve) => {
     const img = new window.Image();
@@ -107,8 +122,11 @@ export async function generateQuotePdfDoc(quote) {
       fill(WHITE);
       doc.setLineWidth(0.4);
       doc.rect(x, gy, colW, vH, 'F');
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); color(BLACK);
-      doc.text(doc.splitTextToSize(value, colW - 8)[0] || '', x + colW / 2, gy + vH / 2 + 3, { align: 'center' });
+      const fitted = fitSingleLineText(value, colW - 8);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(fitted.fontSize);
+      color(BLACK);
+      doc.text(fitted.text, x + colW / 2, gy + vH / 2 + 3, { align: 'center' });
     });
     gy += vH;
   });
