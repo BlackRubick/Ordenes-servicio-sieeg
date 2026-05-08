@@ -56,6 +56,30 @@ export async function generateQuotePdfDoc(quote) {
     return { lines, fontSize };
   };
 
+  const fitWrappedTextStyled = (text, maxWidth, maxFontSize = 7.5, minFontSize = 6, maxLines = 3, fontStyle = 'normal') => {
+    const cleanText = String(text ?? '').trim();
+    if (!cleanText) return { lines: [], fontSize: maxFontSize };
+
+    let fontSize = maxFontSize;
+    let lines = [];
+
+    while (fontSize >= minFontSize) {
+      doc.setFont('helvetica', fontStyle);
+      doc.setFontSize(fontSize);
+      lines = doc.splitTextToSize(cleanText, maxWidth);
+      if (lines.length <= maxLines) break;
+      fontSize -= 0.25;
+    }
+
+    if (lines.length > maxLines) {
+      lines = lines.slice(0, maxLines);
+      const lastIndex = lines.length - 1;
+      lines[lastIndex] = `${lines[lastIndex].replace(/\s+$/g, '')}...`;
+    }
+
+    return { lines, fontSize };
+  };
+
   // ── Logo ──────────────────────────────────────────────────
   const getLogoBase64 = (src) => new Promise((resolve) => {
     const img = new window.Image();
@@ -274,10 +298,11 @@ const bodyY = gy + 8;
     console.log(`DEBUG PDF: Partida ${i}:`, JSON.stringify(p, null, 2));
     // Separar descripción y observaciones y calcular la altura total de la celda
     const obsText = p.observaciones && String(p.observaciones).trim() !== '' ? String(p.observaciones) : '';
-    const descOnlyLines = doc.splitTextToSize(String(p.descripcion || ''), TC[1].w - 6);
-    const obsOnlyLines = obsText ? doc.splitTextToSize(obsText, TC[1].w - 6) : [];
-    const combinedLines = descOnlyLines.concat(obsOnlyLines);
-    const dynH = Math.max(rowH, combinedLines.length * 9 + 8);
+    const descFit = fitWrappedTextStyled(p.descripcion || '', TC[1].w - 8, 7.5, 6, 3, 'normal');
+    const obsFit  = obsText ? fitWrappedTextStyled(obsText, TC[1].w - 8, 7.2, 6, 2, 'bold') : { lines: [], fontSize: 7.2 };
+    const combinedLines = descFit.lines.concat(obsFit.lines);
+    const lineGap = 9;
+    const dynH = Math.max(rowH, combinedLines.length * lineGap + 8);
 
     // Verificar si cabe (producto con su descripción/observaciones)
     if (ry + dynH > tableEndY) return;
@@ -299,19 +324,19 @@ const bodyY = gy + 8;
 
     TC.forEach(({ key, x, w }) => {
       if (key === 'descripcion') {
-        // Renderizar descripción (normal)
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); color(BLACK);
+        // Renderizar descripción (normal) con ajuste dinámico de tamaño
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(descFit.fontSize); color(BLACK);
         let ly = ry + 8;
-        descOnlyLines.forEach((ln) => {
+        descFit.lines.forEach((ln) => {
           doc.text(ln, x + 4, ly);
-          ly += 9;
+          ly += lineGap;
         });
-        // Renderizar observaciones en negrita si existen
-        if (obsOnlyLines.length) {
-          doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); color(BLACK);
-          obsOnlyLines.forEach((ln) => {
+        // Renderizar observaciones en negrita si existen (también con ajuste dinámico)
+        if (obsFit.lines.length) {
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(obsFit.fontSize); color(BLACK);
+          obsFit.lines.forEach((ln) => {
             doc.text(ln, x + 4, ly);
-            ly += 9;
+            ly += lineGap;
           });
           // restaurar fuente normal para las demás celdas
           doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); color(BLACK);
