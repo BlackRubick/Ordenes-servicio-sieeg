@@ -480,7 +480,9 @@ export default function Quotes() {
         if (active) {
           setForm(formFromQuote(data));
           setEmisorSelect(data?.emisor || '');
-          setOtroText(data?.otro || '');
+          const otroValue = String(data?.otro || '');
+          setOtroText(otroValue);
+          setShowOtroInput(otroValue.trim() !== '');
         }
       } catch (error) {
         if (active) {
