@@ -70,11 +70,9 @@ export async function generateQuotePdfDoc(quote) {
       fontSize -= 0.25;
     }
 
-    if (lines.length > maxLines) {
-      lines = lines.slice(0, maxLines);
-      const lastIndex = lines.length - 1;
-      lines[lastIndex] = `${lines[lastIndex].replace(/\s+$/g, '')}...`;
-    }
+    // Si con el tamaño mínimo hay más líneas, devolver todas las líneas
+    // para que el alto de la fila aumente y el texto quede visible.
+    // No se añaden puntos suspensivos.
 
     return { lines, fontSize };
   };
