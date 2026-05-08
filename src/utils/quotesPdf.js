@@ -323,7 +323,11 @@ const bodyY = gy + 8;
       if (key === 'descripcion') {
         // Renderizar descripción (normal) con ajuste dinámico de tamaño
         doc.setFont('helvetica', 'normal'); doc.setFontSize(descFit.fontSize); color(BLACK);
-        let ly = ry + 8;
+        // Calcular posición inicial para centrar verticalmente el bloque de texto
+        const totalLines = descFit.lines.length + obsFit.lines.length;
+        const totalTextHeight = totalLines * lineGap;
+        let startY = ry + Math.max(8, (dynH - totalTextHeight) / 2 + 6);
+        let ly = startY;
         descFit.lines.forEach((ln) => {
           doc.text(ln, x + 4, ly);
           ly += lineGap;
