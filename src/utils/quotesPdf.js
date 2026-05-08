@@ -316,6 +316,8 @@ const bodyY = gy + 8;
           // restaurar fuente normal para las demás celdas
           doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); color(BLACK);
         }
+      } else if (key === 'cantidad') {
+        doc.text(row[key], x + w / 2, ry + dynH / 2 + 3, { align: 'center' });
       } else {
         doc.text(row[key], x + w / 2, ry + 8, { align: 'center' });
       }
