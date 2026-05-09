@@ -62,16 +62,21 @@ export default function QuotesList() {
   const [showProductModal, setShowProductModal] = useState(false);
   const [productForm, setProductForm] = useState(initialProductForm);
   const [productValidationAttempted, setProductValidationAttempted] = useState(false);
-  const [emisorFilter, setEmisorFilter] = useState('sinar');
+  const [emisorFilter, setEmisorFilter] = useState('todas');
   const navigate = useNavigate();
 
   const isEmpty = (value) => String(value ?? '').trim() === '';
 
   const toggleEmisorFilter = () => {
-    setEmisorFilter(prev => prev === 'sinar' ? 'sieeg' : 'sinar');
+    setEmisorFilter(prev => {
+      if (prev === 'todas') return 'sinar';
+      if (prev === 'sinar') return 'sieeg';
+      return 'todas';
+    });
   };
 
   const filteredQuotes = quotes.filter(quote => {
+    if (emisorFilter === 'todas') return true;
     const emisor = String(quote?.emisor || '').toLowerCase().trim();
     if (emisorFilter === 'sinar') {
       return emisor === 'sinar';
@@ -221,17 +226,19 @@ export default function QuotesList() {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-extrabold text-primary-500">Cotizaciones {emisorFilter === 'sinar' ? 'Sinar Adrian' : 'SIEEG'}</h2>
+        <h2 className="text-2xl font-extrabold text-primary-500">Cotizaciones {emisorFilter === 'sinar' ? 'Sinar Adrian' : emisorFilter === 'sieeg' ? 'SIEEG' : ''}</h2>
         <div className="flex flex-wrap gap-3 items-center">
           <button
             className={`px-5 py-2 rounded-xl font-bold shadow-lg transition-all ${
               emisorFilter === 'sinar'
                 ? 'bg-gradient-to-tr from-primary-500 to-secondary-500 text-white hover:scale-105'
-                : 'bg-gradient-to-tr from-orange-400 to-orange-500 text-white hover:scale-105'
+                : emisorFilter === 'sieeg'
+                ? 'bg-gradient-to-tr from-orange-400 to-orange-500 text-white hover:scale-105'
+                : 'bg-gradient-to-tr from-purple-400 to-purple-500 text-white hover:scale-105'
             } active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300`}
             onClick={toggleEmisorFilter}
           >
-            {emisorFilter === 'sinar' ? 'Sinar Adrian' : 'SIEEG'}
+            {emisorFilter === 'sinar' ? 'Sinar Adrian' : emisorFilter === 'sieeg' ? 'SIEEG' : 'Todas'}
           </button>
           <button
             className="px-5 py-2 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300"
@@ -343,7 +350,7 @@ export default function QuotesList() {
             {filteredQuotes.length === 0 && (
               <tr>
                 <td colSpan={9} className="text-center text-muted py-8 bg-white rounded-b-2xl">
-                  {loading ? 'Cargando cotizaciones...' : (error || `No hay cotizaciones de ${emisorFilter === 'sinar' ? 'Sinar Adrian' : 'SIEEG'}.`)}
+                  {loading ? 'Cargando cotizaciones...' : (error || `No hay cotizaciones${emisorFilter === 'todas' ? '' : ` de ${emisorFilter === 'sinar' ? 'Sinar Adrian' : 'SIEEG'}`}.`)}
                 </td>
               </tr>
             )}
