@@ -905,9 +905,7 @@ export default function Quotes() {
                   </ul>
                 )}
               </div>
-              <p className="text-xs text-gray-400 mt-1">
-                Si no aparece una empresa, escribe el nombre completo y se guardara como nueva en esta cotizacion.
-              </p>
+
             </Field>
             <Field label="Contacto">
               <input name="cliente" value={form.cliente} onChange={handleChange} className={requiredInputClass(form.cliente)} placeholder="Nombre completo" required />
