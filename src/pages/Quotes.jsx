@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { generateQuotePdfDoc } from '../utils/quotesPdf';
@@ -183,6 +183,9 @@ export default function Quotes() {
   const [emisorSelect, setEmisorSelect] = useState('');
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [cotCounter, setCotCounter] = useState(1);
+  const [quotesCatalog, setQuotesCatalog] = useState([]);
+  const [showEmpresaSuggestions, setShowEmpresaSuggestions] = useState(false);
+  const [empresaSuggestionIndex, setEmpresaSuggestionIndex] = useState(-1);
   const [currentPartida, setCurrentPartida] = useState({ 
     cantidad: '', 
     descripcion: '', 
@@ -200,21 +203,55 @@ export default function Quotes() {
   const [showOtroInput, setShowOtroInput] = useState(false);
   const [otroText, setOtroText] = useState('');
 
-  // Cargar productos al montar el componente
+  // Cargar productos y catálogo de empresas para autocompletado
   useEffect(() => {
-    const loadProducts = async () => {
+    const loadCatalogs = async () => {
       try {
-        const response = await fetch('/api/products');
-        const data = await response.json();
-        if (response.ok) {
-          setProducts(Array.isArray(data) ? data : []);
+        const [productsResponse, quotesResponse] = await Promise.all([
+          fetch('/api/products'),
+          fetch('/api/quotes'),
+        ]);
+
+        const productsData = await productsResponse.json();
+        if (productsResponse.ok) {
+          setProducts(Array.isArray(productsData) ? productsData : []);
+        }
+
+        const quotesData = await quotesResponse.json();
+        if (quotesResponse.ok) {
+          setQuotesCatalog(Array.isArray(quotesData) ? quotesData : []);
         }
       } catch (error) {
-        console.error('Error cargando productos:', error);
+        console.error('Error cargando catálogos:', error);
       }
     };
-    loadProducts();
+    loadCatalogs();
   }, []);
+
+  const companySuggestions = useMemo(() => {
+    const term = String(form.empresa || '').trim().toLowerCase();
+    const seen = new Set();
+    const list = [];
+
+    quotesCatalog.forEach((quote) => {
+      const empresa = String(quote?.empresa || '').trim();
+      if (!empresa) return;
+      const key = empresa.toLowerCase();
+      if (seen.has(key)) return;
+      seen.add(key);
+
+      if (!term || key.includes(term)) {
+        list.push({
+          empresa,
+          cliente: String(quote?.cliente || '').trim(),
+          correo: String(quote?.correo || '').trim(),
+          otro: String(quote?.otro || '').trim(),
+        });
+      }
+    });
+
+    return list.slice(0, 8);
+  }, [form.empresa, quotesCatalog]);
 
   const EMISORES = [
     {
@@ -284,6 +321,27 @@ export default function Quotes() {
       return;
     }
     setForm({ ...form, [name]: value });
+  };
+
+  const handleEmpresaInputChange = (value) => {
+    setForm((prev) => ({ ...prev, empresa: value }));
+    setShowEmpresaSuggestions(true);
+    setEmpresaSuggestionIndex(0);
+  };
+
+  const handleEmpresaSelect = (suggestion) => {
+    const suggestedOtro = String(suggestion?.otro || '').trim();
+    setForm((prev) => ({
+      ...prev,
+      empresa: suggestion.empresa,
+      cliente: suggestion.cliente || prev.cliente,
+      correo: suggestion.correo || prev.correo,
+      otro: suggestedOtro || prev.otro,
+    }));
+    setOtroText(suggestedOtro);
+    setShowOtroInput(suggestedOtro !== '');
+    setShowEmpresaSuggestions(false);
+    setEmpresaSuggestionIndex(-1);
   };
 
   const handlePartidaChange = (idx, field, value) => {
@@ -774,7 +832,82 @@ export default function Quotes() {
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Field label="Empresa">
-              <input name="empresa" value={form.empresa} onChange={handleChange} className={requiredInputClass(form.empresa)} placeholder="Nombre de la empresa" required />
+              <div className="relative">
+                <input
+                  name="empresa"
+                  value={form.empresa}
+                  onChange={(e) => handleEmpresaInputChange(e.target.value)}
+                  onFocus={() => {
+                    setShowEmpresaSuggestions(true);
+                    setEmpresaSuggestionIndex(0);
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => {
+                      setShowEmpresaSuggestions(false);
+                      setEmpresaSuggestionIndex(-1);
+                    }, 120);
+                  }}
+                  onKeyDown={(e) => {
+                    if (!showEmpresaSuggestions || companySuggestions.length === 0) return;
+
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      setEmpresaSuggestionIndex((prev) => Math.min((prev < 0 ? 0 : prev + 1), companySuggestions.length - 1));
+                      return;
+                    }
+
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      setEmpresaSuggestionIndex((prev) => Math.max((prev <= 0 ? 0 : prev - 1), 0));
+                      return;
+                    }
+
+                    if (e.key === 'Enter') {
+                      const idx = empresaSuggestionIndex >= 0 ? empresaSuggestionIndex : 0;
+                      if (companySuggestions[idx]) {
+                        e.preventDefault();
+                        handleEmpresaSelect(companySuggestions[idx]);
+                      }
+                      return;
+                    }
+
+                    if (e.key === 'Escape') {
+                      setShowEmpresaSuggestions(false);
+                      setEmpresaSuggestionIndex(-1);
+                    }
+                  }}
+                  className={requiredInputClass(form.empresa)}
+                  placeholder="Escribe y selecciona empresa existente o crea nueva"
+                  required
+                />
+
+                {showEmpresaSuggestions && companySuggestions.length > 0 && (
+                  <ul className="absolute z-40 left-0 right-0 mt-1 max-h-56 overflow-auto rounded-lg border border-gray-100 bg-white shadow-lg">
+                    {companySuggestions.map((suggestion, index) => (
+                      <li
+                        key={`${suggestion.empresa}-${index}`}
+                        className={`px-3 py-2 cursor-pointer ${empresaSuggestionIndex === index ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
+                        onMouseEnter={() => setEmpresaSuggestionIndex(index)}
+                        onMouseDown={(ev) => {
+                          ev.preventDefault();
+                          handleEmpresaSelect(suggestion);
+                        }}
+                      >
+                        <div className="text-sm font-medium text-gray-800">{suggestion.empresa}</div>
+                        {(suggestion.cliente || suggestion.correo) && (
+                          <div className="text-xs text-gray-500">{[suggestion.cliente, suggestion.correo].filter(Boolean).join(' · ')}</div>
+                        )}
+                        {suggestion.otro && (
+                          <div className="text-xs text-amber-600 truncate">Otro: {suggestion.otro}</div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                Si no aparece una empresa, escribe el nombre completo y se guardara como nueva en esta cotizacion.
+              </p>
             </Field>
             <Field label="Contacto">
               <input name="cliente" value={form.cliente} onChange={handleChange} className={requiredInputClass(form.cliente)} placeholder="Nombre completo" required />
