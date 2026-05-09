@@ -246,6 +246,8 @@ export default function Quotes() {
           cliente: String(quote?.cliente || '').trim(),
           correo: String(quote?.correo || '').trim(),
           otro: String(quote?.otro || '').trim(),
+          telefono: String(quote?.telefono || '').trim(),
+          direccionCliente: String(quote?.direccionCliente || '').trim(),
         });
       }
     });
@@ -336,6 +338,8 @@ export default function Quotes() {
       empresa: suggestion.empresa,
       cliente: suggestion.cliente || prev.cliente,
       correo: suggestion.correo || prev.correo,
+      telefono: suggestion.telefono || prev.telefono,
+      direccionCliente: suggestion.direccionCliente || prev.direccionCliente,
       otro: suggestedOtro || prev.otro,
     }));
     setOtroText(suggestedOtro);
@@ -919,6 +923,9 @@ export default function Quotes() {
                         <div className="text-sm font-medium text-gray-800">{suggestion.empresa}</div>
                         {(suggestion.cliente || suggestion.correo) && (
                           <div className="text-xs text-gray-500">{[suggestion.cliente, suggestion.correo].filter(Boolean).join(' · ')}</div>
+                        )}
+                        {(suggestion.telefono || suggestion.direccionCliente) && (
+                          <div className="text-xs text-gray-400">{[suggestion.telefono, suggestion.direccionCliente].filter(Boolean).join(' | ')}</div>
                         )}
                         {suggestion.otro && (
                           <div className="text-xs text-amber-600 truncate">Otro: {suggestion.otro}</div>
