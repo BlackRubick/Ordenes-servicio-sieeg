@@ -221,7 +221,7 @@ export default function QuotesList() {
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-extrabold text-primary-500">Cotizaciones</h2>
+        <h2 className="text-2xl font-extrabold text-primary-500">Cotizaciones {emisorFilter === 'sinar' ? 'Sinar Adrian' : 'SIEEG'}</h2>
         <div className="flex flex-wrap gap-3 items-center">
           <button
             className={`px-5 py-2 rounded-xl font-bold shadow-lg transition-all ${
