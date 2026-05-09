@@ -62,9 +62,23 @@ export default function QuotesList() {
   const [showProductModal, setShowProductModal] = useState(false);
   const [productForm, setProductForm] = useState(initialProductForm);
   const [productValidationAttempted, setProductValidationAttempted] = useState(false);
+  const [emisorFilter, setEmisorFilter] = useState('sinar');
   const navigate = useNavigate();
 
   const isEmpty = (value) => String(value ?? '').trim() === '';
+
+  const toggleEmisorFilter = () => {
+    setEmisorFilter(prev => prev === 'sinar' ? 'sieeg' : 'sinar');
+  };
+
+  const filteredQuotes = quotes.filter(quote => {
+    const emisor = String(quote?.emisor || '').toLowerCase().trim();
+    if (emisorFilter === 'sinar') {
+      return emisor === 'sinar';
+    } else {
+      return emisor === 'sieeg';
+    }
+  });
 
   const handleOpenProductModal = () => {
     setProductForm(initialProductForm);
@@ -208,7 +222,17 @@ export default function QuotesList() {
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-extrabold text-primary-500">Cotizaciones</h2>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 items-center">
+          <button
+            className={`px-5 py-2 rounded-xl font-bold shadow-lg transition-all ${
+              emisorFilter === 'sinar'
+                ? 'bg-gradient-to-tr from-primary-500 to-secondary-500 text-white hover:scale-105'
+                : 'bg-gradient-to-tr from-orange-400 to-orange-500 text-white hover:scale-105'
+            } active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300`}
+            onClick={toggleEmisorFilter}
+          >
+            {emisorFilter === 'sinar' ? 'Sinar Adrian' : 'SIEEG'}
+          </button>
           <button
             className="px-5 py-2 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300"
             onClick={() => navigate('/admin/quotes/create')}
@@ -316,15 +340,15 @@ export default function QuotesList() {
             </tr>
           </thead>
           <tbody>
-            {quotes.length === 0 && (
+            {filteredQuotes.length === 0 && (
               <tr>
                 <td colSpan={9} className="text-center text-muted py-8 bg-white rounded-b-2xl">
-                  {loading ? 'Cargando cotizaciones...' : (error || 'No hay cotizaciones registradas.')}
+                  {loading ? 'Cargando cotizaciones...' : (error || `No hay cotizaciones de ${emisorFilter === 'sinar' ? 'Sinar Adrian' : 'SIEEG'}.`)}
                 </td>
               </tr>
             )}
-            {quotes.map((q, idx) => {
-              const isLast = idx === quotes.length - 1;
+            {filteredQuotes.map((q, idx) => {
+              const isLast = idx === filteredQuotes.length - 1;
               return (
                 <tr
                   key={q.id}
