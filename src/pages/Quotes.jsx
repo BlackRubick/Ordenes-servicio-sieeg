@@ -593,15 +593,11 @@ export default function Quotes() {
               ...form,
               partidas,
               total,
+              contacto: form.cliente,
               pruebaRendimiento: Boolean(form.pruebaRendimiento),
               status: isEditMode ? (form.status || 'Borrador') : 'Borrador',
+              otro: String(otroText || '').trim(),
             };
-            // Asegurar que `otro` se envie al servidor si fue capturado en la UI
-            if (otroText && String(otroText).trim() !== '') {
-              payload.otro = String(otroText).trim();
-            } else if (form.otro) {
-              payload.otro = form.otro;
-            }
             console.log('DEBUG: Partidas a enviar al servidor:', JSON.stringify(partidas, null, 2));
             const response = await fetch(isEditMode ? `/api/quotes/${id}` : '/api/quotes', {
               method: isEditMode ? 'PUT' : 'POST',

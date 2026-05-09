@@ -66,6 +66,7 @@ router.post('/', async (req, res) => {
     direccionCliente,
     empresa,
     cliente,
+    contacto,
     correo,
     direccion,
     razonSocial,
@@ -122,7 +123,7 @@ router.post('/', async (req, res) => {
       telefono,
       direccionCliente,
       empresa,
-      cliente,
+      cliente: cliente ?? contacto ?? null,
       correo,
       direccion,
       razonSocial,
@@ -155,6 +156,10 @@ router.put('/:id', async (req, res) => {
       'correo', 'direccion', 'razonSocial', 'rfc', 'repse', 'descripcionGeneral', 'observaciones', 'emisor', 'partidas', 'total',
       'status', 'otro', 'pruebaRendimiento',
     ];
+
+    if (Object.prototype.hasOwnProperty.call(req.body, 'contacto') && !Object.prototype.hasOwnProperty.call(req.body, 'cliente')) {
+      quote.cliente = req.body.contacto;
+    }
 
     fields.forEach((field) => {
       if (Object.prototype.hasOwnProperty.call(req.body, field)) {
