@@ -848,30 +848,52 @@ export default function Quotes() {
                     }, 120);
                   }}
                   onKeyDown={(e) => {
+                    // Si hay sugerencias pero no se muestran, mostrarlas al presionar ArrowDown
+                    if (companySuggestions.length > 0 && !showEmpresaSuggestions && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                      e.preventDefault();
+                      setShowEmpresaSuggestions(true);
+                      setEmpresaSuggestionIndex(0);
+                      return;
+                    }
+
+                    // Si no hay sugerencias o no se muestran, no hacer nada
                     if (!showEmpresaSuggestions || companySuggestions.length === 0) return;
 
                     if (e.key === 'ArrowDown') {
                       e.preventDefault();
-                      setEmpresaSuggestionIndex((prev) => Math.min((prev < 0 ? 0 : prev + 1), companySuggestions.length - 1));
+                      const nextIndex = Math.min((empresaSuggestionIndex < 0 ? 0 : empresaSuggestionIndex + 1), companySuggestions.length - 1);
+                      setEmpresaSuggestionIndex(nextIndex);
+                      // Scroll automático al item seleccionado
+                      setTimeout(() => {
+                        const el = document.getElementById(`empresa-sugg-${nextIndex}`);
+                        if (el) el.scrollIntoView({ block: 'nearest' });
+                      }, 0);
                       return;
                     }
 
                     if (e.key === 'ArrowUp') {
                       e.preventDefault();
-                      setEmpresaSuggestionIndex((prev) => Math.max((prev <= 0 ? 0 : prev - 1), 0));
+                      const prevIndex = Math.max((empresaSuggestionIndex <= 0 ? -1 : empresaSuggestionIndex - 1), 0);
+                      setEmpresaSuggestionIndex(prevIndex);
+                      // Scroll automático al item seleccionado
+                      setTimeout(() => {
+                        const el = document.getElementById(`empresa-sugg-${prevIndex}`);
+                        if (el) el.scrollIntoView({ block: 'nearest' });
+                      }, 0);
                       return;
                     }
 
                     if (e.key === 'Enter') {
+                      e.preventDefault();
                       const idx = empresaSuggestionIndex >= 0 ? empresaSuggestionIndex : 0;
                       if (companySuggestions[idx]) {
-                        e.preventDefault();
                         handleEmpresaSelect(companySuggestions[idx]);
                       }
                       return;
                     }
 
                     if (e.key === 'Escape') {
+                      e.preventDefault();
                       setShowEmpresaSuggestions(false);
                       setEmpresaSuggestionIndex(-1);
                     }
@@ -885,6 +907,7 @@ export default function Quotes() {
                   <ul className="absolute z-40 left-0 right-0 mt-1 max-h-56 overflow-auto rounded-lg border border-gray-100 bg-white shadow-lg">
                     {companySuggestions.map((suggestion, index) => (
                       <li
+                        id={`empresa-sugg-${index}`}
                         key={`${suggestion.empresa}-${index}`}
                         className={`px-3 py-2 cursor-pointer ${empresaSuggestionIndex === index ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
                         onMouseEnter={() => setEmpresaSuggestionIndex(index)}
