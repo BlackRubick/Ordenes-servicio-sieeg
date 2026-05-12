@@ -244,12 +244,14 @@ export default function QuotesList() {
           >
               {emisorFilter === 'sinar' ? 'Persona física' : 'SIEEG'}
           </button>
-          <button
-            className="px-5 py-2 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300"
-            onClick={() => navigate('/admin/quotes/create')}
-          >
-            + Nueva cotización
-          </button>
+          {normalizedRole !== 'cotizador' && (
+            <button
+              className="px-5 py-2 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300"
+              onClick={() => navigate('/admin/quotes/create')}
+            >
+              + Nueva cotización
+            </button>
+          )}
           <button
             className="px-5 py-2 rounded-xl border border-secondary-200 bg-white text-secondary-600 font-bold shadow-sm hover:bg-secondary-50 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-secondary-300 transition-all"
             onClick={() => { if (normalizedRole !== 'cotizador') navigate('/admin/products'); }}
