@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { generateQuotePdfDoc } from '../utils/quotesPdf';
 import Swal from 'sweetalert2';
+import { useAuthStore } from '../store/authStore';
 
 const initialData = {
   direccion: '',
@@ -202,6 +203,12 @@ export default function Quotes() {
   const [editingIndex, setEditingIndex] = useState(null);
   const [showOtroInput, setShowOtroInput] = useState(false);
   const [otroText, setOtroText] = useState('');
+
+  const { role } = useAuthStore();
+  const normalizedRole = String(role || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 
   // Cargar productos y catálogo de empresas para autocompletado
   useEffect(() => {
@@ -1295,26 +1302,30 @@ export default function Quotes() {
                       <td className="px-4 py-3 text-right font-semibold text-gray-900">${parseFloat(p.importe || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => editPartida(idx)}
-                            title="Editar"
-                            className="w-7 h-7 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition-all"
-                          >
+                          {normalizedRole !== 'cotizador' && (
+                            <button
+                              type="button"
+                              onClick={() => editPartida(idx)}
+                              title="Editar"
+                              className="w-7 h-7 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition-all"
+                            >
                             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                               <path d="M11.33 2L14 4.67M2 14H5L13.5 5.5L10.5 2.5L2 11V14Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => removePartida(idx)}
-                            title="Eliminar"
-                            className="w-7 h-7 rounded-md bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-all"
-                          >
+                            </button>
+                          )}
+                          {normalizedRole !== 'cotizador' && (
+                            <button
+                              type="button"
+                              onClick={() => removePartida(idx)}
+                              title="Eliminar"
+                              className="w-7 h-7 rounded-md bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition-all"
+                            >
                             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                               <path d="M2 4h12M6.5 7v4M9.5 7v4M3 4l1 10.5a2 2 0 002 1.5h4a2 2 0 002-1.5L13 4M6 4V3a1 1 0 011-1h2a1 1 0 011 1v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
-                          </button>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

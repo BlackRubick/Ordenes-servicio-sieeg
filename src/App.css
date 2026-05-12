@@ -36,3 +36,17 @@
     transform: rotate(360deg);
   }
 }
+
+/* Hide edit/delete action buttons when role is cotizador */
+[data-role="cotizador"] button[title="Eliminar"],
+[data-role="cotizador"] button[title="Editar"],
+[data-role="cotizador"] a[title="Eliminar"],
+[data-role="cotizador"] a[title="Editar"] {
+  display: none !important;
+}
+
+/* Also hide small action icon buttons commonly used */
+[data-role="cotizador"] button.w-7[title="Eliminar"],
+[data-role="cotizador"] button.w-7[title="Editar"] {
+  display: none !important;
+}
