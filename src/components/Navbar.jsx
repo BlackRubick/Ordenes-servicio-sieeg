@@ -14,6 +14,7 @@ const Navbar = () => {
     .toLowerCase();
   const isAdmin = normalizedRole === 'admin' || normalizedRole === 'administrador';
   const isMostrador = normalizedRole === 'mostrador';
+  const isCotizador = normalizedRole === 'cotizador';
   const navLinks =
     normalizedRole === 'tecnico'
       ? [
@@ -42,6 +43,12 @@ const Navbar = () => {
           { name: 'Consulta Pública', to: '/consulta-tu-orden' },
           { name: 'Solicitar Orden de Servicio', to: '/solicitar-orden-cliente' },
         ];
+  
+  // If user is Cotizador, only show Quotes
+  if (isCotizador) {
+    navLinks.length = 0;
+    navLinks.push({ name: 'Cotizaciones', to: '/admin/quotes' });
+  }
   return (
     <header className="w-full h-20 bg-navbar shadow-soft flex items-center px-8 justify-between transition-all duration-300 border-b border-border fixed top-0 left-0 z-30">
       {/* Logo */}

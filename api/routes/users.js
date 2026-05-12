@@ -3,7 +3,7 @@ const router = express.Router();
 const { User } = require('../models');
 const bcrypt = require('bcrypt');
 
-const ROLES_VALIDOS = ['administrador', 'admin', 'tecnico', 'técnico', 'mostrador'];
+const ROLES_VALIDOS = ['administrador', 'admin', 'tecnico', 'técnico', 'mostrador', 'cotizador'];
 
 const normalizarRol = (rol) => String(rol || '')
   .normalize('NFD')
