@@ -360,9 +360,9 @@ const bodyY = gy + 8;
   // ══════════════════════════════════════════════════════════
   const observacionesExtra = String(quote.observacionesExtra || '').trim();
   if (quote.pruebaRendimiento && observacionesExtra) {
-    const boxWidth = Math.max(0, tableW - 20);
-    const boxX = MX + 10;
-    const bodyWidth = boxWidth - 8;
+    const boxWidth = Math.min(W - 80, 500);
+    const boxX = (W - boxWidth) / 2;
+    const bodyWidth = boxWidth - 10;
     const wrapped = doc.splitTextToSize(observacionesExtra, bodyWidth);
     const bodyLineH = 7;
     const boxH = (wrapped.length * bodyLineH) + 8;
