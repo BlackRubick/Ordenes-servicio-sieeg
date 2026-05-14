@@ -138,7 +138,7 @@ FORMA DE PAGO: TRANSFERENCIA ELECTRONICA DE FONDOS(03)
 USO DE MCÍA.:G03 -GASTOSEN GENERAL
 MÉTODO DE PAGO:PAGO EN UNA SOLA EXHIBICIÓN
 UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
-  pruebaRendimiento: Boolean(quote?.pruebaRendimiento),
+  pruebaRendimiento: Boolean(quote?.pruebaRendimiento || String(quote?.observacionesExtra || '').trim()),
   observacionesExtra: quote?.observacionesExtra || '',
   otro: quote?.otro || '',
   status: quote?.status || 'Borrador',
@@ -550,8 +550,16 @@ export default function Quotes() {
           setForm(formFromQuote(data));
           setEmisorSelect(data?.emisor || '');
           const otroValue = String(data?.otro || '');
+          const observacionesExtraValue = String(data?.observacionesExtra || '').trim();
           setOtroText(otroValue);
           setShowOtroInput(otroValue.trim() !== '');
+          if (observacionesExtraValue) {
+            setForm((current) => ({
+              ...current,
+              pruebaRendimiento: true,
+              observacionesExtra: data.observacionesExtra || '',
+            }));
+          }
         }
       } catch (error) {
         if (active) {

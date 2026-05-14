@@ -21,6 +21,7 @@ const Quote = sequelize.define('Quote', {
   status: { type: DataTypes.STRING, allowNull: true, defaultValue: 'Borrador' },
   otro: { type: DataTypes.TEXT, allowNull: true },
   observaciones: { type: DataTypes.TEXT, allowNull: true },
+  observacionesExtra: { type: DataTypes.TEXT, allowNull: true },
   emisor: { type: DataTypes.STRING, allowNull: true },
   pruebaRendimiento: { type: DataTypes.BOOLEAN, allowNull: true, defaultValue: false },
 });
