@@ -360,24 +360,13 @@ const bodyY = gy + 8;
   // ══════════════════════════════════════════════════════════
   const observacionesExtra = String(quote.observacionesExtra || '').trim();
   if (quote.pruebaRendimiento && observacionesExtra) {
-    const boxWidth = Math.min(360, tableW - 90);
-    const boxX = MX + (tableW - boxWidth) / 2;
-    const title = 'OBSERVACIONES EXTRA';
-    const bodyWidth = boxWidth - 10;
+    const boxWidth = Math.max(0, tableW - 20);
+    const boxX = MX + 10;
+    const bodyWidth = boxWidth - 8;
     const wrapped = doc.splitTextToSize(observacionesExtra, bodyWidth);
-    const titleH = 7;
     const bodyLineH = 7;
-    const boxH = titleH + (wrapped.length * bodyLineH) + 8;
+    const boxH = (wrapped.length * bodyLineH) + 8;
     const boxY = Math.max(ry + 20, ry + ((footerY - ry - boxH) / 2));
-
-    doc.setFillColor(248, 250, 252);
-    doc.setDrawColor(226, 232, 240);
-    doc.roundedRect(boxX, boxY, boxWidth, boxH, 3, 3, 'FD');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    color(NAVY);
-    doc.text(title, boxX + 5, boxY + 6);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6.8);
