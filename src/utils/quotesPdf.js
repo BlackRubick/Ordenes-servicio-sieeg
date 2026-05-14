@@ -360,17 +360,29 @@ const bodyY = gy + 8;
   // ══════════════════════════════════════════════════════════
   const observacionesExtra = String(quote.observacionesExtra || '').trim();
   if (quote.pruebaRendimiento && observacionesExtra) {
-    const boxWidth = Math.min(380, tableW - 80);
+    const boxWidth = Math.min(360, tableW - 90);
     const boxX = MX + (tableW - boxWidth) / 2;
-    const lineH = 11;
-    const wrapped = doc.splitTextToSize(observacionesExtra, boxWidth);
-    const boxH = wrapped.length * lineH;
-    const boxY = Math.max(ry + 24, ry + ((footerY - ry - boxH) / 2));
+    const title = 'OBSERVACIONES EXTRA';
+    const bodyWidth = boxWidth - 10;
+    const wrapped = doc.splitTextToSize(observacionesExtra, bodyWidth);
+    const titleH = 7;
+    const bodyLineH = 7;
+    const boxH = titleH + (wrapped.length * bodyLineH) + 8;
+    const boxY = Math.max(ry + 20, ry + ((footerY - ry - boxH) / 2));
+
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(boxX, boxY, boxWidth, boxH, 3, 3, 'FD');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    color(NAVY);
+    doc.text(title, boxX + 5, boxY + 6);
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
+    doc.setFontSize(6.8);
     color(BLACK);
-    doc.text(wrapped, boxX, boxY);
+    doc.text(wrapped, boxX + 5, boxY + 14);
   }
 
   // ══════════════════════════════════════════════════════════
