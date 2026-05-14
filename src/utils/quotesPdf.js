@@ -360,8 +360,8 @@ const bodyY = gy + 8;
   // ══════════════════════════════════════════════════════════
   const observacionesExtra = String(quote.observacionesExtra || '').trim();
   if (quote.pruebaRendimiento && observacionesExtra) {
-    const boxWidth = 480; // Más ancho para que el texto salga completo
-    const boxX = (W - boxWidth) / 2; // Centrado pero con más espacio
+    const boxWidth = 480;
+    const boxX = (W - boxWidth) / 2 + 20; // Centrado + 20px hacia la derecha
     const bodyWidth = boxWidth - 10;
     const wrapped = doc.splitTextToSize(observacionesExtra, bodyWidth);
     const bodyLineH = 7;
