@@ -680,6 +680,7 @@ export default function Quotes() {
             const total = partidas.reduce((sum, partida) => sum + (Number(partida.importe) || 0), 0);
             const payload = {
               ...form,
+              emisor: emisorSelect || form.emisor || '',
               partidas,
               total,
               contacto: form.cliente,
