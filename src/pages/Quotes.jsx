@@ -715,10 +715,15 @@ export default function Quotes() {
             } else if (savedQuote?.otro) {
               pdfQuote.otro = savedQuote.otro;
             }
-            const doc = await generateQuotePdfDoc(pdfQuote);
-            doc.save(`Cotizacion_${savedQuote.numeroCotizacion || form.numeroCotizacion || 'nueva'}.pdf`);
-            Swal.fire(isEditMode ? 'Cotización actualizada' : 'Cotización guardada', isEditMode ? 'Los cambios se guardaron en la base de datos y el PDF fue generado.' : 'La cotización se guardó en la base de datos y el PDF fue generado.', 'success');
-            navigate(isEditMode ? `/admin/quotes/${savedQuote.id}` : '/admin/quotes');
+            if (!isEditMode) {
+              const doc = await generateQuotePdfDoc(pdfQuote);
+              doc.save(`Cotizacion_${savedQuote.numeroCotizacion || form.numeroCotizacion || 'nueva'}.pdf`);
+              Swal.fire('Cotización guardada', 'La cotización se guardó en la base de datos y el PDF fue generado.', 'success');
+              navigate('/admin/quotes');
+            } else {
+              Swal.fire('Cotización actualizada', 'Los cambios se guardaron en la base de datos.', 'success');
+              navigate(`/admin/quotes/${savedQuote.id}`);
+            }
           } catch (error) {
             Swal.fire('Error', error.message || 'No se pudo guardar la cotización', 'error');
           }
