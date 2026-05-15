@@ -160,8 +160,20 @@ export default function Quotes() {
   const navigate = useNavigate();
   const isEditMode = Boolean(id);
   const preloadedPartida = location.state?.preloadedPartida;
+  const preloadedQuote = location.state?.preloadedQuote;
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState(() => {
+    if (preloadedQuote && !isEditMode) {
+      const base = formFromQuote(preloadedQuote);
+      const today = new Date().toISOString().slice(0, 10);
+      return {
+        ...base,
+        numeroCotizacion: '',
+        fecha: today,
+        status: 'Borrador',
+      };
+    }
+
     if (preloadedPartida && !isEditMode) {
       const modalObservaciones = String(preloadedPartida.observaciones || '').trim();
       return {
@@ -181,7 +193,7 @@ export default function Quotes() {
     return initialData;
   });
   const [loadingQuote, setLoadingQuote] = useState(isEditMode);
-  const [emisorSelect, setEmisorSelect] = useState('');
+  const [emisorSelect, setEmisorSelect] = useState(() => (preloadedQuote && !isEditMode ? (preloadedQuote.emisor || '') : ''));
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [cotCounter, setCotCounter] = useState(1);
   const [quotesCatalog, setQuotesCatalog] = useState([]);

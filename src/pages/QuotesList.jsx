@@ -400,6 +400,13 @@ export default function QuotesList() {
                          PDF
                       </button>
                       <button
+                        className="px-3 py-1 rounded-xl bg-blue-50 text-blue-700 font-semibold border border-blue-100 hover:bg-blue-100 transition-all"
+                        onClick={() => navigate('/admin/quotes/create', { state: { preloadedQuote: q } })}
+                        title="Clonar"
+                      >
+                        Clonar
+                      </button>
+                      <button
                         className="px-3 py-1 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-semibold shadow-soft hover:from-primary-600 hover:to-blue-400 transition-all"
                         onClick={() => navigate(`/admin/quotes/${q.id}`)}
                       >
