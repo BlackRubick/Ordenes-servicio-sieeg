@@ -13,4 +13,8 @@ User.hasMany(Order, { foreignKey: 'technicianId', as: 'TechnicianOrders' });
 Order.belongsTo(Client, { foreignKey: 'clienteId', as: 'Cliente' });
 Client.hasMany(Order, { foreignKey: 'clienteId', as: 'Ordenes' });
 
+// Relación: Quote pertenece a User (vendedor)
+Quote.belongsTo(User, { foreignKey: 'vendedorId', as: 'Vendedor' });
+User.hasMany(Quote, { foreignKey: 'vendedorId', as: 'VendedorQuotes' });
+
 module.exports = { User, Order, Technician, Client, Quote, Product };

@@ -57,6 +57,16 @@ export default function OrderDetail() {
   const [diagnostico, setDiagnostico] = useState('');
   const [diagnosticoGuardado, setDiagnosticoGuardado] = useState('');
   const [editandoDiagnostico, setEditandoDiagnostico] = useState(false);
+  // Piezas modal
+  const [showPiezaModal, setShowPiezaModal] = useState(false);
+  const [piezaTab, setPiezaTab] = useState('woo');
+  const [piezaSearch, setPiezaSearch] = useState('');
+  const [wooProducts, setWooProducts] = useState([]);
+  const [localProducts, setLocalProducts] = useState([]);
+  const [loadingWoo, setLoadingWoo] = useState(false);
+  const [piezaSelected, setPiezaSelected] = useState(null);
+  const [piezaCantidad, setPiezaCantidad] = useState('1');
+  const [piezaPrecio, setPiezaPrecio] = useState('');
 
   // Handler functions
   const handleAgregarTrabajo = () => {
@@ -116,7 +126,7 @@ export default function OrderDetail() {
       return;
     }
     const nuevosTrabajos = trabajos.map((t, idx) =>
-      idx === editIndex ? { descripcion: editDescripcion, costo: parseFloat(editCosto) } : t
+      idx === editIndex ? { ...t, descripcion: editDescripcion, costo: parseFloat(editCosto) } : t
     );
     fetch(`/api/orders/${order.folio}/trabajos`, {
       method: 'PUT',
@@ -356,6 +366,90 @@ export default function OrderDetail() {
       Swal.fire('Error', error.message || 'No se pudo eliminar la foto', 'error');
     }
   };
+
+  const handleEliminarPieza = (absIdx) => {
+    Swal.fire({
+      icon: 'warning',
+      title: '¿Eliminar pieza?',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+    }).then(result => {
+      if (result.isConfirmed) {
+        const nuevosTrabajos = trabajos.filter((_, i) => i !== absIdx);
+        fetch(`/api/orders/${order.folio}/trabajos`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ trabajos: nuevosTrabajos }),
+        })
+          .then(res => res.json())
+          .then(data => {
+            setTrabajos(data.trabajos);
+            setOrder(prev => ({ ...prev, trabajos: data.trabajos }));
+            Swal.fire({ icon: 'success', title: 'Pieza eliminada', timer: 1200, showConfirmButton: false });
+          })
+          .catch(() => Swal.fire('Error', 'No se pudo eliminar la pieza', 'error'));
+      }
+    });
+  };
+
+  const handleAgregarPieza = () => {
+    if (!piezaSelected) return;
+    const cantidad = parseFloat(piezaCantidad) || 1;
+    const precio = parseFloat(piezaPrecio) || 0;
+    const nuevaPieza = {
+      descripcion: piezaSelected.name || piezaSelected.nombre || '',
+      costo: parseFloat((cantidad * precio).toFixed(2)),
+      tipo: 'pieza',
+      cantidad,
+      precioUnitario: precio,
+      sku: piezaSelected.sku || '',
+    };
+    const nuevosTrabajos = [...trabajos, nuevaPieza];
+    fetch(`/api/orders/${order.folio}/trabajos`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trabajos: nuevosTrabajos }),
+    })
+      .then(res => res.json())
+      .then(data => {
+        setTrabajos(data.trabajos);
+        setOrder(prev => ({ ...prev, trabajos: data.trabajos }));
+        setShowPiezaModal(false);
+        setPiezaSelected(null);
+        setPiezaSearch('');
+        setPiezaCantidad('1');
+        setPiezaPrecio('');
+        Swal.fire({ icon: 'success', title: 'Pieza agregada', timer: 1200, showConfirmButton: false });
+      })
+      .catch(() => Swal.fire('Error', 'No se pudo guardar la pieza', 'error'));
+  };
+
+  // Carga catálogo local cuando se abre el modal
+  React.useEffect(() => {
+    if (!showPiezaModal) return;
+    fetch('/api/products')
+      .then(res => res.json())
+      .then(data => setLocalProducts(Array.isArray(data) ? data : []))
+      .catch(() => setLocalProducts([]));
+  }, [showPiezaModal]);
+
+  // Búsqueda en WooCommerce con debounce
+  React.useEffect(() => {
+    if (!showPiezaModal || piezaTab !== 'woo') return;
+    if (!piezaSearch.trim()) { setWooProducts([]); return; }
+    const timer = setTimeout(() => {
+      setLoadingWoo(true);
+      fetch(`/api/woocommerce/products?search=${encodeURIComponent(piezaSearch)}&per_page=20`)
+        .then(res => res.json())
+        .then(data => setWooProducts(data.products || []))
+        .catch(() => setWooProducts([]))
+        .finally(() => setLoadingWoo(false));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [piezaSearch, showPiezaModal, piezaTab]);
 
   React.useEffect(() => {
     fetch(`/api/orders?folio=${folio}`)
@@ -657,18 +751,18 @@ export default function OrderDetail() {
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-gray-400 flex items-center gap-2">
                     <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2" /></svg>
-                    {trabajos.length === 0 ? 'No hay trabajos registrados' : ''}
+                    {trabajos.filter(t => t.tipo !== 'pieza').length === 0 ? 'No hay trabajos registrados' : ''}
                   </span>
                   {!isReadOnly && (
                     <button className="px-4 py-2 rounded-xl bg-blue-500 text-white font-bold shadow-lg hover:bg-blue-600 transition-all" onClick={handleAgregarTrabajo}>+ Agregar</button>
                   )}
                 </div>
               )}
-              {trabajos.length > 0 && (
+              {trabajos.filter(t => t.tipo !== 'pieza').length > 0 && (
                 <ul className="divide-y divide-blue-100 mt-2">
-                  {trabajos.map((t, idx) => (
-                    <li key={idx} className="py-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                      {!isReadOnly && editIndex === idx ? (
+                  {trabajos.map((t, absIdx) => t.tipo === 'pieza' ? null : (
+                    <li key={absIdx} className="py-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                      {!isReadOnly && editIndex === absIdx ? (
                         <>
                           <div className="flex-1 flex flex-col md:flex-row gap-2 items-center">
                             <input
@@ -705,11 +799,11 @@ export default function OrderDetail() {
                             <>
                               <button
                                 className="px-3 py-1 rounded-xl bg-yellow-500 text-white font-bold shadow-lg hover:bg-yellow-600 transition-all"
-                                onClick={() => handleEditarTrabajo(idx)}
+                                onClick={() => handleEditarTrabajo(absIdx)}
                               >Editar</button>
                               <button
                                 className="px-3 py-1 rounded-xl bg-red-500 text-white font-bold shadow-lg hover:bg-red-600 transition-all"
-                                onClick={() => handleEliminarTrabajo(idx)}
+                                onClick={() => handleEliminarTrabajo(absIdx)}
                               >Eliminar</button>
                             </>
                           )}
@@ -728,13 +822,46 @@ export default function OrderDetail() {
                 <span className="font-bold text-blue-700 text-lg">Piezas usadas</span>
               </div>
               <div className="flex justify-between items-center mb-4">
-                <span className="text-gray-400 flex items-center gap-2"><svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2" /><circle cx="12" cy="14" r="3" /></svg>No hay piezas registradas</span>
-                <button className="px-4 py-2 rounded-xl bg-blue-500 text-white font-bold shadow-lg hover:bg-blue-600 transition-all">+ Agregar pieza</button>
+                <span className="text-gray-400 text-sm">
+                  {trabajos.filter(t => t.tipo === 'pieza').length === 0 ? 'No hay piezas registradas' : ''}
+                </span>
+                {!isReadOnly && (
+                  <button
+                    className="px-4 py-2 rounded-xl bg-blue-500 text-white font-bold shadow-lg hover:bg-blue-600 transition-all"
+                    onClick={() => setShowPiezaModal(true)}
+                  >+ Agregar pieza</button>
+                )}
               </div>
-              <div className="bg-blue-50 rounded-xl p-4 flex justify-between items-center mt-4">
+              {trabajos.filter(t => t.tipo === 'pieza').length > 0 && (
+                <ul className="divide-y divide-blue-100 mt-2 mb-4">
+                  {trabajos.map((t, absIdx) => t.tipo !== 'pieza' ? null : (
+                    <li key={absIdx} className="py-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                      <div className="flex-1">
+                        <span className="text-blue-700 font-semibold">{t.descripcion}</span>
+                        {t.sku && <span className="text-xs text-gray-400 ml-2">SKU: {t.sku}</span>}
+                        {t.cantidad && (
+                          <span className="text-xs text-gray-500 ml-2">
+                            {t.cantidad} × ${(t.precioUnitario || 0).toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-blue-700">${(t.costo || 0).toFixed(2)}</span>
+                        {!isReadOnly && (
+                          <button
+                            className="px-3 py-1 rounded-xl bg-red-500 text-white font-bold shadow-lg hover:bg-red-600 transition-all"
+                            onClick={() => handleEliminarPieza(absIdx)}
+                          >Eliminar</button>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="bg-blue-50 rounded-xl p-4 flex justify-between items-center mt-2">
                 <span className="font-bold text-blue-700">Costo Total:</span>
                 <span className="font-mono text-2xl text-blue-700">
-                  {order && order.resumen && typeof order.resumen.total === 'number' ? `$${order.resumen.total.toFixed(2)}` : `$${trabajos.reduce((acc, t) => acc + (typeof t.costo === 'number' ? t.costo : 0), 0).toFixed(2)}`}
+                  {`$${trabajos.reduce((acc, t) => acc + (typeof t.costo === 'number' ? t.costo : 0), 0).toFixed(2)}`}
                 </span>
               </div>
             </div>
@@ -766,6 +893,154 @@ export default function OrderDetail() {
         )}
 
       </div>
+
+      {/* Modal: Agregar pieza */}
+      {showPiezaModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] flex flex-col mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-blue-700">Agregar pieza</h2>
+              <button
+                onClick={() => { setShowPiezaModal(false); setPiezaSelected(null); setPiezaSearch(''); setPiezaTab('woo'); }}
+                className="text-gray-400 hover:text-gray-600 text-3xl font-bold leading-none"
+              >×</button>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex gap-2 mb-4">
+              <button
+                className={`px-4 py-2 rounded-xl font-bold transition-all ${piezaTab === 'woo' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                onClick={() => { setPiezaTab('woo'); setPiezaSelected(null); setPiezaSearch(''); }}
+              >WooCommerce</button>
+              <button
+                className={`px-4 py-2 rounded-xl font-bold transition-all ${piezaTab === 'local' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                onClick={() => { setPiezaTab('local'); setPiezaSelected(null); setPiezaSearch(''); }}
+              >Catálogo local</button>
+            </div>
+
+            {/* Buscador */}
+            <input
+              type="text"
+              className="w-full rounded-xl border border-blue-200 p-3 text-base focus:ring-2 focus:ring-blue-200 outline-none mb-4"
+              placeholder={piezaTab === 'woo' ? 'Buscar en WooCommerce...' : 'Filtrar catálogo...'}
+              value={piezaSearch}
+              onChange={e => setPiezaSearch(e.target.value)}
+              autoFocus
+            />
+
+            {/* Lista productos */}
+            <div className="flex-1 overflow-y-auto min-h-0 mb-4 border border-gray-100 rounded-xl">
+              {piezaTab === 'woo' ? (
+                loadingWoo ? (
+                  <div className="text-center text-gray-400 py-8">Buscando en WooCommerce...</div>
+                ) : wooProducts.length === 0 ? (
+                  <div className="text-center text-gray-400 py-8">
+                    {piezaSearch.trim() ? 'Sin resultados' : 'Escribe para buscar productos en la tienda'}
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-gray-100">
+                    {wooProducts.map(p => (
+                      <li
+                        key={p.id}
+                        className={`flex items-center gap-3 py-2 px-3 cursor-pointer transition-all ${piezaSelected?.id === p.id && piezaSelected?._src === 'woo' ? 'bg-blue-50 border-l-4 border-blue-400' : 'hover:bg-gray-50'}`}
+                        onClick={() => { setPiezaSelected({ ...p, _src: 'woo' }); setPiezaPrecio(p.price || '0'); }}
+                      >
+                        {p.image && <img src={p.image} alt={p.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-blue-700 truncate">{p.name}</div>
+                          <div className="text-xs text-gray-400">{p.sku ? `SKU: ${p.sku}` : ''} {(p.categories || []).join(', ')}</div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <div className="font-mono text-blue-700">${p.price}</div>
+                          <div className={`text-xs ${p.stock_status === 'instock' ? 'text-green-500' : 'text-red-400'}`}>
+                            {p.stock_status === 'instock'
+                              ? `En stock${p.stock_quantity ? ` (${p.stock_quantity})` : ''}`
+                              : 'Sin stock'}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )
+              ) : (
+                localProducts.filter(p =>
+                  !piezaSearch.trim() || (p.nombre || '').toLowerCase().includes(piezaSearch.toLowerCase())
+                ).length === 0 ? (
+                  <div className="text-center text-gray-400 py-8">Sin productos en catálogo</div>
+                ) : (
+                  <ul className="divide-y divide-gray-100">
+                    {localProducts
+                      .filter(p => !piezaSearch.trim() || (p.nombre || '').toLowerCase().includes(piezaSearch.toLowerCase()))
+                      .map(p => (
+                        <li
+                          key={p.id}
+                          className={`flex items-center gap-3 py-2 px-3 cursor-pointer transition-all ${piezaSelected?.id === p.id && piezaSelected?._src === 'local' ? 'bg-blue-50 border-l-4 border-blue-400' : 'hover:bg-gray-50'}`}
+                          onClick={() => { setPiezaSelected({ ...p, name: p.nombre, price: String(p.precioBase || 0), _src: 'local' }); setPiezaPrecio(String(p.precioBase || '')); }}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-blue-700 truncate">{p.nombre}</div>
+                            <div className="text-xs text-gray-400">{p.descripcion} · {p.unidad}</div>
+                          </div>
+                          <div className="font-mono text-blue-700">${parseFloat(p.precioBase || 0).toFixed(2)}</div>
+                        </li>
+                      ))}
+                  </ul>
+                )
+              )}
+            </div>
+
+            {/* Pieza seleccionada + cantidad + precio */}
+            {piezaSelected && (
+              <div className="border border-blue-200 rounded-xl p-4 mb-4 bg-blue-50">
+                <div className="font-semibold text-blue-700 mb-3 truncate">{piezaSelected.name || piezaSelected.nombre}</div>
+                <div className="flex flex-wrap gap-4 items-end">
+                  <div>
+                    <label className="text-xs text-gray-500 font-semibold block mb-1">Cantidad</label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      className="w-24 rounded-xl border border-blue-200 p-2 text-base focus:ring-2 focus:ring-blue-200 outline-none"
+                      value={piezaCantidad}
+                      onChange={e => setPiezaCantidad(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 font-semibold block mb-1">Precio unitario ($)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-32 rounded-xl border border-blue-200 p-2 text-base focus:ring-2 focus:ring-blue-200 outline-none"
+                      value={piezaPrecio}
+                      onChange={e => setPiezaPrecio(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 font-semibold block mb-1">Total</label>
+                    <span className="font-mono text-blue-700 text-lg font-bold">
+                      ${((parseFloat(piezaCantidad) || 0) * (parseFloat(piezaPrecio) || 0)).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 rounded-xl bg-gray-200 text-gray-700 font-bold hover:bg-gray-300 transition-all"
+                onClick={() => { setShowPiezaModal(false); setPiezaSelected(null); setPiezaSearch(''); setPiezaTab('woo'); }}
+              >Cancelar</button>
+              <button
+                className="px-4 py-2 rounded-xl bg-blue-500 text-white font-bold shadow-lg hover:bg-blue-600 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={!piezaSelected}
+                onClick={handleAgregarPieza}
+              >Agregar pieza</button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </DashboardLayout>
   );
 }

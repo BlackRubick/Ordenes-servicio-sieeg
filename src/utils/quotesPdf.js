@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 
-export async function generateQuotePdfDoc(quote) {
-  console.log('DEBUG PDF: quote.partidas[0]:', quote.partidas?.[0]);
+// mode: 'client' (default, oculta precioCosto) | 'internal' (muestra columna COSTO)
+export async function generateQuotePdfDoc(quote, mode = 'client') {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
@@ -193,15 +193,24 @@ export async function generateQuotePdfDoc(quote) {
 const bodyY = gy + 8;
 
   // ══════════════════════════════════════════════════════════
-  // COLUMNAS DE LA TABLA
+  // COLUMNAS DE LA TABLA (varía según el modo)
   // ══════════════════════════════════════════════════════════
-  const TC = [
-    { label: 'CANTIDAD',         key: 'cantidad',       x: MX,      w: 55  },
-    { label: 'DESCRIPCION',      key: 'descripcion',    x: MX+55,   w: 210 },
-    { label: 'UNIDAD',           key: 'unidad',         x: MX+265,  w: 58  },
-    { label: 'P/U',              key: 'precioUnitario', x: MX+323,  w: 82  },
-    { label: 'IMPORTE',          key: 'importe',        x: MX+405,  w: tableW - 405 },
-  ];
+  const TC = mode === 'internal'
+    ? [
+        { label: 'CANTIDAD',    key: 'cantidad',       x: MX,      w: 50  },
+        { label: 'DESCRIPCION', key: 'descripcion',    x: MX+50,   w: 170 },
+        { label: 'UNIDAD',      key: 'unidad',         x: MX+220,  w: 48  },
+        { label: 'COSTO',       key: 'precioCosto',    x: MX+268,  w: 65  },
+        { label: 'P/U',         key: 'precioUnitario', x: MX+333,  w: 67  },
+        { label: 'IMPORTE',     key: 'importe',        x: MX+400,  w: tableW - 400 },
+      ]
+    : [
+        { label: 'CANTIDAD',    key: 'cantidad',       x: MX,      w: 55  },
+        { label: 'DESCRIPCION', key: 'descripcion',    x: MX+55,   w: 210 },
+        { label: 'UNIDAD',      key: 'unidad',         x: MX+265,  w: 58  },
+        { label: 'P/U',         key: 'precioUnitario', x: MX+323,  w: 82  },
+        { label: 'IMPORTE',     key: 'importe',        x: MX+405,  w: tableW - 405 },
+      ];
 
   const thH  = 26;
   const rowH = 22;
@@ -315,6 +324,9 @@ const bodyY = gy + 8;
       cantidad:       String(p.cantidad || ''),
       descripcion:    String(p.descripcion || ''),
       unidad:         String(p.unidad || ''),
+      precioCosto:    p.precioCosto !== '' && p.precioCosto !== undefined && p.precioCosto !== null
+        ? '$' + (Number(p.precioCosto)).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : '—',
       precioUnitario: '$' + (Number(p.precioUnitario)||0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       importe:        '$' + (Number(p.importe)       ||0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
     };

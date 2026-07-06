@@ -38,6 +38,7 @@ const Navbar = () => {
           { name: 'Cotizaciones', to: '/admin/quotes' },
           { name: 'Usuarios', to: '/admin/technicians' },
           ...(isAdmin ? [{ name: 'Clientes', to: '/admin/clientes' }] : []),
+          ...(isAdmin ? [{ name: 'Reportes', to: '/admin/reportes/vendedores' }] : []),
           { name: 'Servicios Externos', to: '/servicios-externos' },
           { name: 'Órdenes de Clientes', to: '/ordenes-clientes' },
           { name: 'Consulta Pública', to: '/consulta-tu-orden' },

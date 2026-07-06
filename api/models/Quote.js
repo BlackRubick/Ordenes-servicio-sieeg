@@ -24,6 +24,7 @@ const Quote = sequelize.define('Quote', {
   observacionesExtra: { type: DataTypes.TEXT, allowNull: true },
   emisor: { type: DataTypes.STRING, allowNull: true },
   pruebaRendimiento: { type: DataTypes.BOOLEAN, allowNull: true, defaultValue: false },
+  vendedorId: { type: DataTypes.INTEGER, allowNull: true },
 });
 
 module.exports = Quote;

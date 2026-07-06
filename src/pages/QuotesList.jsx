@@ -64,6 +64,7 @@ export default function QuotesList() {
   const [productForm, setProductForm] = useState(initialProductForm);
   const [productValidationAttempted, setProductValidationAttempted] = useState(false);
   const [emisorFilter, setEmisorFilter] = useState('sinar');
+  const [vendedorFilter, setVendedorFilter] = useState('');
   const navigate = useNavigate();
   const { role } = useAuthStore();
   const normalizedRole = String(role || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -80,12 +81,27 @@ export default function QuotesList() {
 
   const filteredQuotes = quotes.filter(quote => {
     const emisor = String(quote?.emisor || '').toLowerCase().trim();
-    if (emisorFilter === 'sinar') {
-      return emisor === 'sinar';
-    } else {
-      return emisor === 'sieeg';
-    }
+    const matchEmisor = emisorFilter === 'sinar' ? emisor === 'sinar' : emisor === 'sieeg';
+    const matchVendedor = !vendedorFilter
+      || String(quote?.vendedorId || '') === vendedorFilter
+      || (vendedorFilter === 'sin_vendedor' && !quote?.vendedorId);
+    return matchEmisor && matchVendedor;
   });
+
+  // Vendedores únicos para el filtro
+  const vendedoresUnicos = Array.from(
+    new Map(
+      quotes
+        .filter(q => q.vendedorId && q.vendedorNombre)
+        .map(q => [String(q.vendedorId), { id: String(q.vendedorId), nombre: q.vendedorNombre }])
+    ).values()
+  );
+
+  // Totales del filtro actual
+  const totalFiltrado = filteredQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0);
+  const totalAprobado = filteredQuotes
+    .filter(q => q.status === 'Aprobado')
+    .reduce((s, q) => s + (Number(q.total) || 0), 0);
 
   const handleOpenProductModal = () => {
     setProductForm(initialProductForm);
@@ -231,8 +247,8 @@ export default function QuotesList() {
 
   return (
     <DashboardLayout>
-      <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-extrabold text-primary-500">Cotizaciones {emisorFilter === 'sinar' ? 'Persona física' : 'SIEEG'}</h2>
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+        <h2 className="text-2xl font-extrabold text-primary-500">Cotizaciones {emisorFilter === 'sinar' ? 'Persona física' : 'SIEEG'}</h2>
         <div className="flex flex-wrap gap-3 items-center">
           <button
             className={`px-5 py-2 rounded-xl font-bold shadow-lg transition-all ${
@@ -242,8 +258,30 @@ export default function QuotesList() {
             } active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300`}
             onClick={toggleEmisorFilter}
           >
-              {emisorFilter === 'sinar' ? 'Persona física' : 'SIEEG'}
+            {emisorFilter === 'sinar' ? 'Persona física' : 'SIEEG'}
           </button>
+
+          {/* Filtro por vendedor */}
+          <select
+            value={vendedorFilter}
+            onChange={e => setVendedorFilter(e.target.value)}
+            className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-200"
+          >
+            <option value="">Todos los vendedores</option>
+            <option value="sin_vendedor">Sin vendedor</option>
+            {vendedoresUnicos.map(v => (
+              <option key={v.id} value={v.id}>{v.nombre}</option>
+            ))}
+          </select>
+
+          {isAdmin && (
+            <button
+              className="px-4 py-2 rounded-xl bg-purple-50 text-purple-700 font-bold border border-purple-200 hover:bg-purple-100 transition-all"
+              onClick={() => navigate('/admin/reportes/vendedores')}
+            >
+              Reportes vendedores
+            </button>
+          )}
           {normalizedRole !== 'cotizador' && (
             <button
               className="px-5 py-2 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300"
@@ -338,6 +376,18 @@ export default function QuotesList() {
           </div>
         </div>
       )}
+      {/* Resumen de totales */}
+      <div className="flex flex-wrap gap-4 mb-4">
+        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
+          <div className="text-xs text-gray-400 font-semibold">Cotizaciones ({filteredQuotes.length})</div>
+          <div className="text-lg font-extrabold text-primary-600">${totalFiltrado.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</div>
+        </div>
+        <div className="bg-white rounded-xl border border-green-200 px-4 py-3 shadow-sm">
+          <div className="text-xs text-green-600 font-semibold">Aprobado</div>
+          <div className="text-lg font-extrabold text-green-700">${totalAprobado.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</div>
+        </div>
+      </div>
+
       <div className="rounded-2xl bg-gradient-to-tr from-primary-100 to-blue-50 shadow-lg p-1 overflow-x-auto animate-fade-in">
         <table className="min-w-full text-base border-separate border-spacing-0">
           <thead>
@@ -347,6 +397,7 @@ export default function QuotesList() {
               <th className="py-3 px-4">Fecha</th>
               <th className="py-3 px-4">Empresa</th>
               <th className="py-3 px-4">Cliente</th>
+              <th className="py-3 px-4">Vendedor</th>
               <th className="py-3 px-4">Total</th>
               <th className="py-3 px-4">Vigencia</th>
               <th className="py-3 px-4">Estado</th>
@@ -356,8 +407,8 @@ export default function QuotesList() {
           <tbody>
             {filteredQuotes.length === 0 && (
               <tr>
-                <td colSpan={9} className="text-center text-muted py-8 bg-white rounded-b-2xl">
-                    {loading ? 'Cargando cotizaciones...' : (error || `No hay cotizaciones de ${emisorFilter === 'sinar' ? 'Persona física' : 'SIEEG'}.`)}
+                <td colSpan={10} className="text-center text-muted py-8 bg-white rounded-b-2xl">
+                  {loading ? 'Cargando cotizaciones...' : (error || `No hay cotizaciones de ${emisorFilter === 'sinar' ? 'Persona física' : 'SIEEG'}.`)}
                 </td>
               </tr>
             )}
@@ -374,7 +425,8 @@ export default function QuotesList() {
                   <td className="py-4 px-4 align-middle">{q.fecha}</td>
                   <td className="py-4 px-4 align-middle">{q.empresa}</td>
                   <td className="py-4 px-4 align-middle">{q.cliente}</td>
-                  <td className="py-4 px-4 align-middle">${q.total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                  <td className="py-4 px-4 align-middle text-sm text-gray-600">{q.vendedorNombre || '—'}</td>
+                  <td className="py-4 px-4 align-middle">${Number(q.total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
                   <td className="py-4 px-4 align-middle">{q.vigencia} días</td>
                   <td className="py-4 px-4 align-middle">
                     <select

@@ -116,6 +116,9 @@ const normalizePartidas = (partidas) => partidas.map((partida) => ({
     ? Number(partida.importe)
     : '',
   observaciones: partida.observaciones || '',
+  precioCosto: partida.precioCosto !== '' && partida.precioCosto !== null && partida.precioCosto !== undefined
+    ? Number(partida.precioCosto)
+    : '',
 }));
 
 const formFromQuote = (quote) => ({
@@ -142,6 +145,7 @@ UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
   observacionesExtra: quote?.observacionesExtra || '',
   otro: quote?.otro || '',
   status: quote?.status || 'Borrador',
+  vendedorId: quote?.vendedorId ? String(quote.vendedorId) : '',
   partidas: Array.isArray(quote?.partidas) && quote.partidas.length > 0
     ? quote.partidas.map((partida) => ({
         cantidad: partida?.cantidad !== undefined && partida?.cantidad !== null && String(partida?.cantidad) !== '' ? String(partida.cantidad) : '',
@@ -149,9 +153,10 @@ UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
         unidad: partida?.unidad || '',
         precioUnitario: partida?.precioUnitario !== undefined && partida?.precioUnitario !== null && String(partida?.precioUnitario) !== '' ? String(partida.precioUnitario) : '',
         importe: partida?.importe !== undefined && partida?.importe !== null && String(partida?.importe) !== '' ? String(partida.importe) : '',
-               observaciones: partida?.observaciones || '',
+        observaciones: partida?.observaciones || '',
+        precioCosto: partida?.precioCosto !== undefined && partida?.precioCosto !== null && String(partida?.precioCosto) !== '' ? String(partida.precioCosto) : '',
       }))
-    : [{ cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '' }],
+    : [{ cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '', observaciones: '', precioCosto: '' }],
 });
 
 export default function Quotes() {
@@ -162,6 +167,7 @@ export default function Quotes() {
   const preloadedPartida = location.state?.preloadedPartida;
   const preloadedQuote = location.state?.preloadedQuote;
   const [products, setProducts] = useState([]);
+  const [users, setUsers] = useState([]);
   const [form, setForm] = useState(() => {
     if (preloadedQuote && !isEditMode) {
       const base = formFromQuote(preloadedQuote);
@@ -199,13 +205,14 @@ export default function Quotes() {
   const [quotesCatalog, setQuotesCatalog] = useState([]);
   const [showEmpresaSuggestions, setShowEmpresaSuggestions] = useState(false);
   const [empresaSuggestionIndex, setEmpresaSuggestionIndex] = useState(-1);
-  const [currentPartida, setCurrentPartida] = useState({ 
-    cantidad: '', 
-    descripcion: '', 
-    unidad: '', 
-    precioUnitario: '', 
-    importe: '', 
+  const [currentPartida, setCurrentPartida] = useState({
+    cantidad: '',
+    descripcion: '',
+    unidad: '',
+    precioUnitario: '',
+    importe: '',
     observaciones: '',
+    precioCosto: '',
     productSearch: '',
     showSuggestions: false,
     suggestionIndex: -1,
@@ -222,13 +229,14 @@ export default function Quotes() {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 
-  // Cargar productos y catálogo de empresas para autocompletado
+  // Cargar productos, catálogo de empresas y usuarios para autocompletado
   useEffect(() => {
     const loadCatalogs = async () => {
       try {
-        const [productsResponse, quotesResponse] = await Promise.all([
+        const [productsResponse, quotesResponse, usersResponse] = await Promise.all([
           fetch('/api/products'),
           fetch('/api/quotes'),
+          fetch('/api/users'),
         ]);
 
         const productsData = await productsResponse.json();
@@ -239,6 +247,11 @@ export default function Quotes() {
         const quotesData = await quotesResponse.json();
         if (quotesResponse.ok) {
           setQuotesCatalog(Array.isArray(quotesData) ? quotesData : []);
+        }
+
+        const usersData = await usersResponse.json();
+        if (usersResponse.ok) {
+          setUsers(Array.isArray(usersData) ? usersData.filter(u => u.estado === 'activo' || u.estado === 'Activo') : []);
         }
       } catch (error) {
         console.error('Error cargando catálogos:', error);
@@ -469,6 +482,7 @@ export default function Quotes() {
       precioUnitario: currentPartida.precioUnitario,
       importe: currentPartida.importe,
       observaciones: currentPartida.observaciones,
+      precioCosto: currentPartida.precioCosto,
     };
 
     if (editingIndex !== null) {
@@ -484,13 +498,14 @@ export default function Quotes() {
       });
     }
     // Resetear formulario
-    setCurrentPartida({ 
-      cantidad: '', 
-      descripcion: '', 
-      unidad: '', 
-      precioUnitario: '', 
-      importe: '', 
+    setCurrentPartida({
+      cantidad: '',
+      descripcion: '',
+      unidad: '',
+      precioUnitario: '',
+      importe: '',
       observaciones: '',
+      precioCosto: '',
       productSearch: '',
       showSuggestions: false,
       suggestionIndex: -1,
@@ -508,6 +523,7 @@ export default function Quotes() {
       precioUnitario: p.precioUnitario,
       importe: p.importe,
       observaciones: p.observaciones,
+      precioCosto: p.precioCosto || '',
       productSearch: p.descripcion,
       showSuggestions: false,
       suggestionIndex: -1,
@@ -523,13 +539,14 @@ export default function Quotes() {
 
   const cancelEdit = () => {
     setEditingIndex(null);
-    setCurrentPartida({ 
-      cantidad: '', 
-      descripcion: '', 
-      unidad: '', 
-      precioUnitario: '', 
-      importe: '', 
+    setCurrentPartida({
+      cantidad: '',
+      descripcion: '',
+      unidad: '',
+      precioUnitario: '',
+      importe: '',
       observaciones: '',
+      precioCosto: '',
       productSearch: '',
       showSuggestions: false,
       suggestionIndex: -1,
@@ -687,6 +704,7 @@ export default function Quotes() {
               pruebaRendimiento: Boolean(form.pruebaRendimiento),
               status: isEditMode ? (form.status || 'Borrador') : 'Borrador',
               otro: String(otroText || '').trim(),
+              vendedorId: form.vendedorId ? Number(form.vendedorId) : null,
             };
             console.log('DEBUG: Partidas a enviar al servidor:', JSON.stringify(partidas, null, 2));
             const response = await fetch(isEditMode ? `/api/quotes/${id}` : '/api/quotes', {
@@ -783,6 +801,24 @@ export default function Quotes() {
               <p className="w-full text-xs font-medium text-red-500">Selecciona un emisor antes de guardar.</p>
             )}
           </div>
+          {/* Selector de vendedor */}
+          <div className="mb-4">
+            <label className="text-xs font-medium text-gray-500">Vendedor asignado</label>
+            <select
+              name="vendedorId"
+              value={form.vendedorId || ''}
+              onChange={handleChange}
+              className={`${inputCls} mt-1`}
+            >
+              <option value="">— Sin vendedor —</option>
+              {users.map(u => (
+                <option key={u.id} value={u.id}>
+                  #{u.id} · {u.nombre} ({u.rol})
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Dirección">
               <input name="direccion" value={form.direccion} onChange={handleChange} className={requiredInputClass(form.direccion)} placeholder="Calle, número, colonia..." required />
@@ -1188,6 +1224,22 @@ export default function Quotes() {
                 </div>
               </div>
 
+              {/* Precio de costo interno (solo visible para admin/mostrador) */}
+              {(normalizedRole === 'admin' || normalizedRole === 'administrador' || normalizedRole === 'mostrador') && (
+                <div>
+                  <label className="block mb-1 text-xs font-semibold text-orange-600 uppercase tracking-wide">Precio de costo interno (opcional)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-orange-200 bg-orange-50 focus:bg-white focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-100 transition-all"
+                    value={currentPartida.precioCosto}
+                    placeholder="0.00 — no aparece en PDF cliente"
+                    onChange={e => handleCurrentPartidaChange('precioCosto', e.target.value)}
+                  />
+                </div>
+              )}
+
               {/* Observaciones con Autocompletación */}
               <div className="relative">
                 <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Observaciones (opcional)</label>
@@ -1309,6 +1361,9 @@ export default function Quotes() {
                     <th className="px-4 py-3 text-left font-semibold text-gray-700 text-xs uppercase tracking-wide">Descripción</th>
                     <th className="px-4 py-3 text-center font-semibold text-gray-700 text-xs uppercase tracking-wide">Cant.</th>
                     <th className="px-4 py-3 text-center font-semibold text-gray-700 text-xs uppercase tracking-wide">Unidad</th>
+                    {(normalizedRole === 'admin' || normalizedRole === 'administrador' || normalizedRole === 'mostrador') && (
+                      <th className="px-4 py-3 text-right font-semibold text-orange-600 text-xs uppercase tracking-wide">Costo</th>
+                    )}
                     <th className="px-4 py-3 text-right font-semibold text-gray-700 text-xs uppercase tracking-wide">P. Unit.</th>
                     <th className="px-4 py-3 text-right font-semibold text-gray-700 text-xs uppercase tracking-wide">Importe</th>
                     <th className="px-4 py-3 text-center font-semibold text-gray-700 text-xs uppercase tracking-wide">Acciones</th>
@@ -1324,6 +1379,13 @@ export default function Quotes() {
                       </td>
                       <td className="px-4 py-3 text-center text-gray-900">{p.cantidad}</td>
                       <td className="px-4 py-3 text-center text-gray-900">{p.unidad}</td>
+                      {(normalizedRole === 'admin' || normalizedRole === 'administrador' || normalizedRole === 'mostrador') && (
+                        <td className="px-4 py-3 text-right text-orange-700 font-mono text-xs">
+                          {p.precioCosto !== '' && p.precioCosto !== undefined && p.precioCosto !== null
+                            ? `$${parseFloat(p.precioCosto).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                            : '—'}
+                        </td>
+                      )}
                       <td className="px-4 py-3 text-right text-gray-900">${parseFloat(p.precioUnitario || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       <td className="px-4 py-3 text-right font-semibold text-gray-900">${parseFloat(p.importe || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       <td className="px-4 py-3 text-center">
