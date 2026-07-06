@@ -442,9 +442,30 @@ export default function OrderDetail() {
     setLoadingWoo(true);
     const delay = piezaSearch.trim() ? 500 : 0;
     const timer = setTimeout(() => {
-      fetch(`/api/woocommerce/products?search=${encodeURIComponent(piezaSearch.trim())}&per_page=30`)
+      const wooUrl = process.env.REACT_APP_WOO_URL || 'https://sieeg.com.mx';
+      const wooKey = process.env.REACT_APP_WOO_KEY || '';
+      const wooSecret = process.env.REACT_APP_WOO_SECRET || '';
+      const params = new URLSearchParams({
+        search: piezaSearch.trim(),
+        per_page: '30',
+        consumer_key: wooKey,
+        consumer_secret: wooSecret,
+      });
+      fetch(`${wooUrl}/wp-json/wc/v3/products?${params.toString()}`)
         .then(res => res.json())
-        .then(data => setWooProducts(data.products || []))
+        .then(data => {
+          const products = (Array.isArray(data) ? data : []).map(p => ({
+            id: p.id,
+            name: p.name,
+            sku: p.sku || '',
+            price: p.price || p.regular_price || '0',
+            stock_status: p.stock_status,
+            stock_quantity: p.stock_quantity,
+            image: p.images?.[0]?.src || null,
+            categories: (p.categories || []).map(c => c.name),
+          }));
+          setWooProducts(products);
+        })
         .catch(() => setWooProducts([]))
         .finally(() => setLoadingWoo(false));
     }, delay);
