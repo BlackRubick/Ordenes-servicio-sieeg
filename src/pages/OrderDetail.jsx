@@ -436,18 +436,18 @@ export default function OrderDetail() {
       .catch(() => setLocalProducts([]));
   }, [showPiezaModal]);
 
-  // Búsqueda en WooCommerce con debounce
+  // WooCommerce: carga inmediata al abrir, debounce al escribir
   React.useEffect(() => {
     if (!showPiezaModal || piezaTab !== 'woo') return;
-    if (!piezaSearch.trim()) { setWooProducts([]); return; }
+    setLoadingWoo(true);
+    const delay = piezaSearch.trim() ? 500 : 0;
     const timer = setTimeout(() => {
-      setLoadingWoo(true);
-      fetch(`/api/woocommerce/products?search=${encodeURIComponent(piezaSearch)}&per_page=20`)
+      fetch(`/api/woocommerce/products?search=${encodeURIComponent(piezaSearch.trim())}&per_page=30`)
         .then(res => res.json())
         .then(data => setWooProducts(data.products || []))
         .catch(() => setWooProducts([]))
         .finally(() => setLoadingWoo(false));
-    }, 500);
+    }, delay);
     return () => clearTimeout(timer);
   }, [piezaSearch, showPiezaModal, piezaTab]);
 
@@ -935,7 +935,7 @@ export default function OrderDetail() {
                   <div className="text-center text-gray-400 py-8">Buscando en WooCommerce...</div>
                 ) : wooProducts.length === 0 ? (
                   <div className="text-center text-gray-400 py-8">
-                    {piezaSearch.trim() ? 'Sin resultados' : 'Escribe para buscar productos en la tienda'}
+                    {piezaSearch.trim() ? 'Sin resultados para esa búsqueda' : 'No se encontraron productos'}
                   </div>
                 ) : (
                   <ul className="divide-y divide-gray-100">
