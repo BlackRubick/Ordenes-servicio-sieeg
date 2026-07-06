@@ -21,7 +21,6 @@ router.get('/products', async (req, res) => {
     search,
     per_page: String(per_page),
     page: String(page),
-    status: 'publish',
   });
 
   try {
