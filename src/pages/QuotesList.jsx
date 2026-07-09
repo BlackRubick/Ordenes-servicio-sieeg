@@ -65,6 +65,9 @@ export default function QuotesList() {
   const [productValidationAttempted, setProductValidationAttempted] = useState(false);
   const [emisorFilter, setEmisorFilter] = useState('sinar');
   const [vendedorFilter, setVendedorFilter] = useState('');
+  const [searchCliente, setSearchCliente] = useState('');
+  const [searchEmpresa, setSearchEmpresa] = useState('');
+  const [searchNumero, setSearchNumero] = useState('');
   const navigate = useNavigate();
   const { role } = useAuthStore();
   const normalizedRole = String(role || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -79,14 +82,23 @@ export default function QuotesList() {
     });
   };
 
-  const filteredQuotes = quotes.filter(quote => {
-    const emisor = String(quote?.emisor || '').toLowerCase().trim();
-    const matchEmisor = emisorFilter === 'sinar' ? emisor === 'sinar' : emisor === 'sieeg';
-    const matchVendedor = !vendedorFilter
-      || String(quote?.vendedorId || '') === vendedorFilter
-      || (vendedorFilter === 'sin_vendedor' && !quote?.vendedorId);
-    return matchEmisor && matchVendedor;
-  });
+  const filteredQuotes = quotes
+    .slice()
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    .filter(quote => {
+      const emisor = String(quote?.emisor || '').toLowerCase().trim();
+      const matchEmisor = emisorFilter === 'sinar' ? emisor === 'sinar' : emisor === 'sieeg';
+      const matchVendedor = !vendedorFilter
+        || String(quote?.vendedorId || '') === vendedorFilter
+        || (vendedorFilter === 'sin_vendedor' && !quote?.vendedorId);
+      const matchCliente = !searchCliente
+        || (quote?.cliente || '').toLowerCase().includes(searchCliente.toLowerCase());
+      const matchEmpresa = !searchEmpresa
+        || (quote?.empresa || '').toLowerCase().includes(searchEmpresa.toLowerCase());
+      const matchNumero = !searchNumero
+        || (quote?.numeroCotizacion || '').toLowerCase().includes(searchNumero.toLowerCase());
+      return matchEmisor && matchVendedor && matchCliente && matchEmpresa && matchNumero;
+    });
 
   // Vendedores únicos para el filtro
   const vendedoresUnicos = Array.from(
@@ -247,8 +259,34 @@ export default function QuotesList() {
 
   return (
     <DashboardLayout>
+      {/* Datos de contacto de la sucursal */}
+      <div className="mb-4 px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 flex flex-wrap gap-4 items-center text-sm text-blue-800">
+        <div className="flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1C5.24 1 3 3.24 3 6c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5zm0 6.5A1.5 1.5 0 1 1 8 4a1.5 1.5 0 0 1 0 3z" fill="currentColor"/></svg>
+          <span className="font-semibold">Blvd. Belisario Domínguez #4213 L5, Tuxtla Gutiérrez, Chiapas</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.2"/><path d="M1 6l7 4 7-4" stroke="currentColor" strokeWidth="1.2"/></svg>
+          <span>
+            {emisorFilter === 'sieeg'
+              ? 'SIEEG INGENIERIA Y TELECOMUNICACIONES · RFC: SIT2409128S3'
+              : 'Sinar Adrián Casanova García · RFC: CAGS890306QG4'}
+          </span>
+        </div>
+      </div>
+
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <h2 className="text-2xl font-extrabold text-primary-500">Cotizaciones {emisorFilter === 'sinar' ? 'Persona física' : 'SIEEG'}</h2>
+        <div>
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1 text-sm text-gray-500 hover:text-primary-500 mb-1 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Volver
+          </button>
+          <h2 className="text-2xl font-extrabold text-primary-500">Cotizaciones {emisorFilter === 'sinar' ? 'Persona física' : 'SIEEG'}</h2>
+        </div>
         <div className="flex flex-wrap gap-3 items-center">
           <button
             className={`px-5 py-2 rounded-xl font-bold shadow-lg transition-all ${
@@ -376,6 +414,51 @@ export default function QuotesList() {
           </div>
         </div>
       )}
+      {/* Filtros de búsqueda */}
+      <div className="flex flex-wrap gap-3 mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+        <div className="flex-1 min-w-[180px]">
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Número de cotización</label>
+          <input
+            type="text"
+            value={searchNumero}
+            onChange={e => setSearchNumero(e.target.value)}
+            placeholder="Buscar por número..."
+            className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
+          />
+        </div>
+        <div className="flex-1 min-w-[180px]">
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Empresa</label>
+          <input
+            type="text"
+            value={searchEmpresa}
+            onChange={e => setSearchEmpresa(e.target.value)}
+            placeholder="Buscar por empresa..."
+            className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
+          />
+        </div>
+        <div className="flex-1 min-w-[180px]">
+          <label className="block text-xs font-semibold text-gray-500 mb-1">Cliente</label>
+          <input
+            type="text"
+            value={searchCliente}
+            onChange={e => setSearchCliente(e.target.value)}
+            placeholder="Buscar por cliente..."
+            className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
+          />
+        </div>
+        {(searchNumero || searchEmpresa || searchCliente) && (
+          <div className="flex items-end">
+            <button
+              type="button"
+              onClick={() => { setSearchNumero(''); setSearchEmpresa(''); setSearchCliente(''); }}
+              className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-500 hover:bg-gray-100 transition-all"
+            >
+              Limpiar
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Resumen de totales */}
       <div className="flex flex-wrap gap-4 mb-4">
         <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">

@@ -19,6 +19,9 @@ const normalizePartida = (partida = {}) => ({
   precioCosto: partida.precioCosto !== undefined && partida.precioCosto !== null && partida.precioCosto !== ''
     ? Number(partida.precioCosto)
     : '',
+  utilidad: partida.utilidad !== undefined && partida.utilidad !== null && partida.utilidad !== ''
+    ? Number(partida.utilidad)
+    : '',
 });
 
 const calculateTotal = (partidas) => (Array.isArray(partidas) ? partidas : []).reduce(

@@ -119,6 +119,9 @@ const normalizePartidas = (partidas) => partidas.map((partida) => ({
   precioCosto: partida.precioCosto !== '' && partida.precioCosto !== null && partida.precioCosto !== undefined
     ? Number(partida.precioCosto)
     : '',
+  utilidad: partida.utilidad !== '' && partida.utilidad !== null && partida.utilidad !== undefined
+    ? Number(partida.utilidad)
+    : '',
 }));
 
 const formFromQuote = (quote) => ({
@@ -155,8 +158,9 @@ UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
         importe: partida?.importe !== undefined && partida?.importe !== null && String(partida?.importe) !== '' ? String(partida.importe) : '',
         observaciones: partida?.observaciones || '',
         precioCosto: partida?.precioCosto !== undefined && partida?.precioCosto !== null && String(partida?.precioCosto) !== '' ? String(partida.precioCosto) : '',
+        utilidad: partida?.utilidad !== undefined && partida?.utilidad !== null && String(partida?.utilidad) !== '' ? String(partida.utilidad) : '',
       }))
-    : [{ cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '', observaciones: '', precioCosto: '' }],
+    : [{ cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '', observaciones: '', precioCosto: '', utilidad: '' }],
 });
 
 export default function Quotes() {
@@ -213,6 +217,7 @@ export default function Quotes() {
     importe: '',
     observaciones: '',
     precioCosto: '',
+    utilidad: '',
     productSearch: '',
     showSuggestions: false,
     suggestionIndex: -1,
@@ -280,6 +285,7 @@ export default function Quotes() {
           otro: String(quote?.otro || '').trim(),
           telefono: String(quote?.telefono || '').trim(),
           direccionCliente: String(quote?.direccionCliente || '').trim(),
+          emisor: String(quote?.emisor || '').trim(),
         });
       }
     });
@@ -365,15 +371,36 @@ export default function Quotes() {
 
   const handleEmpresaSelect = (suggestion) => {
     const suggestedOtro = String(suggestion?.otro || '').trim();
-    setForm((prev) => ({
-      ...prev,
-      empresa: suggestion.empresa,
-      cliente: suggestion.cliente || prev.cliente,
-      correo: suggestion.correo || prev.correo,
-      telefono: suggestion.telefono || prev.telefono,
-      direccionCliente: suggestion.direccionCliente || prev.direccionCliente,
-      otro: suggestedOtro || prev.otro,
-    }));
+    const suggestedEmisor = String(suggestion?.emisor || '').trim();
+
+    setForm((prev) => {
+      const base = {
+        ...prev,
+        empresa: suggestion.empresa,
+        cliente: suggestion.cliente || prev.cliente,
+        correo: suggestion.correo || prev.correo,
+        telefono: suggestion.telefono || prev.telefono,
+        direccionCliente: suggestion.direccionCliente || prev.direccionCliente,
+        otro: suggestedOtro || prev.otro,
+      };
+      if (suggestedEmisor) {
+        const emisorData = EMISORES.find(e => e.key === suggestedEmisor);
+        if (emisorData) {
+          base.emisor = suggestedEmisor;
+          base.direccion = emisorData.direccion;
+          base.razonSocial = emisorData.razonSocial;
+          base.rfc = emisorData.rfc;
+          base.repse = emisorData.repse || '';
+        }
+      }
+      return base;
+    });
+
+    if (suggestedEmisor) {
+      const emisorData = EMISORES.find(e => e.key === suggestedEmisor);
+      if (emisorData) setEmisorSelect(suggestedEmisor);
+    }
+
     setOtroText(suggestedOtro);
     setShowOtroInput(suggestedOtro !== '');
     setShowEmpresaSuggestions(false);
@@ -401,6 +428,19 @@ export default function Quotes() {
   // Funciones para manejar el formulario de entrada de partidas
   const handleCurrentPartidaChange = (field, value) => {
     const updated = { ...currentPartida, [field]: value };
+
+    // Si cambia precioCosto o utilidad, recalcular precioUnitario (precio neto)
+    if (field === 'precioCosto' || field === 'utilidad') {
+      const costo = parseFloat(field === 'precioCosto' ? value : updated.precioCosto);
+      const util = parseFloat(field === 'utilidad' ? value : updated.utilidad);
+      if (!isNaN(costo) && costo > 0 && !isNaN(util)) {
+        const precioNeto = costo * (1 + util / 100);
+        updated.precioUnitario = precioNeto.toFixed(2);
+        const c = parseFloat(updated.cantidad) || 0;
+        updated.importe = (c * precioNeto).toFixed(2);
+      }
+    }
+
     if (field === 'cantidad' || field === 'precioUnitario') {
       const c = parseFloat(field === 'cantidad' ? value : updated.cantidad) || 0;
       const u = parseFloat(field === 'precioUnitario' ? value : updated.precioUnitario) || 0;
@@ -483,6 +523,7 @@ export default function Quotes() {
       importe: currentPartida.importe,
       observaciones: currentPartida.observaciones,
       precioCosto: currentPartida.precioCosto,
+      utilidad: currentPartida.utilidad,
     };
 
     if (editingIndex !== null) {
@@ -506,6 +547,7 @@ export default function Quotes() {
       importe: '',
       observaciones: '',
       precioCosto: '',
+      utilidad: '',
       productSearch: '',
       showSuggestions: false,
       suggestionIndex: -1,
@@ -524,6 +566,7 @@ export default function Quotes() {
       importe: p.importe,
       observaciones: p.observaciones,
       precioCosto: p.precioCosto || '',
+      utilidad: p.utilidad !== undefined && p.utilidad !== null && p.utilidad !== '' ? String(p.utilidad) : '',
       productSearch: p.descripcion,
       showSuggestions: false,
       suggestionIndex: -1,
@@ -547,6 +590,7 @@ export default function Quotes() {
       importe: '',
       observaciones: '',
       precioCosto: '',
+      utilidad: '',
       productSearch: '',
       showSuggestions: false,
       suggestionIndex: -1,
@@ -642,6 +686,14 @@ export default function Quotes() {
       {/* Header */}
       <div className="flex items-end justify-between mb-6 pb-4 border-b border-gray-100">
         <div>
+          <button
+            type="button"
+            onClick={() => navigate(isEditMode ? `/admin/quotes/${id}` : '/admin/quotes')}
+            className="flex items-center gap-1 text-sm text-gray-500 hover:text-primary-500 mb-2 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Volver
+          </button>
           <h2 className="text-2xl font-extrabold text-primary-500">{isEditMode ? 'Editar cotización' : 'Nueva cotización'}</h2>
           <p className="text-sm text-gray-400 mt-0.5">{isEditMode ? 'Actualiza los datos y guarda los cambios' : 'Completa los campos para generar el documento'}</p>
         </div>
@@ -1224,19 +1276,34 @@ export default function Quotes() {
                 </div>
               </div>
 
-              {/* Precio de costo interno (solo visible para admin/mostrador) */}
+              {/* Precio de costo interno y % utilidad (solo visible para admin/mostrador) */}
               {(normalizedRole === 'admin' || normalizedRole === 'administrador' || normalizedRole === 'mostrador') && (
-                <div>
-                  <label className="block mb-1 text-xs font-semibold text-orange-600 uppercase tracking-wide">Precio de costo interno (opcional)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-orange-200 bg-orange-50 focus:bg-white focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-100 transition-all"
-                    value={currentPartida.precioCosto}
-                    placeholder="0.00 — no aparece en PDF cliente"
-                    onChange={e => handleCurrentPartidaChange('precioCosto', e.target.value)}
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block mb-1 text-xs font-semibold text-orange-600 uppercase tracking-wide">Precio de costo (opcional)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-orange-200 bg-orange-50 focus:bg-white focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-100 transition-all"
+                      value={currentPartida.precioCosto}
+                      placeholder="0.00 — no aparece en PDF"
+                      onChange={e => handleCurrentPartidaChange('precioCosto', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block mb-1 text-xs font-semibold text-green-600 uppercase tracking-wide">% Utilidad (opcional)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="10000"
+                      step="0.1"
+                      className="w-full px-3 py-2 text-sm rounded-lg border border-green-200 bg-green-50 focus:bg-white focus:border-green-400 focus:outline-none focus:ring-1 focus:ring-green-100 transition-all"
+                      value={currentPartida.utilidad}
+                      placeholder="0.0 — calcula P. Neto"
+                      onChange={e => handleCurrentPartidaChange('utilidad', e.target.value)}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -1362,9 +1429,9 @@ export default function Quotes() {
                     <th className="px-4 py-3 text-center font-semibold text-gray-700 text-xs uppercase tracking-wide">Cant.</th>
                     <th className="px-4 py-3 text-center font-semibold text-gray-700 text-xs uppercase tracking-wide">Unidad</th>
                     {(normalizedRole === 'admin' || normalizedRole === 'administrador' || normalizedRole === 'mostrador') && (
-                      <th className="px-4 py-3 text-right font-semibold text-orange-600 text-xs uppercase tracking-wide">Costo</th>
+                      <th className="px-4 py-3 text-right font-semibold text-orange-600 text-xs uppercase tracking-wide">Costo / Util.</th>
                     )}
-                    <th className="px-4 py-3 text-right font-semibold text-gray-700 text-xs uppercase tracking-wide">P. Unit.</th>
+                    <th className="px-4 py-3 text-right font-semibold text-gray-700 text-xs uppercase tracking-wide">P. Neto</th>
                     <th className="px-4 py-3 text-right font-semibold text-gray-700 text-xs uppercase tracking-wide">Importe</th>
                     <th className="px-4 py-3 text-center font-semibold text-gray-700 text-xs uppercase tracking-wide">Acciones</th>
                   </tr>
@@ -1384,6 +1451,9 @@ export default function Quotes() {
                           {p.precioCosto !== '' && p.precioCosto !== undefined && p.precioCosto !== null
                             ? `$${parseFloat(p.precioCosto).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                             : '—'}
+                          {p.utilidad !== '' && p.utilidad !== undefined && p.utilidad !== null && (
+                            <span className="ml-1 text-green-600">({parseFloat(p.utilidad).toFixed(1)}%)</span>
+                          )}
                         </td>
                       )}
                       <td className="px-4 py-3 text-right text-gray-900">${parseFloat(p.precioUnitario || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>

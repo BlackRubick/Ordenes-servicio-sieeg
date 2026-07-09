@@ -277,8 +277,8 @@ export default function QuoteDetail() {
                   <th className="py-2 px-3">Descripción</th>
                   <th className="py-2 px-3">Cantidad</th>
                   <th className="py-2 px-3">Unidad</th>
-                  {canSeeCosts && <th className="py-2 px-3 bg-orange-400">Costo</th>}
-                  <th className="py-2 px-3">P. Unitario</th>
+                  {canSeeCosts && <th className="py-2 px-3 bg-orange-400">Costo / Util.</th>}
+                  <th className="py-2 px-3">P. Neto</th>
                   <th className="py-2 px-3">Importe</th>
                 </tr>
               </thead>
@@ -308,7 +308,9 @@ export default function QuoteDetail() {
                           {costo !== null
                             ? <>
                                 ${costo.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                                {margen && <span className="ml-1 text-green-600">({margen})</span>}
+                                {p.utilidad !== undefined && p.utilidad !== null && p.utilidad !== ''
+                                  ? <span className="ml-1 text-green-600">({parseFloat(p.utilidad).toFixed(1)}%)</span>
+                                  : margen && <span className="ml-1 text-green-600">({margen})</span>}
                               </>
                             : '—'}
                         </td>

@@ -201,14 +201,14 @@ const bodyY = gy + 8;
         { label: 'DESCRIPCION', key: 'descripcion',    x: MX+50,   w: 170 },
         { label: 'UNIDAD',      key: 'unidad',         x: MX+220,  w: 48  },
         { label: 'COSTO',       key: 'precioCosto',    x: MX+268,  w: 65  },
-        { label: 'P/U',         key: 'precioUnitario', x: MX+333,  w: 67  },
+        { label: 'P. NETO',     key: 'precioUnitario', x: MX+333,  w: 67  },
         { label: 'IMPORTE',     key: 'importe',        x: MX+400,  w: tableW - 400 },
       ]
     : [
         { label: 'CANTIDAD',    key: 'cantidad',       x: MX,      w: 55  },
         { label: 'DESCRIPCION', key: 'descripcion',    x: MX+55,   w: 210 },
         { label: 'UNIDAD',      key: 'unidad',         x: MX+265,  w: 58  },
-        { label: 'P/U',         key: 'precioUnitario', x: MX+323,  w: 82  },
+        { label: 'P. NETO',     key: 'precioUnitario', x: MX+323,  w: 82  },
         { label: 'IMPORTE',     key: 'importe',        x: MX+405,  w: tableW - 405 },
       ];
 
@@ -241,14 +241,22 @@ const bodyY = gy + 8;
   doc.setLineWidth(0.3);
   doc.rect(obsX, obsY, obsW, obsH, 'F');
   doc.setFont('helvetica', 'normal'); doc.setFontSize(5); color(BLACK);
-  // Usar únicamente el campo `observaciones` proporcionado por el formulario.
   const obsText = quote.observaciones && String(quote.observaciones).trim()
     ? String(quote.observaciones).trim()
     : '';
+  let obsOverflowLines = [];
   if (obsText !== '') {
-    const obsLines = doc.splitTextToSize(obsText, obsW - 12);
-    // dibujar el texto dentro del cuadro con un pequeño padding (ligero)
-    doc.text(obsLines, obsX + 6, obsY + 10);
+    const allObsLines = doc.splitTextToSize(obsText, obsW - 12);
+    const obsLineH = 6.5;
+    const maxLines = Math.max(1, Math.floor((obsH - 10) / obsLineH));
+    const visibleLines = allObsLines.slice(0, maxLines);
+    obsOverflowLines = allObsLines.slice(maxLines);
+    doc.text(visibleLines, obsX + 6, obsY + 9);
+    if (obsOverflowLines.length > 0) {
+      doc.setFontSize(4.5); color('#888888');
+      doc.text('↓ continúa en siguiente página', obsX + 6, obsY + obsH - 5);
+      color(BLACK); doc.setFontSize(5);
+    }
   }
 
   [
@@ -402,5 +410,30 @@ const bodyY = gy + 8;
     bankY += 16;
     doc.text('Bbva       Cta : 0480072338     Clabe: 012 100 004800723387    Nombre: Sinar Adrián Casanova García', MX, bankY);
   }
+  // ══════════════════════════════════════════════════════════
+  // PÁGINA EXTRA: Observaciones completas si no cupieron en la primera
+  // ══════════════════════════════════════════════════════════
+  if (obsOverflowLines.length > 0) {
+    doc.addPage();
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); color(NAVY);
+    doc.text('Observaciones (continuación)', MX, 36);
+    doc.setLineWidth(0.5); stroke(NAVY);
+    doc.line(MX, 42, W - MX, 42);
+
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(BLACK);
+    // Incluir todas las obs en la página 2 (completas)
+    const fullLines = doc.splitTextToSize(obsText, W - MX * 2);
+    const pageLineH = 11;
+    let py = 56;
+    fullLines.forEach((line) => {
+      if (py > H - 40) {
+        doc.addPage();
+        py = 36;
+      }
+      doc.text(line, MX, py);
+      py += pageLineH;
+    });
+  }
+
   return doc;
 }
