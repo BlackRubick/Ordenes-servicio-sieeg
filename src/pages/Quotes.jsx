@@ -277,15 +277,32 @@ export default function Quotes() {
     .toLowerCase();
 
   // Cargar productos, catálogo de empresas y usuarios para autocompletado
-  // WooCommerce modal search
+  // Búsqueda en inventario (WooCommerce directo)
   useEffect(() => {
     if (!showWooModal) return;
     setWooModalLoading(true);
     const delay = wooModalSearch.trim() ? 400 : 0;
     const timer = setTimeout(() => {
-      fetch(`/api/woocommerce/products?search=${encodeURIComponent(wooModalSearch.trim())}&per_page=30`)
+      const wooUrl = process.env.REACT_APP_WOO_URL || 'https://sieeg.com.mx';
+      const wooKey = process.env.REACT_APP_WOO_KEY || '';
+      const wooSecret = process.env.REACT_APP_WOO_SECRET || '';
+      const params = new URLSearchParams({ search: wooModalSearch.trim(), per_page: '30', consumer_key: wooKey, consumer_secret: wooSecret });
+      fetch(`${wooUrl}/wp-json/wc/v3/products?${params.toString()}`)
         .then(r => r.json())
-        .then(data => setWooModalProducts(Array.isArray(data.products) ? data.products : []))
+        .then(data => {
+          const products = (Array.isArray(data) ? data : []).map(p => {
+            const costMeta = (p.meta_data || []).find(m => m.key === '_op_cost_price');
+            return {
+              id: p.id, name: p.name, sku: p.sku || '',
+              price: p.price || p.regular_price || '0',
+              stock_status: p.stock_status, stock_quantity: p.stock_quantity,
+              image: p.images?.[0]?.src || null,
+              categories: (p.categories || []).map(c => c.name),
+              cost_price: costMeta ? costMeta.value : null,
+            };
+          });
+          setWooModalProducts(products);
+        })
         .catch(() => setWooModalProducts([]))
         .finally(() => setWooModalLoading(false));
     }, delay);
