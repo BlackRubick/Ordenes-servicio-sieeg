@@ -362,6 +362,23 @@ const bodyY = gy + 8;
           // restaurar fuente normal para las demás celdas
           doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); color(BLACK);
         }
+      } else if (key === 'precioCosto') {
+        const hasCosto = p.precioCosto !== '' && p.precioCosto !== undefined && p.precioCosto !== null;
+        const hasUtil  = p.utilidad !== '' && p.utilidad !== undefined && p.utilidad !== null;
+        const costoStr = hasCosto
+          ? '$' + (Number(p.precioCosto)).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : '—';
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); color(BLACK);
+        if (hasCosto && hasUtil) {
+          const ganancia = (Number(p.precioUnitario) || 0) - (Number(p.precioCosto) || 0);
+          const utilStr = `(${parseFloat(p.utilidad).toFixed(1)}% / $${ganancia.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
+          doc.text(costoStr, x + w / 2, ry + dynH / 2, { align: 'center' });
+          doc.setFontSize(5.5); color('#16a34a');
+          doc.text(utilStr, x + w / 2, ry + dynH / 2 + 5.5, { align: 'center' });
+          doc.setFontSize(7.5); color(BLACK);
+        } else {
+          doc.text(costoStr, x + w / 2, ry + dynH / 2 + 3, { align: 'center' });
+        }
       } else if (key === 'cantidad') {
         doc.text(row[key], x + w / 2, ry + dynH / 2 + 3, { align: 'center' });
       } else if (key === 'unidad' || key === 'precioUnitario' || key === 'importe') {

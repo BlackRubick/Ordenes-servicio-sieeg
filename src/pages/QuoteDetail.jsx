@@ -325,9 +325,34 @@ export default function QuoteDetail() {
           </div>
         </div>
 
-        <div className="flex justify-end items-center gap-4 mt-6">
-          <span className="text-lg font-bold text-gray-700">Total:</span>
-          <span className="text-2xl font-extrabold text-primary-600">${Number(quote.total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+        <div className="flex flex-col items-end gap-1 mt-6">
+          {(() => {
+            const subtotal = Number(quote.total || 0);
+            const iva = subtotal * 0.16;
+            const totalConIva = subtotal + iva;
+            return (
+              <>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-sm text-gray-500">Subtotal:</span>
+                  <span className="text-base font-semibold text-gray-700 w-36 text-right">
+                    ${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-sm text-gray-500">IVA 16%:</span>
+                  <span className="text-base font-semibold text-gray-700 w-36 text-right">
+                    ${iva.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-3 border-t border-gray-200 pt-1 mt-1">
+                  <span className="text-lg font-bold text-gray-700">Total:</span>
+                  <span className="text-2xl font-extrabold text-primary-600 w-36 text-right">
+                    ${totalConIva.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </>
+            );
+          })()}
         </div>
 
         {/* Datos emisor / cliente */}

@@ -622,7 +622,9 @@ export default function Quotes() {
     setForm({ ...form, partidas: form.partidas.filter((_, i) => i !== idx) });
   };
 
-  const total = form.partidas.reduce((sum, p) => sum + (parseFloat(p.importe) || 0), 0);
+  const subtotal = form.partidas.reduce((sum, p) => sum + (parseFloat(p.importe) || 0), 0);
+  const iva = subtotal * 0.16;
+  const total = subtotal + iva;
 
   useEffect(() => {
     if (!isEditMode) return;
@@ -1514,10 +1516,22 @@ export default function Quotes() {
           )}
 
           {/* Total y footer */}
-          <div className="flex items-center justify-end pt-4 border-t border-gray-100">
-            <div className="flex items-baseline gap-2">
+          <div className="flex flex-col items-end gap-1 pt-4 border-t border-gray-100">
+            <div className="flex items-baseline gap-3">
+              <span className="text-sm text-gray-500">Subtotal:</span>
+              <span className="text-base font-semibold text-gray-700 w-36 text-right">
+                ${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div className="flex items-baseline gap-3">
+              <span className="text-sm text-gray-500">IVA 16%:</span>
+              <span className="text-base font-semibold text-gray-700 w-36 text-right">
+                ${iva.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div className="flex items-baseline gap-3 border-t border-gray-200 pt-1 mt-1">
               <span className="text-sm font-semibold text-gray-600">Total:</span>
-              <span className="text-2xl font-bold text-primary-600">
+              <span className="text-2xl font-bold text-primary-600 w-36 text-right">
                 ${total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
