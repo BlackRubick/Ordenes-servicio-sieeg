@@ -160,8 +160,8 @@ export default function QuotesList() {
   };
 
   const handleDeleteQuote = async (quote) => {
-    if (normalizedRole === 'cotizador') {
-      await Swal.fire('Permisos insuficientes', 'No puedes eliminar cotizaciones con el rol Cotizador.', 'warning');
+    if (normalizedRole === 'cotizador' || normalizedRole === 'ejecutivo de ventas') {
+      await Swal.fire('Permisos insuficientes', 'No tienes permisos para eliminar cotizaciones.', 'warning');
       return;
     }
     try {
@@ -304,13 +304,14 @@ export default function QuotesList() {
               + Nueva cotización
             </button>
           )}
-          <button
-            className="px-5 py-2 rounded-xl border border-secondary-200 bg-white text-secondary-600 font-bold shadow-sm hover:bg-secondary-50 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-secondary-300 transition-all"
-            onClick={() => { if (normalizedRole !== 'cotizador') navigate('/admin/products'); }}
-            style={{ display: normalizedRole === 'cotizador' ? 'none' : undefined }}
-          >
-            Ver productos/servicios
-          </button>
+          {normalizedRole !== 'cotizador' && normalizedRole !== 'ejecutivo de ventas' && (
+            <button
+              className="px-5 py-2 rounded-xl border border-secondary-200 bg-white text-secondary-600 font-bold shadow-sm hover:bg-secondary-50 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-secondary-300 transition-all"
+              onClick={() => navigate('/admin/products')}
+            >
+              Ver productos/servicios
+            </button>
+          )}
         </div>
       </div>
 

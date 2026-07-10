@@ -53,6 +53,8 @@ const Login = () => {
             navigate('/admin/orders');
           } else if (rol === 'cotizador') {
             navigate('/admin/quotes');
+          } else if (rol === 'ejecutivo de ventas') {
+            navigate('/admin/quotes');
           }
         } else {
           setError('Credenciales incorrectas');

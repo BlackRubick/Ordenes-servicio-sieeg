@@ -15,6 +15,7 @@ const Navbar = () => {
   const isAdmin = normalizedRole === 'admin' || normalizedRole === 'administrador';
   const isMostrador = normalizedRole === 'mostrador';
   const isCotizador = normalizedRole === 'cotizador';
+  const isVendedor = normalizedRole === 'ejecutivo de ventas';
   const navLinks =
     normalizedRole === 'tecnico'
       ? [
@@ -45,8 +46,8 @@ const Navbar = () => {
           { name: 'Solicitar Orden de Servicio', to: '/solicitar-orden-cliente' },
         ];
   
-  // If user is Cotizador, only show Quotes
-  if (isCotizador) {
+  // Cotizador y Vendedor solo ven Cotizaciones
+  if (isCotizador || isVendedor) {
     navLinks.length = 0;
     navLinks.push({ name: 'Cotizaciones', to: '/admin/quotes' });
   }
