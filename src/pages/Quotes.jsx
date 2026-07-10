@@ -163,6 +163,25 @@ UNA VEZ REALIZADO EL PAGO SE PROCEDE A AGENDAR EL SERVICIO`,
     : [{ cantidad: '', descripcion: '', unidad: '', precioUnitario: '', importe: '', observaciones: '', precioCosto: '', utilidad: '' }],
 });
 
+const EMISORES = [
+  {
+    key: 'sieeg',
+    label: 'SIEEG',
+    direccion: 'Blvd. Belisario Dominguez #4213 L5',
+    razonSocial: 'SIEEG INGENIERIA Y TELECOMUNICACIONES',
+    rfc: 'SIT2409128S3',
+    repse: '',
+  },
+  {
+    key: 'sinar',
+    label: 'Sinar Adrian',
+    direccion: 'Blvd. Belisario Dominguez #4213 L5',
+    razonSocial: 'Sinar Adrian Casanova García',
+    rfc: 'CAGS890306QG4',
+    repse: 'AR9966/2022',
+  },
+];
+
 export default function Quotes() {
   const { id } = useParams();
   const location = useLocation();
@@ -170,6 +189,7 @@ export default function Quotes() {
   const isEditMode = Boolean(id);
   const preloadedPartida = location.state?.preloadedPartida;
   const preloadedQuote = location.state?.preloadedQuote;
+  const defaultEmisorKey = !isEditMode ? (location.state?.defaultEmisor || '') : '';
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
   const [form, setForm] = useState(() => {
@@ -200,10 +220,28 @@ export default function Quotes() {
       };
     }
 
+    if (defaultEmisorKey) {
+      const emisorData = EMISORES.find(e => e.key === defaultEmisorKey);
+      if (emisorData) {
+        return {
+          ...initialData,
+          emisor: emisorData.key,
+          direccion: emisorData.direccion,
+          razonSocial: emisorData.razonSocial,
+          rfc: emisorData.rfc,
+          repse: emisorData.repse || '',
+        };
+      }
+    }
+
     return initialData;
   });
   const [loadingQuote, setLoadingQuote] = useState(isEditMode);
-  const [emisorSelect, setEmisorSelect] = useState(() => (preloadedQuote && !isEditMode ? (preloadedQuote.emisor || '') : ''));
+  const [emisorSelect, setEmisorSelect] = useState(() => {
+    if (preloadedQuote && !isEditMode) return preloadedQuote.emisor || '';
+    if (defaultEmisorKey) return defaultEmisorKey;
+    return '';
+  });
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [cotCounter, setCotCounter] = useState(1);
   const [quotesCatalog, setQuotesCatalog] = useState([]);
@@ -292,25 +330,6 @@ export default function Quotes() {
 
     return list.slice(0, 8);
   }, [form.empresa, quotesCatalog]);
-
-  const EMISORES = [
-    {
-      key: 'sieeg',
-      label: 'SIEEG',
-      direccion: 'Blvd. Belisario Dominguez #4213 L5',
-      razonSocial: 'SIEEG INGENIERIA Y TELECOMUNICACIONES',
-      rfc: 'SIT2409128S3',
-      repse: '',
-    },
-    {
-      key: 'sinar',
-      label: 'Sinar Adrian',
-      direccion: 'Blvd. Belisario Dominguez #4213 L5',
-      razonSocial: 'Sinar Adrian Casanova García',
-      rfc: 'CAGS890306QG4',
-      repse: 'AR9966/2022',
-    },
-  ];
 
   // Generar número de cotización automático
   const generarNumeroCotizacion = (emisorKey) => {
@@ -686,20 +705,21 @@ export default function Quotes() {
       {/* Header */}
       <div className="flex items-end justify-between mb-6 pb-4 border-b border-gray-100">
         <div>
-          <button
-            type="button"
-            onClick={() => navigate(isEditMode ? `/admin/quotes/${id}` : '/admin/quotes')}
-            className="flex items-center gap-1 text-sm text-gray-500 hover:text-primary-500 mb-2 transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            Volver
-          </button>
           <h2 className="text-2xl font-extrabold text-primary-500">{isEditMode ? 'Editar cotización' : 'Nueva cotización'}</h2>
           <p className="text-sm text-gray-400 mt-0.5">{isEditMode ? 'Actualiza los datos y guarda los cambios' : 'Completa los campos para generar el documento'}</p>
         </div>
-        <span className="text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-blue-50 text-blue-600">
-          {isEditMode ? 'Edición' : 'Borrador'}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-semibold uppercase tracking-wider px-3 py-1 rounded-full bg-blue-50 text-blue-600">
+            {isEditMode ? 'Edición' : 'Borrador'}
+          </span>
+          <button
+            type="button"
+            className="px-4 py-2 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 transition-all"
+            onClick={() => navigate(isEditMode ? `/admin/quotes/${id}` : '/admin/quotes')}
+          >
+            Volver
+          </button>
+        </div>
       </div>
 
       <form

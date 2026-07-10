@@ -259,22 +259,6 @@ export default function QuotesList() {
 
   return (
     <DashboardLayout>
-      {/* Datos de contacto de la sucursal */}
-      <div className="mb-4 px-4 py-3 rounded-xl bg-blue-50 border border-blue-100 flex flex-wrap gap-4 items-center text-sm text-blue-800">
-        <div className="flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1C5.24 1 3 3.24 3 6c0 3.75 5 9 5 9s5-5.25 5-9c0-2.76-2.24-5-5-5zm0 6.5A1.5 1.5 0 1 1 8 4a1.5 1.5 0 0 1 0 3z" fill="currentColor"/></svg>
-          <span className="font-semibold">Blvd. Belisario Domínguez #4213 L5, Tuxtla Gutiérrez, Chiapas</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.2"/><path d="M1 6l7 4 7-4" stroke="currentColor" strokeWidth="1.2"/></svg>
-          <span>
-            {emisorFilter === 'sieeg'
-              ? 'SIEEG INGENIERIA Y TELECOMUNICACIONES · RFC: SIT2409128S3'
-              : 'Sinar Adrián Casanova García · RFC: CAGS890306QG4'}
-          </span>
-        </div>
-      </div>
-
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
           <button
@@ -323,7 +307,7 @@ export default function QuotesList() {
           {normalizedRole !== 'cotizador' && (
             <button
               className="px-5 py-2 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300"
-              onClick={() => navigate('/admin/quotes/create')}
+              onClick={() => navigate('/admin/quotes/create', { state: { defaultEmisor: emisorFilter } })}
             >
               + Nueva cotización
             </button>
