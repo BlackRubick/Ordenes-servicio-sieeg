@@ -40,22 +40,75 @@ router.get('/products', async (req, res) => {
     }
 
     const data = await response.json();
-    const products = (Array.isArray(data) ? data : []).map(p => ({
-      id: p.id,
-      name: p.name,
-      sku: p.sku || '',
-      price: p.price || p.regular_price || '0',
-      regular_price: p.regular_price || '0',
-      sale_price: p.sale_price || '',
-      stock_status: p.stock_status,
-      stock_quantity: p.stock_quantity,
-      image: p.images?.[0]?.src || null,
-      categories: (p.categories || []).map(c => c.name),
-    }));
+    const products = (Array.isArray(data) ? data : []).map(p => {
+      const costMeta = (p.meta_data || []).find(m => m.key === '_op_cost_price');
+      return {
+        id: p.id,
+        name: p.name,
+        sku: p.sku || '',
+        price: p.price || p.regular_price || '0',
+        regular_price: p.regular_price || '0',
+        sale_price: p.sale_price || '',
+        stock_status: p.stock_status,
+        stock_quantity: p.stock_quantity,
+        image: p.images?.[0]?.src || null,
+        categories: (p.categories || []).map(c => c.name),
+        cost_price: costMeta ? costMeta.value : null,
+      };
+    });
 
     res.json({ products });
   } catch (err) {
     res.status(500).json({ error: err.message, products: [] });
+  }
+});
+
+// GET /api/woocommerce/cost-price?name=xxx
+// Busca un producto en WooCommerce por nombre y retorna su _op_cost_price
+router.get('/cost-price', async (req, res) => {
+  if (!isConfigured()) {
+    return res.json({ cost_price: null });
+  }
+
+  const { name = '' } = req.query;
+  if (!name.trim()) return res.json({ cost_price: null });
+
+  const params = new URLSearchParams({
+    search: name.trim(),
+    per_page: '5',
+    page: '1',
+  });
+
+  try {
+    const response = await fetch(
+      `${WOO_URL}/wp-json/wc/v3/products?${params.toString()}`,
+      {
+        headers: {
+          Authorization: basicAuth(),
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!response.ok) return res.json({ cost_price: null });
+
+    const data = await response.json();
+    const products = Array.isArray(data) ? data : [];
+
+    const normalizedSearch = name.trim().toLowerCase();
+    const match = products.find(p => p.name.toLowerCase() === normalizedSearch)
+      || products[0];
+
+    if (!match) return res.json({ cost_price: null });
+
+    const costMeta = (match.meta_data || []).find(m => m.key === '_op_cost_price');
+    res.json({
+      cost_price: costMeta ? costMeta.value : null,
+      woo_id: match.id,
+      name: match.name,
+    });
+  } catch (err) {
+    res.json({ cost_price: null });
   }
 });
 

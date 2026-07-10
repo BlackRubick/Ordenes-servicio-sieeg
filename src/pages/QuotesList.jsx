@@ -69,9 +69,10 @@ export default function QuotesList() {
   const [searchEmpresa, setSearchEmpresa] = useState('');
   const [searchNumero, setSearchNumero] = useState('');
   const navigate = useNavigate();
-  const { role } = useAuthStore();
+  const { role, user } = useAuthStore();
   const normalizedRole = String(role || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const isAdmin = normalizedRole === 'admin' || normalizedRole === 'administrador';
+  const isEjecutivo = normalizedRole === 'ejecutivo de ventas';
 
   const isEmpty = (value) => String(value ?? '').trim() === '';
 
@@ -97,7 +98,9 @@ export default function QuotesList() {
         || (quote?.empresa || '').toLowerCase().includes(searchEmpresa.toLowerCase());
       const matchNumero = !searchNumero
         || (quote?.numeroCotizacion || '').toLowerCase().includes(searchNumero.toLowerCase());
-      return matchEmisor && matchVendedor && matchCliente && matchEmpresa && matchNumero;
+      const matchEjecutivo = !isEjecutivo
+        || String(quote?.vendedorId || '') === String(user?.id || '');
+      return matchEmisor && matchVendedor && matchCliente && matchEmpresa && matchNumero && matchEjecutivo;
     });
 
   // Vendedores únicos para el filtro

@@ -483,7 +483,7 @@ export default function Quotes() {
   const handleProductSelect = (product) => {
     const u = parseFloat(product.precioBase) || 0;
     const qty = 1;
-    setCurrentPartida({
+    const base = {
       ...currentPartida,
       productSearch: product.nombre,
       descripcion: product.nombre,
@@ -492,9 +492,25 @@ export default function Quotes() {
       cantidad: '1',
       importe: (qty * u).toFixed(2),
       observaciones: product.descripcion || '',
+      precioCosto: '',
+      utilidad: '',
       showSuggestions: false,
       suggestionIndex: -1,
-    });
+    };
+    setCurrentPartida(base);
+
+    // Buscar costo en WooCommerce por nombre
+    fetch(`/api/woocommerce/cost-price?name=${encodeURIComponent(product.nombre)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.cost_price !== null && data.cost_price !== undefined) {
+          setCurrentPartida(prev => ({
+            ...prev,
+            precioCosto: String(data.cost_price),
+          }));
+        }
+      })
+      .catch(() => {});
   };
 
   const observationCatalog = Array.from(new Set(
