@@ -244,6 +244,10 @@ export default function Quotes() {
   });
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [cotCounter, setCotCounter] = useState(1);
+  const [showWooModal, setShowWooModal] = useState(false);
+  const [wooModalSearch, setWooModalSearch] = useState('');
+  const [wooModalProducts, setWooModalProducts] = useState([]);
+  const [wooModalLoading, setWooModalLoading] = useState(false);
   const [quotesCatalog, setQuotesCatalog] = useState([]);
   const [showEmpresaSuggestions, setShowEmpresaSuggestions] = useState(false);
   const [empresaSuggestionIndex, setEmpresaSuggestionIndex] = useState(-1);
@@ -273,6 +277,39 @@ export default function Quotes() {
     .toLowerCase();
 
   // Cargar productos, catálogo de empresas y usuarios para autocompletado
+  // WooCommerce modal search
+  useEffect(() => {
+    if (!showWooModal) return;
+    setWooModalLoading(true);
+    const delay = wooModalSearch.trim() ? 400 : 0;
+    const timer = setTimeout(() => {
+      fetch(`/api/woocommerce/products?search=${encodeURIComponent(wooModalSearch.trim())}&per_page=30`)
+        .then(r => r.json())
+        .then(data => setWooModalProducts(Array.isArray(data.products) ? data.products : []))
+        .catch(() => setWooModalProducts([]))
+        .finally(() => setWooModalLoading(false));
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [wooModalSearch, showWooModal]);
+
+  const handleWooModalSelect = (p) => {
+    const u = Number(p.price) || 0;
+    setCurrentPartida(prev => ({
+      ...prev,
+      productSearch: p.name,
+      descripcion: p.name,
+      unidad: prev.unidad || 'PZA',
+      precioUnitario: String(u),
+      cantidad: prev.cantidad || '1',
+      importe: ((parseFloat(prev.cantidad) || 1) * u).toFixed(2),
+      precioCosto: p.cost_price !== null && p.cost_price !== undefined ? String(p.cost_price) : '',
+      utilidad: '',
+    }));
+    setShowWooModal(false);
+    setWooModalSearch('');
+    setWooModalProducts([]);
+  };
+
   useEffect(() => {
     const loadCatalogs = async () => {
       try {
@@ -1184,7 +1221,17 @@ export default function Quotes() {
             <div className="space-y-3">
               {/* Búsqueda de Producto con Autocompletación */}
               <div className="relative">
-                <label className="block mb-1 text-xs font-semibold text-gray-500 uppercase tracking-wide">Producto *</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Producto *</label>
+                  <button
+                    type="button"
+                    onClick={() => { setShowWooModal(true); setWooModalSearch(''); setWooModalProducts([]); }}
+                    className="flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" strokeWidth="1.4"/><path d="M11 11l3 3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                    Buscar en inventario
+                  </button>
+                </div>
                 <input
                   type="text"
                   className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 bg-white focus:bg-white focus:border-primary-400 focus:outline-none focus:ring-1 focus:ring-primary-100 transition-all"
@@ -1594,6 +1641,65 @@ export default function Quotes() {
           </button>
         </div>
       </form>
+
+      {/* Modal WooCommerce */}
+      {showWooModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
+          <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-gray-100 flex flex-col max-h-[85vh] overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-500 to-blue-600 text-white flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-extrabold">Buscar en inventario</h3>
+                <p className="text-xs text-white/80">Selecciona un producto para agregarlo a la partida.</p>
+              </div>
+              <button type="button" onClick={() => setShowWooModal(false)} className="text-white/70 hover:text-white text-2xl font-bold leading-none">×</button>
+            </div>
+            <div className="px-5 pt-4 pb-2">
+              <input
+                type="text"
+                autoFocus
+                value={wooModalSearch}
+                onChange={e => setWooModalSearch(e.target.value)}
+                placeholder="Buscar producto..."
+                className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+            </div>
+            <div className="flex-1 overflow-y-auto min-h-0 mx-5 mb-5 border border-gray-100 rounded-xl">
+              {wooModalLoading ? (
+                <div className="text-center text-gray-400 py-10 text-sm">Buscando...</div>
+              ) : wooModalProducts.length === 0 ? (
+                <div className="text-center text-gray-400 py-10 text-sm">
+                  {wooModalSearch.trim() ? 'Sin resultados' : 'Escribe para buscar'}
+                </div>
+              ) : (
+                <ul className="divide-y divide-gray-100">
+                  {wooModalProducts.map(p => (
+                    <li
+                      key={p.id}
+                      onClick={() => handleWooModalSelect(p)}
+                      className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-blue-50 transition-all"
+                    >
+                      {p.image && <img src={p.image} alt={p.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-gray-800 truncate">{p.name}</div>
+                        <div className="text-xs text-gray-400">{p.sku ? `SKU: ${p.sku}` : ''}</div>
+                        {p.cost_price && (
+                          <div className="text-xs text-orange-600 font-medium">Costo: ${p.cost_price}</div>
+                        )}
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <div className="text-sm font-bold text-blue-600">${p.price}</div>
+                        <div className={`text-xs ${p.stock_status === 'instock' ? 'text-green-500' : 'text-red-400'}`}>
+                          {p.stock_status === 'instock' ? `En stock${p.stock_quantity ? ` (${p.stock_quantity})` : ''}` : 'Sin stock'}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }

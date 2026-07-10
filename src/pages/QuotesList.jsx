@@ -63,6 +63,11 @@ export default function QuotesList() {
   const [showProductModal, setShowProductModal] = useState(false);
   const [productForm, setProductForm] = useState(initialProductForm);
   const [productValidationAttempted, setProductValidationAttempted] = useState(false);
+  const [productTab, setProductTab] = useState('woo');
+  const [wooSearch, setWooSearch] = useState('');
+  const [wooProducts, setWooProducts] = useState([]);
+  const [wooLoading, setWooLoading] = useState(false);
+  const [wooSelected, setWooSelected] = useState(null);
   const [emisorFilter, setEmisorFilter] = useState('sinar');
   const [vendedorFilter, setVendedorFilter] = useState('');
   const [searchCliente, setSearchCliente] = useState('');
@@ -128,6 +133,27 @@ export default function QuotesList() {
     setShowProductModal(false);
     setProductForm(initialProductForm);
     setProductValidationAttempted(false);
+    setProductTab('woo');
+    setWooSearch('');
+    setWooProducts([]);
+    setWooSelected(null);
+  };
+
+  const handleWooProductSelect = (p) => {
+    const partida = {
+      cantidad: 1,
+      descripcion: p.name,
+      observaciones: '',
+      unidad: 'PZA',
+      precioUnitario: Number(p.price) || 0,
+      importe: Number(p.price) || 0,
+      precioCosto: p.cost_price !== null && p.cost_price !== undefined ? Number(p.cost_price) : '',
+    };
+    setShowProductModal(false);
+    setWooSearch('');
+    setWooProducts([]);
+    setWooSelected(null);
+    navigate('/admin/quotes/create', { state: { preloadedPartida: partida, defaultEmisor: emisorFilter } });
   };
 
   const handleProductChange = (event) => {
@@ -260,6 +286,21 @@ export default function QuotesList() {
     };
   }, []);
 
+  // WooCommerce search en modal de producto
+  useEffect(() => {
+    if (!showProductModal || productTab !== 'woo') return;
+    setWooLoading(true);
+    const delay = wooSearch.trim() ? 400 : 0;
+    const timer = setTimeout(() => {
+      fetch(`/api/woocommerce/products?search=${encodeURIComponent(wooSearch.trim())}&per_page=30`)
+        .then(r => r.json())
+        .then(data => setWooProducts(Array.isArray(data.products) ? data.products : []))
+        .catch(() => setWooProducts([]))
+        .finally(() => setWooLoading(false));
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [wooSearch, showProductModal, productTab]);
+
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
@@ -320,77 +361,140 @@ export default function QuotesList() {
 
       {showProductModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
-          <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-primary-500 to-secondary-500 text-white">
-              <h3 className="text-lg font-extrabold">Alta Producto</h3>
-              <p className="text-sm text-white/90">Captura la partida para agregarla a una cotización.</p>
+          <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-primary-500 to-secondary-500 text-white flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-extrabold">Nueva partida</h3>
+                <p className="text-sm text-white/90">Busca en inventario o captura manualmente.</p>
+              </div>
+              <button type="button" onClick={handleCloseProductModal} className="text-white/70 hover:text-white text-2xl font-bold leading-none">×</button>
             </div>
-            <form className="p-6 space-y-4" onSubmit={handleProductSubmit}>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Descripción</label>
+
+            {/* Tabs */}
+            <div className="flex gap-2 px-6 pt-4">
+              <button
+                type="button"
+                onClick={() => { setProductTab('woo'); setWooSelected(null); }}
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${productTab === 'woo' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              >
+                Inventario
+              </button>
+              <button
+                type="button"
+                onClick={() => setProductTab('manual')}
+                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${productTab === 'manual' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              >
+                Manual
+              </button>
+            </div>
+
+            {productTab === 'woo' ? (
+              <div className="flex flex-col flex-1 overflow-hidden px-6 pb-6 pt-3">
                 <input
-                  name="descripcion"
-                  value={productForm.descripcion}
-                  onChange={handleProductChange}
-                  className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.descripcion) ? 'border-red-400' : 'border-gray-200'}`}
-                  placeholder="Descripción del producto o servicio"
+                  type="text"
+                  autoFocus
+                  value={wooSearch}
+                  onChange={e => { setWooSearch(e.target.value); setWooSelected(null); }}
+                  placeholder="Buscar producto en inventario..."
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 mb-3"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Observaciones</label>
-                <textarea
-                  name="observaciones"
-                  value={productForm.observaciones}
-                  onChange={handleProductChange}
-                  className={`w-full min-h-[110px] px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 resize-y ${productValidationAttempted && isEmpty(productForm.observaciones) ? 'border-red-400' : 'border-gray-200'}`}
-                  placeholder="Escribe observaciones del producto o servicio"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Unidad</label>
-                <select
-                  name="unidad"
-                  value={productForm.unidad}
-                  onChange={handleProductChange}
-                  className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.unidad) ? 'border-red-400' : 'border-gray-200'}`}
-                >
-                  <option value="">Selecciona una unidad</option>
-                  {unitOptions.map((unidad) => (
-                    <option key={unidad} value={unidad}>
-                      {unidad}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">P. Unitario</label>
-                <input
-                  name="precioUnitario"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={productForm.precioUnitario}
-                  onChange={handleProductChange}
-                  className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.precioUnitario) ? 'border-red-400' : 'border-gray-200'}`}
-                  placeholder="0.00"
-                />
-              </div>
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  className="flex-1 px-4 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all"
-                  onClick={handleCloseProductModal}
-                >
+                <div className="flex-1 overflow-y-auto border border-gray-100 rounded-xl min-h-0">
+                  {wooLoading ? (
+                    <div className="text-center text-gray-400 py-10 text-sm">Buscando en inventario...</div>
+                  ) : wooProducts.length === 0 ? (
+                    <div className="text-center text-gray-400 py-10 text-sm">
+                      {wooSearch.trim() ? 'Sin resultados' : 'Escribe para buscar productos'}
+                    </div>
+                  ) : (
+                    <ul className="divide-y divide-gray-100">
+                      {wooProducts.map(p => (
+                        <li
+                          key={p.id}
+                          onClick={() => handleWooProductSelect(p)}
+                          className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-primary-50 transition-all"
+                        >
+                          {p.image && <img src={p.image} alt={p.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-gray-800 truncate">{p.name}</div>
+                            <div className="text-xs text-gray-400">{p.sku ? `SKU: ${p.sku}` : ''} {(p.categories || []).join(', ')}</div>
+                            {p.cost_price && (
+                              <div className="text-xs text-orange-600 font-medium">Costo: ${p.cost_price}</div>
+                            )}
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-sm font-bold text-primary-600">${p.price}</div>
+                            <div className={`text-xs ${p.stock_status === 'instock' ? 'text-green-500' : 'text-red-400'}`}>
+                              {p.stock_status === 'instock' ? `En stock${p.stock_quantity ? ` (${p.stock_quantity})` : ''}` : 'Sin stock'}
+                            </div>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+                <button type="button" onClick={handleCloseProductModal} className="mt-3 w-full px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all">
                   Cancelar
                 </button>
-                <button
-                  type="submit"
-                  className="flex-[2] px-4 py-3 rounded-2xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white text-sm font-bold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
-                >
-                  Continuar a cotización
-                </button>
               </div>
-            </form>
+            ) : (
+              <form className="p-6 space-y-4 overflow-y-auto" onSubmit={handleProductSubmit}>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Descripción</label>
+                  <input
+                    name="descripcion"
+                    value={productForm.descripcion}
+                    onChange={handleProductChange}
+                    className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.descripcion) ? 'border-red-400' : 'border-gray-200'}`}
+                    placeholder="Descripción del producto o servicio"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Observaciones</label>
+                  <textarea
+                    name="observaciones"
+                    value={productForm.observaciones}
+                    onChange={handleProductChange}
+                    className={`w-full min-h-[80px] px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 resize-y ${productValidationAttempted && isEmpty(productForm.observaciones) ? 'border-red-400' : 'border-gray-200'}`}
+                    placeholder="Observaciones del producto o servicio"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Unidad</label>
+                  <select
+                    name="unidad"
+                    value={productForm.unidad}
+                    onChange={handleProductChange}
+                    className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.unidad) ? 'border-red-400' : 'border-gray-200'}`}
+                  >
+                    <option value="">Selecciona una unidad</option>
+                    {unitOptions.map((unidad) => (
+                      <option key={unidad} value={unidad}>{unidad}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">P. Unitario</label>
+                  <input
+                    name="precioUnitario"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={productForm.precioUnitario}
+                    onChange={handleProductChange}
+                    className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.precioUnitario) ? 'border-red-400' : 'border-gray-200'}`}
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button type="button" className="flex-1 px-4 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all" onClick={handleCloseProductModal}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="flex-[2] px-4 py-3 rounded-2xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white text-sm font-bold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all">
+                    Continuar a cotización
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
