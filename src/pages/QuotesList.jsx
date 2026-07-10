@@ -261,14 +261,6 @@ export default function QuotesList() {
     <DashboardLayout>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div>
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-1 text-sm text-gray-500 hover:text-primary-500 mb-1 transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            Volver
-          </button>
           <h2 className="text-2xl font-extrabold text-primary-500">Cotizaciones {emisorFilter === 'sinar' ? 'Persona física' : 'SIEEG'}</h2>
         </div>
         <div className="flex flex-wrap gap-3 items-center">
