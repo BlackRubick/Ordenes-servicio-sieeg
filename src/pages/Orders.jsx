@@ -733,9 +733,12 @@ const generateOrderPdfDoc = async (order) => {
       return matchSearch && matchEstado && matchTecnico;
     })
     .sort((a, b) => {
-      const fechaA = a.fecha ? new Date(a.fecha) : new Date(0);
-      const fechaB = b.fecha ? new Date(b.fecha) : new Date(0);
-      return fechaA - fechaB;
+      const fechaA = a.fecha || '';
+      const fechaB = b.fecha || '';
+      if (fechaA !== fechaB) return fechaB > fechaA ? 1 : -1;
+      const createdA = a.createdAt ? new Date(a.createdAt) : new Date(0);
+      const createdB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+      return createdA - createdB;
     });
 
   return (

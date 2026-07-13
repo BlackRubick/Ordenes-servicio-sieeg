@@ -116,7 +116,7 @@ router.get('/', async (req, res) => {
     };
   }
   try {
-    const orders = await Order.findAll({ where, include: [{ model: User, as: 'Technician' }], order: [['createdAt', 'ASC']] });
+    const orders = await Order.findAll({ where, include: [{ model: User, as: 'Technician' }], order: [['fecha', 'DESC'], ['createdAt', 'ASC']] });
     // Transformar cada orden para agregar la propiedad 'tecnico' igual al nombre del técnico
     const ordersWithTecnico = orders.map(order => {
       const plain = order.get({ plain: true });
