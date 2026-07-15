@@ -427,15 +427,16 @@ const bodyY = gy + 8;
     }
     doc.text('Cta: 0123875156   Clabe: 012100001238751568   Nombre: SIEEG INGENIERIA Y TELECOMUNICACIONES SA DE CV', MX + bbvaW + 5, bankY);
   } else {
+    const textX = MX + Math.max(banorteW, bbvaW) + 5; // alinear texto de ambos bancos al mismo X
     if (banorteLogoBase64) {
       doc.addImage(banorteLogoBase64, 'PNG', MX, bankY - bankLogoH, banorteW, bankLogoH);
     }
-    doc.text('Cta: 0295855215   Clabe: 072 100 002958552154   Nombre: Sinar Adrián Casanova García', MX + banorteW + 5, bankY);
+    doc.text('Cta: 0295855215   Clabe: 072 100 002958552154   Nombre: Sinar Adrián Casanova García', textX, bankY);
     bankY += 16;
     if (bbvaLogoBase64) {
       doc.addImage(bbvaLogoBase64, 'PNG', MX, bankY - bankLogoH, bbvaW, bankLogoH);
     }
-    doc.text('Cta: 0480072338   Clabe: 012 100 004800723387   Nombre: Sinar Adrián Casanova García', MX + bbvaW + 5, bankY);
+    doc.text('Cta: 0480072338   Clabe: 012 100 004800723387   Nombre: Sinar Adrián Casanova García', textX, bankY);
   }
   return doc;
 }
