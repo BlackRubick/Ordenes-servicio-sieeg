@@ -412,7 +412,7 @@ const bodyY = gy + 8;
   // ══════════════════════════════════════════════════════════
   // Asegurar que los datos bancarios queden al final, justo debajo de los totales
   // añadir un salto extra para que no quede tan pegado a los totales
-  let bankY = footerY + tRowH * 3 + 28;
+  let bankY = footerY + tRowH * 3 + 14;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   color(NAVY);
