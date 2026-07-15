@@ -350,14 +350,14 @@ const bodyY = gy + 8;
         let startY = ry + Math.max(8, (dynH - totalTextHeight) / 2 + 6);
         let ly = startY;
         descFit.lines.forEach((ln) => {
-          doc.text(ln, x + 4, ly);
+          doc.text(ln, x + w / 2, ly, { align: 'center' });
           ly += lineGap;
         });
         // Renderizar observaciones en negrita si existen (también con ajuste dinámico)
         if (obsFit.lines.length) {
           doc.setFont('helvetica', 'bold'); doc.setFontSize(obsFit.fontSize); color(BLACK);
           obsFit.lines.forEach((ln) => {
-            doc.text(ln, x + 4, ly);
+            doc.text(ln, x + w / 2, ly, { align: 'center' });
             ly += lineGap;
           });
           // restaurar fuente normal para las demás celdas
