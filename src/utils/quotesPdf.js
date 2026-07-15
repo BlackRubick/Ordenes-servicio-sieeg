@@ -304,11 +304,16 @@ const bodyY = gy + 8;
   const tableEndY   = footerY - 6; // límite: no pisar totales
   let ry = bodyY + thH;
 
+  // Pre-calcular el tamaño de fuente mínimo entre todas las descripciones
+  // para que todas las filas usen el mismo tamaño y se vean uniformes
+  const globalDescFontSize = partidas.length > 0
+    ? Math.min(...partidas.map(p => fitWrappedTextStyled(p.descripcion || '', TC[1].w - 8, 7.5, 6, 3, 'normal').fontSize))
+    : 7.5;
+
   partidas.forEach((p, i) => {
-    console.log(`DEBUG PDF: Partida ${i}:`, JSON.stringify(p, null, 2));
     // Separar descripción y observaciones y calcular la altura total de la celda
     const obsText = p.observaciones && String(p.observaciones).trim() !== '' ? String(p.observaciones) : '';
-    const descFit = fitWrappedTextStyled(p.descripcion || '', TC[1].w - 8, 7.5, 6, 3, 'normal');
+    const descFit = fitWrappedTextStyled(p.descripcion || '', TC[1].w - 8, globalDescFontSize, globalDescFontSize, 3, 'normal');
     const obsFit  = obsText ? fitWrappedTextStyled(obsText, TC[1].w - 8, 7.2, 6, 2, 'bold') : { lines: [], fontSize: 7.2 };
     const combinedLines = descFit.lines.concat(obsFit.lines);
     const lineGap = 9;
