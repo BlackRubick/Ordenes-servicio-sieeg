@@ -90,7 +90,9 @@ export async function generateQuotePdfDoc(quote, mode = 'client') {
     img.onerror = () => resolve(null);
     img.src = src;
   });
-  const logoBase64 = await getLogoBase64('/images/logo.ico');
+  const logoBase64        = await getLogoBase64('/images/logo.ico');
+  const bbvaLogoBase64    = await getLogoBase64('/images/bbva-logo.png');
+  const banorteLogoBase64 = await getLogoBase64('/images/banorte-logo.png');
 
   const MX     = 28;
   const tableW = W - MX * 2;
@@ -244,19 +246,12 @@ const bodyY = gy + 8;
   const obsText = quote.observaciones && String(quote.observaciones).trim()
     ? String(quote.observaciones).trim()
     : '';
-  let obsOverflowLines = [];
   if (obsText !== '') {
     const allObsLines = doc.splitTextToSize(obsText, obsW - 12);
     const obsLineH = 6.5;
     const maxLines = Math.max(1, Math.floor((obsH - 10) / obsLineH));
     const visibleLines = allObsLines.slice(0, maxLines);
-    obsOverflowLines = allObsLines.slice(maxLines);
     doc.text(visibleLines, obsX + 6, obsY + 9);
-    if (obsOverflowLines.length > 0) {
-      doc.setFontSize(4.5); color('#888888');
-      doc.text('↓ continúa en siguiente página', obsX + 6, obsY + obsH - 5);
-      color(BLACK); doc.setFontSize(5);
-    }
   }
 
   [
@@ -279,6 +274,7 @@ const bodyY = gy + 8;
 
   // — Datos bancarios —
   // (Los datos bancarios se renderizan más abajo según el emisor)
+  // Los logos se cargan al inicio del documento para usarlos aquí.
 
   // ══════════════════════════════════════════════════════════
   // ENCABEZADO DE TABLA
@@ -418,39 +414,28 @@ const bodyY = gy + 8;
   // añadir un salto extra para que no quede tan pegado a los totales
   let bankY = footerY + tRowH * 3 + 28;
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   color(NAVY);
+
+  const bankLogoH = 10; // altura en pt para los logos de banco
+  const bbvaW     = bbvaLogoBase64    ? bankLogoH * (201 / 60) : 0;
+  const banorteW  = banorteLogoBase64 ? bankLogoH * (417 / 60) : 0;
+
   if ((quote.razonSocial || '').toUpperCase().includes('SIEEG')) {
-    doc.text('cuenta bbva : 0123875156   clabe 012100001238751568   Nombre SIEEG INGENIERIA Y TELECOMUNICACIONES SA DE CV', MX, bankY);
+    if (bbvaLogoBase64) {
+      doc.addImage(bbvaLogoBase64, 'PNG', MX, bankY - bankLogoH, bbvaW, bankLogoH);
+    }
+    doc.text('Cta: 0123875156   Clabe: 012100001238751568   Nombre: SIEEG INGENIERIA Y TELECOMUNICACIONES SA DE CV', MX + bbvaW + 5, bankY);
   } else {
-    doc.text('Banorte Cta : 0295855215     Clabe : 072 100 002958552154   Nombre:  Sinar Adrián Casanova García', MX, bankY);
+    if (banorteLogoBase64) {
+      doc.addImage(banorteLogoBase64, 'PNG', MX, bankY - bankLogoH, banorteW, bankLogoH);
+    }
+    doc.text('Cta: 0295855215   Clabe: 072 100 002958552154   Nombre: Sinar Adrián Casanova García', MX + banorteW + 5, bankY);
     bankY += 16;
-    doc.text('Bbva       Cta : 0480072338     Clabe: 012 100 004800723387    Nombre: Sinar Adrián Casanova García', MX, bankY);
+    if (bbvaLogoBase64) {
+      doc.addImage(bbvaLogoBase64, 'PNG', MX, bankY - bankLogoH, bbvaW, bankLogoH);
+    }
+    doc.text('Cta: 0480072338   Clabe: 012 100 004800723387   Nombre: Sinar Adrián Casanova García', MX + bbvaW + 5, bankY);
   }
-  // ══════════════════════════════════════════════════════════
-  // PÁGINA EXTRA: Observaciones completas si no cupieron en la primera
-  // ══════════════════════════════════════════════════════════
-  if (obsOverflowLines.length > 0) {
-    doc.addPage();
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); color(NAVY);
-    doc.text('Observaciones (continuación)', MX, 36);
-    doc.setLineWidth(0.5); stroke(NAVY);
-    doc.line(MX, 42, W - MX, 42);
-
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); color(BLACK);
-    // Incluir todas las obs en la página 2 (completas)
-    const fullLines = doc.splitTextToSize(obsText, W - MX * 2);
-    const pageLineH = 11;
-    let py = 56;
-    fullLines.forEach((line) => {
-      if (py > H - 40) {
-        doc.addPage();
-        py = 36;
-      }
-      doc.text(line, MX, py);
-      py += pageLineH;
-    });
-  }
-
   return doc;
 }
