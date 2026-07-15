@@ -434,7 +434,8 @@ const bodyY = gy + 8;
     doc.text('Cta: 0295855215   Clabe: 072 100 002958552154   Nombre: Sinar Adrián Casanova García', textX, bankY);
     bankY += 16;
     if (bbvaLogoBase64) {
-      doc.addImage(bbvaLogoBase64, 'PNG', MX, bankY - bankLogoH, bbvaW, bankLogoH);
+      const bbvaX = MX + (Math.max(banorteW, bbvaW) - bbvaW) / 2; // centrar BBVA respecto al ancho de Banorte
+      doc.addImage(bbvaLogoBase64, 'PNG', bbvaX, bankY - bankLogoH, bbvaW, bankLogoH);
     }
     doc.text('Cta: 0480072338   Clabe: 012 100 004800723387   Nombre: Sinar Adrián Casanova García', textX, bankY);
   }
