@@ -1058,12 +1058,13 @@ const generateOrderPdfDoc = async (order) => {
               }}>Cancelar</button>
               <button className="px-5 py-2 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 text-base" disabled={!recipientName.trim() || !signatureData} onClick={async () => {
                 try {
-                  await fetch(`/api/orders/${entregaOrderFolio}/estado`, {
+                  const res = await fetch(`/api/orders/${entregaOrderFolio}/estado`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ estado: 'entregada' })
+                    body: JSON.stringify({ estado: 'entregada', firma: signatureData, nombreRecibe: recipientName })
                   });
-                  setOrders(prev => prev.map((ord) => ord.folio === entregaOrderFolio ? { ...ord, status: 'entregada', estado: 'entregada', nombreEntrega: recipientName, firmaEntrega: signatureData } : ord));
+                  if (!res.ok) throw new Error('No se pudo registrar la entrega en el servidor');
+                  setOrders(prev => prev.map((ord) => ord.folio === entregaOrderFolio ? { ...ord, status: 'entregada', estado: 'entregada', firma: signatureData, nombreRecibe: recipientName } : ord));
                   setEntregaOrderFolio(null);
                   setRecipientName('');
                   setSignatureData(null);
