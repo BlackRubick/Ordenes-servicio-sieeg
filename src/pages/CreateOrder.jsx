@@ -474,40 +474,50 @@ const CreateOrder = () => {
 
   return (
     <DashboardLayout>
-      <form className="max-w-4xl mx-auto w-full" onSubmit={handleSubmit} autoComplete="off">
-        <h2 className="text-2xl font-extrabold text-primary-500 mb-2 tracking-tight">Crear Orden</h2>
-        <p className="text-text-secondary mb-6">Llena todos los campos obligatorios para generar una nueva orden de servicio.</p>
+      <form className="max-w-4xl mx-auto w-full pb-6" onSubmit={handleSubmit} autoComplete="off">
 
-        {/* Card: Folio, Fecha, Estado */}
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between animate-fade-in">
-          <div className="flex-1 flex flex-col gap-2">
-            <label className="text-xs font-semibold text-text-secondary">Folio</label>
-            <input className="w-full px-4 py-3 rounded-xl border-2 border-primary-100 bg-primary-50/40 text-primary-600 font-mono font-bold text-lg" value={folio} disabled readOnly />
+        {/* ── Encabezado ── */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 tracking-tight">Nueva Orden de Servicio</h2>
+            <p className="text-sm text-gray-400 mt-0.5">Completa los campos para registrar el equipo</p>
           </div>
-          <div className="flex-1 flex flex-col gap-2">
-            <label className="text-xs font-semibold text-text-secondary">Fecha de ingreso</label>
-            <input className="w-full px-4 py-3 rounded-xl border border-border bg-gray-50 text-dark font-semibold" value={fecha.split('-').reverse().join('/')} disabled readOnly />
-          </div>
-          <div className="flex-1 flex flex-col gap-2">
-            <label className="text-xs font-semibold text-text-secondary">Estado</label>
-            <input className="w-full px-4 py-3 rounded-xl border border-border bg-gray-50 text-primary-500 font-bold" value="Pendiente" disabled readOnly />
+          {/* Chips de meta info */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 text-xs font-mono font-bold text-gray-600">
+              <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" /></svg>
+              {folio}
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 text-xs font-semibold text-gray-500">
+              <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+              {fecha.split('-').reverse().join('/')}
+            </span>
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-50 text-xs font-semibold text-yellow-700 border border-yellow-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 inline-block" />
+              Pendiente
+            </span>
           </div>
         </div>
 
-        {/* Card: Información del Cliente */}
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-6 animate-fade-in">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="bg-primary-100 text-primary-500 rounded-full p-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            </span>
-            <h3 className="text-lg font-bold text-primary-500">Información del Cliente</h3>
+        {/* ── Card: Cliente ── */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-5">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900">Información del Cliente</h3>
+              <p className="text-xs text-gray-400">Datos de contacto del cliente</p>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-sm font-medium text-dark">Nombre *</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Nombre <span className="text-red-400">*</span></label>
               <input
                 name="nombre"
-                className={`w-full px-4 py-3 rounded-xl border ${touched.nombre && errors.nombre ? 'border-error' : 'border-border'} bg-white/80 focus:ring-2 focus:ring-primary-500 outline-none`}
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all ${touched.nombre && errors.nombre ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200' : 'border-gray-200 bg-white focus:ring-2 focus:ring-primary-200 focus:border-primary-300'}`}
                 placeholder="Nombre completo"
                 value={form.nombre}
                 onChange={e => {
@@ -517,14 +527,14 @@ const CreateOrder = () => {
                 onBlur={handleBlur}
                 autoComplete="off"
               />
-              {touched.nombre && errors.nombre && <span className="text-error text-xs mt-1 animate-fade-in">{errors.nombre}</span>}
+              {touched.nombre && errors.nombre && <span className="text-red-500 text-xs">{errors.nombre}</span>}
             </div>
-            <div>
-              <label className="text-sm font-medium text-dark">Teléfono *</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Teléfono</label>
               <input
                 name="telefono"
-                className={`w-full px-4 py-3 rounded-xl border ${touched.telefono && errors.telefono ? 'border-error' : 'border-border'} bg-white/80 focus:ring-2 focus:ring-primary-500 outline-none`}
-                placeholder="Teléfono (10 dígitos)"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all ${touched.telefono && errors.telefono ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200' : 'border-gray-200 bg-white focus:ring-2 focus:ring-primary-200 focus:border-primary-300'}`}
+                placeholder="10 dígitos"
                 value={form.telefono}
                 onChange={e => {
                   const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
@@ -534,129 +544,150 @@ const CreateOrder = () => {
                 maxLength={10}
                 autoComplete="off"
               />
-              {touched.telefono && errors.telefono && <span className="text-error text-xs mt-1 animate-fade-in">{errors.telefono}</span>}
+              {touched.telefono && errors.telefono && <span className="text-red-500 text-xs">{errors.telefono}</span>}
             </div>
-            <div>
-              <label className="text-sm font-medium text-dark">Correo *</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Correo <span className="text-red-400">*</span></label>
               <input
                 name="correo"
                 type="email"
-                className={`w-full px-4 py-3 rounded-xl border ${touched.correo && errors.correo ? 'border-error' : 'border-border'} bg-white/80 focus:ring-2 focus:ring-primary-500 outline-none`}
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all ${touched.correo && errors.correo ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200' : 'border-gray-200 bg-white focus:ring-2 focus:ring-primary-200 focus:border-primary-300'}`}
                 placeholder="cliente@ejemplo.com"
                 value={form.correo}
-                onChange={e => {
-                  setForm(f => ({ ...f, correo: e.target.value }));
-                }}
+                onChange={e => { setForm(f => ({ ...f, correo: e.target.value })); }}
                 onBlur={handleBlur}
                 autoComplete="off"
               />
-              {touched.correo && errors.correo && <span className="text-error text-xs mt-1 animate-fade-in">{errors.correo}</span>}
+              {touched.correo && errors.correo && <span className="text-red-500 text-xs">{errors.correo}</span>}
             </div>
           </div>
         </div>
 
-        {/* Card: Información del Equipo */}
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-6 animate-fade-in">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="bg-orange-100 text-orange-500 rounded-full p-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 21m5.25-4l.75 4M4 4h16v2a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm0 0V2a2 2 0 012-2h12a2 2 0 012 2v2" /></svg>
-            </span>
-            <h3 className="text-lg font-bold text-orange-500">Información del Equipo</h3>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* ── Card: Equipo ── */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-5">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 17L9 21m5.25-4l.75 4M4 4h16v2a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+              </svg>
+            </div>
             <div>
-              <label className="text-sm font-medium text-dark">Tipo *</label>
+              <h3 className="text-sm font-bold text-gray-900">Información del Equipo</h3>
+              <p className="text-xs text-gray-400">Tipo, marca, modelo y número de serie</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipo <span className="text-red-400">*</span></label>
               <input
                 name="tipo"
-                className={`w-full px-4 py-3 rounded-xl border ${touched.tipo && errors.tipo ? 'border-error' : 'border-border'} bg-white/80 focus:ring-2 focus:ring-primary-500 outline-none`}
-                placeholder="Laptop, Celular, Tablet"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all ${touched.tipo && errors.tipo ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200' : 'border-gray-200 bg-white focus:ring-2 focus:ring-primary-200 focus:border-primary-300'}`}
+                placeholder="Laptop, Celular..."
                 value={form.tipo}
                 onChange={handleChange}
                 onBlur={handleBlur}
               />
-              {touched.tipo && errors.tipo && <span className="text-error text-xs mt-1 animate-fade-in">{errors.tipo}</span>}
+              {touched.tipo && errors.tipo && <span className="text-red-500 text-xs">{errors.tipo}</span>}
             </div>
-            <div>
-              <label className="text-sm font-medium text-dark">Marca *</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Marca <span className="text-red-400">*</span></label>
               <input
                 name="marca"
-                className={`w-full px-4 py-3 rounded-xl border ${touched.marca && errors.marca ? 'border-error' : 'border-border'} bg-white/80 focus:ring-2 focus:ring-primary-500 outline-none`}
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all ${touched.marca && errors.marca ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200' : 'border-gray-200 bg-white focus:ring-2 focus:ring-primary-200 focus:border-primary-300'}`}
                 placeholder="HP, Samsung, Apple"
                 value={form.marca}
                 onChange={handleChange}
                 onBlur={handleBlur}
               />
-              {touched.marca && errors.marca && <span className="text-error text-xs mt-1 animate-fade-in">{errors.marca}</span>}
+              {touched.marca && errors.marca && <span className="text-red-500 text-xs">{errors.marca}</span>}
             </div>
-            <div>
-              <label className="text-sm font-medium text-dark">Modelo *</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Modelo <span className="text-red-400">*</span></label>
               <input
                 name="modelo"
-                className={`w-full px-4 py-3 rounded-xl border ${touched.modelo && errors.modelo ? 'border-error' : 'border-border'} bg-white/80 focus:ring-2 focus:ring-primary-500 outline-none`}
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all ${touched.modelo && errors.modelo ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200' : 'border-gray-200 bg-white focus:ring-2 focus:ring-primary-200 focus:border-primary-300'}`}
                 placeholder="Pavilion 15"
                 value={form.modelo}
                 onChange={handleChange}
                 onBlur={handleBlur}
               />
-              {touched.modelo && errors.modelo && <span className="text-error text-xs mt-1 animate-fade-in">{errors.modelo}</span>}
+              {touched.modelo && errors.modelo && <span className="text-red-500 text-xs">{errors.modelo}</span>}
             </div>
-            <div>
-              <label className="text-sm font-medium text-dark">Número de Serie *</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">N.º de Serie <span className="text-red-400">*</span></label>
               <input
                 name="serie"
-                className={`w-full px-4 py-3 rounded-xl border ${touched.serie && errors.serie ? 'border-error' : 'border-border'} bg-white/80 focus:ring-2 focus:ring-primary-500 outline-none`}
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all ${touched.serie && errors.serie ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200' : 'border-gray-200 bg-white focus:ring-2 focus:ring-primary-200 focus:border-primary-300'}`}
                 placeholder="SN123456789"
                 value={form.serie}
                 onChange={handleChange}
                 onBlur={handleBlur}
               />
-              {touched.serie && errors.serie && <span className="text-error text-xs mt-1 animate-fade-in">{errors.serie}</span>}
+              {touched.serie && errors.serie && <span className="text-red-500 text-xs">{errors.serie}</span>}
             </div>
           </div>
         </div>
 
-        {/* Card: Accesorios y Seguridad */}
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-6 animate-fade-in">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="bg-green-100 text-green-500 rounded-full p-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" /></svg>
-            </span>
-            <h3 className="text-lg font-bold text-green-500">Accesorios y Seguridad</h3>
+        {/* ── Card: Accesorios y Seguridad ── */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-5">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900">Accesorios y Seguridad</h3>
+              <p className="text-xs text-gray-400">Qué trae el equipo y cómo está protegido</p>
+            </div>
           </div>
+
+          {/* Checkboxes de accesorios como pills */}
           <div className="flex flex-wrap gap-2 mb-4">
             {accesoriosList.map(acc => (
-              <label key={acc} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border bg-white shadow-sm text-sm font-medium cursor-pointer hover:bg-primary-50 transition-all">
+              <label
+                key={acc}
+                className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border text-sm font-medium cursor-pointer transition-all select-none ${form.accesorios.includes(acc) ? 'bg-green-50 border-green-300 text-green-700' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'}`}
+              >
                 <input
                   type="checkbox"
-                  className="accent-primary-500"
+                  className="sr-only"
                   name="accesorios"
                   value={acc}
                   checked={form.accesorios.includes(acc)}
                   onChange={handleChange}
-                /> {acc}
+                />
+                {form.accesorios.includes(acc) && (
+                  <svg className="w-3.5 h-3.5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+                {acc}
               </label>
             ))}
-            <input
-              name="otrosAccesorios"
-              className="flex-1 min-w-[180px] px-4 py-2 rounded-xl border border-border bg-white/80 focus:ring-2 focus:ring-primary-500 outline-none text-sm"
-              placeholder="Otros accesorios..."
-              value={form.otrosAccesorios}
-              onChange={handleChange}
-            />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-dark">Contraseña del Equipo</label>
+          <input
+            name="otrosAccesorios"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-sm outline-none focus:ring-2 focus:ring-primary-200 focus:border-primary-300 mb-5 transition-all"
+            placeholder="Otros accesorios (escribe aquí)..."
+            value={form.otrosAccesorios}
+            onChange={handleChange}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contraseña / PIN del equipo</label>
               <input
                 name="seguridad"
-                className="w-full px-4 py-3 rounded-xl border border-border bg-white/80 focus:ring-2 focus:ring-primary-500 outline-none"
-                placeholder="Contraseña o PIN"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all ${touched.seguridad && errors.seguridad ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200' : 'border-gray-200 bg-white focus:ring-2 focus:ring-primary-200 focus:border-primary-300'}`}
+                placeholder="Contraseña o PIN de desbloqueo"
                 value={form.seguridad}
                 onChange={handleChange}
               />
+              {touched.seguridad && errors.seguridad && <span className="text-red-500 text-xs">{errors.seguridad}</span>}
             </div>
-            <div>
-              <label className="text-sm font-medium text-dark">Patrón de Desbloqueo</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Patrón de Desbloqueo</label>
               <PatternLock
                 value={form.patron}
                 onChange={handlePatternChange}
@@ -664,60 +695,75 @@ const CreateOrder = () => {
                 disabled={loading}
               />
               {touched.patron && errors.patron && (
-                <div className="text-xs text-error mt-1 animate-fade-in">{errors.patron}</div>
+                <span className="text-red-500 text-xs">{errors.patron}</span>
               )}
               {form.patron && form.patron.length > 0 && !errors.patron && (
-                <div className="text-xs text-primary-500 mt-1">Patrón registrado</div>
+                <span className="text-xs text-green-600 font-medium">Patrón registrado</span>
               )}
             </div>
           </div>
         </div>
 
-        {/* Card: Técnico asignado */}
-        <div className="bg-white rounded-2xl shadow-card p-6 mb-6 animate-fade-in">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="bg-blue-100 text-blue-500 rounded-full p-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87M16 3.13a4 4 0 010 7.75M8 3.13a4 4 0 000 7.75" /></svg>
-            </span>
-            <h3 className="text-lg font-bold text-blue-500">Técnico Asignado</h3>
+        {/* ── Card: Técnico ── */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-5">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-9 h-9 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87M16 3.13a4 4 0 010 7.75M8 3.13a4 4 0 000 7.75" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900">Técnico Asignado</h3>
+              <p className="text-xs text-gray-400">Responsable de atender la reparación</p>
+            </div>
           </div>
           <select
             name="tecnico"
-            className={`w-full px-4 py-3 rounded-xl border ${touched.tecnico && errors.tecnico ? 'border-error' : 'border-border'} bg-white/80 focus:ring-2 focus:ring-primary-500 outline-none`}
+            className={`w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all ${touched.tecnico && errors.tecnico ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200' : 'border-gray-200 bg-white focus:ring-2 focus:ring-primary-200 focus:border-primary-300'}`}
             value={form.tecnico}
             onChange={e => setForm(f => ({ ...f, tecnico: e.target.value }))}
             onBlur={handleBlur}
           >
-            <option value="">-- Sin asignar --</option>
+            <option value="">— Sin asignar —</option>
             {tecnicos.map(t => (
               <option key={t.id} value={t.id}>{t.nombre}</option>
             ))}
           </select>
-          <div className="flex items-center gap-2 mb-4">
-            <span className="bg-primary-100 text-primary-500 rounded-full p-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-3-3v6" /></svg>
-            </span>
-            <h3 className="text-lg font-bold text-primary-500">Descripción y Observaciones</h3>
+          {touched.tecnico && errors.tecnico && <span className="text-red-500 text-xs mt-1">{errors.tecnico}</span>}
+        </div>
+
+        {/* ── Card: Descripción y Observaciones ── */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-gray-900">Descripción y Observaciones</h3>
+              <p className="text-xs text-gray-400">Describe el problema y agrega notas opcionales</p>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-dark">Problema *</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Problema reportado <span className="text-red-400">*</span></label>
               <textarea
                 name="problema"
-                className={`w-full px-4 py-3 rounded-xl border ${touched.problema && errors.problema ? 'border-error' : 'border-border'} bg-white/80 focus:ring-2 focus:ring-primary-500 outline-none min-h-[80px]`}
-                placeholder="Describe el problema..."
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none resize-none transition-all min-h-[100px] ${touched.problema && errors.problema ? 'border-red-300 bg-red-50 focus:ring-2 focus:ring-red-200' : 'border-gray-200 bg-white focus:ring-2 focus:ring-primary-200 focus:border-primary-300'}`}
+                placeholder="Describe el problema del equipo..."
                 value={form.problema}
                 onChange={handleChange}
                 onBlur={handleBlur}
               />
-              {touched.problema && errors.problema && <span className="text-error text-xs mt-1 animate-fade-in">{errors.problema}</span>}
+              {touched.problema && errors.problema && <span className="text-red-500 text-xs">{errors.problema}</span>}
             </div>
-            <div>
-              <label className="text-sm font-medium text-dark">Observaciones</label>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Observaciones <span className="text-gray-300">(opcional)</span></label>
               <textarea
                 name="observaciones"
-                className="w-full px-4 py-3 rounded-xl border border-border bg-white/80 focus:ring-2 focus:ring-primary-500 outline-none min-h-[60px]"
-                placeholder="Observaciones adicionales..."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-sm outline-none resize-none focus:ring-2 focus:ring-primary-200 focus:border-primary-300 min-h-[100px] transition-all"
+                placeholder="Notas adicionales, acuerdos, etc."
                 value={form.observaciones}
                 onChange={handleChange}
               />
@@ -725,115 +771,163 @@ const CreateOrder = () => {
           </div>
         </div>
 
-        {/* Botón */}
-        <div className="flex gap-4 mt-4">
+        {/* ── Mensajes de estado ── */}
+        {error && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm mb-4">
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm mb-4">
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            {success}
+          </div>
+        )}
+
+        {/* ── Botones ── */}
+        <div className="flex gap-3">
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 py-3 rounded-2xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300 relative overflow-hidden group"
+            className="flex-1 inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-sm font-bold shadow-sm transition-all duration-150 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <span className="relative z-10">{loading ? 'Generando...' : 'Generar Orden'}</span>
-            <span className="absolute inset-0 group-active:scale-110 group-hover:opacity-0 transition-all duration-300 bg-white/10 rounded-2xl" />
+            {loading ? (
+              <>
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" /></svg>
+                Generando...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Generar Orden
+              </>
+            )}
           </button>
           <button
             type="button"
-            className="flex-1 py-3 rounded-2xl bg-muted text-dark font-semibold shadow-soft transition-all hover:bg-border"
+            className="px-6 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all duration-150"
             onClick={() => setForm(initialState)}
           >
-            Cancelar
+            Limpiar
           </button>
         </div>
 
-        {/* Modal de Términos y Condiciones */}
+        {/* ── Modal: Términos y Condiciones ── */}
         {showTerms && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-2 py-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-4 md:p-6 relative animate-fade-in flex flex-col" style={{ maxHeight: '95vh' }}>
-              <h2 className="text-xl font-bold text-primary-600 mb-2">Términos y Condiciones</h2>
-              <div className="flex-1 overflow-y-auto" style={{ minHeight: 0 }}>
-                <p className="text-sm text-gray-700 mb-4">Por favor, lea cuidadosamente antes de firmar</p>
-                <ol className="text-base text-gray-800 mb-4 list-decimal pl-4 space-y-1">
-                  <li>SIEEG no se responsabiliza en caso el equipo presente daños por mal uso de terceros o a nivel software y/o hardware antes de su ingreso a reparación.</li>
-                  <li>El cliente acepta pagar todas las piezas y mano de obra al finalizar la reparación.</li>
-                  <li>La fecha estimada de finalización está sujeta a cambios según la disponibilidad de piezas.</li>
-                  <li>El taller de reparación no es responsable de ninguna pérdida de datos en equipos electrónicos.</li>
-                  <li>Si la reparación requiere trabajos y/o piezas que no se hayan especificado anteriormente, SIEEG indicará un presupuesto actualizado, en caso de no autorizarlo no se realizará ninguna reparación.</li>
-                  <li>SIEEG te notificará una vez que tu producto esté reparado y listo para su entrega, este mismo se almacenará sin coste durante los primeros 10 días hábiles. Después de 10 días, si no se ha retirado el dispositivo, se cobrará los gastos de almacenamiento. El gasto de almacenamiento equivale a $50.00 por día.</li>
-                  <li>Una vez el producto se considere abandonado, SIEEG tomará la propiedad del mismo en compensación de los costos de almacenamiento.</li>
-                  <li>La garantía sobre reparaciones es válida solo en la mano de obra a partir de la fecha de finalización.</li>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-3 py-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden" style={{ maxHeight: '95vh' }}>
+
+              {/* Header del modal */}
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-primary-50 flex items-center justify-center">
+                    <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-gray-900">Términos y Condiciones</h2>
+                    <p className="text-xs text-gray-400">Lea cuidadosamente antes de firmar</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+                  onClick={() => setShowTerms(false)}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+
+              {/* Cuerpo scrolleable */}
+              <div className="flex-1 overflow-y-auto px-6 py-5" style={{ minHeight: 0 }}>
+                <ol className="space-y-2.5 mb-5">
+                  {[
+                    'SIEEG no se responsabiliza en caso el equipo presente daños por mal uso de terceros o a nivel software y/o hardware antes de su ingreso a reparación.',
+                    'El cliente acepta pagar todas las piezas y mano de obra al finalizar la reparación.',
+                    'La fecha estimada de finalización está sujeta a cambios según la disponibilidad de piezas.',
+                    'El taller de reparación no es responsable de ninguna pérdida de datos en equipos electrónicos.',
+                    'Si la reparación requiere trabajos y/o piezas que no se hayan especificado anteriormente, SIEEG indicará un presupuesto actualizado, en caso de no autorizarlo no se realizará ninguna reparación.',
+                    'SIEEG te notificará una vez que tu producto esté reparado y listo para su entrega, este mismo se almacenará sin coste durante los primeros 10 días hábiles. Después de 10 días, si no se ha retirado el dispositivo, se cobrará los gastos de almacenamiento. El gasto de almacenamiento equivale a $50.00 por día.',
+                    'Una vez el producto se considere abandonado, SIEEG tomará la propiedad del mismo en compensación de los costos de almacenamiento.',
+                    'La garantía sobre reparaciones es válida solo en la mano de obra a partir de la fecha de finalización.',
+                  ].map((t, i) => (
+                    <li key={i} className="flex gap-3 text-sm text-gray-700 leading-relaxed">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-100 text-gray-500 text-xs font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
+                      {t}
+                    </li>
+                  ))}
                 </ol>
-                <div className="mb-2">
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Nombre del cliente</label>
+
+                {/* Nombre del cliente (readonly) */}
+                <div className="mb-4">
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Nombre del cliente</label>
                   <input
-                    className="w-full px-3 py-2 rounded-lg border border-border bg-gray-50 text-dark font-medium mb-2"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-700 text-sm font-medium"
                     value={form.nombre}
                     disabled
+                    readOnly
                   />
                 </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Firma digital</label>
-                  <div className="bg-gray-100 rounded-lg border border-primary-200 p-2 flex flex-col items-center">
+
+                {/* Firma digital */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Firma digital del cliente</label>
+                  <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 flex flex-col items-center">
                     <SignaturePadCanvas
                       ref={sigPadRef}
                       width={650}
                       height={220}
-                      style={{ touchAction: 'none', maxWidth: '100%', height: '220px', borderRadius: 14, background: 'white', boxShadow: '0 1px 8px #0001' }}
+                      style={{ touchAction: 'none', maxWidth: '100%', height: '220px', borderRadius: 10, background: 'white', boxShadow: '0 1px 6px #0001' }}
                       onEnd={() => setSignature(sigPadRef.current.isEmpty() ? null : sigPadRef.current.getTrimmedCanvas().toDataURL('image/png'))}
                     />
                     <button
                       type="button"
-                      className="mt-3 px-4 py-1 rounded-lg border border-primary-200 text-primary-600 font-semibold flex items-center gap-1 hover:bg-primary-50 transition text-base"
+                      className="mt-3 px-4 py-1.5 rounded-lg bg-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-300 transition-all"
                       onClick={() => { sigPadRef.current.clear(); setSignature(null); }}
                     >
                       Limpiar firma
                     </button>
-                    <span className="text-xs text-gray-500 mt-2">Usa tu dedo o stylus para firmar. Si te equivocas, puedes limpiar y volver a intentar.</span>
+                    <p className="text-xs text-gray-400 mt-2 text-center">Usa tu dedo o stylus para firmar</p>
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col gap-2 mt-2">
+
+              {/* Footer del modal */}
+              <div className="px-6 py-4 border-t border-gray-100 flex flex-col gap-2 flex-shrink-0">
                 <button
                   type="button"
-                  className="w-full py-3 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300 text-lg"
+                  className="w-full py-3 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-sm font-bold shadow-sm transition-all active:scale-95"
                   onClick={handleAcceptTerms}
                 >
-                  Acepto términos y condiciones
+                  Acepto los términos y condiciones
                 </button>
                 <button
                   type="button"
-                  className="w-full py-2 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 text-base"
+                  className="w-full py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-all"
                   onClick={() => setShowTerms(false)}
-                  aria-label="Cerrar"
                 >
-                  Cerrar
+                  Cancelar
                 </button>
               </div>
-              <button
-                type="button"
-                className="absolute top-2 right-2 text-gray-400 hover:text-primary-500 text-xl md:hidden"
-                onClick={() => setShowTerms(false)}
-                aria-label="Cerrar"
-              >
-                ×
-              </button>
             </div>
           </div>
         )}
-        {error && <div className="text-error text-center text-sm mt-2 animate-fade-in">{error}</div>}
-        {success && <div className="text-success text-center text-sm mt-2 animate-fade-in">{success}</div>}
 
-        {/* Modal de vista previa PDF */}
+        {/* ── Modal: Vista previa PDF ── */}
         {showPdfPreview && pdfUrl && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-6 relative animate-fade-in flex flex-col items-center">
-              <h2 className="text-xl font-bold text-primary-600 mb-2">Vista previa de la orden</h2>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full p-6 flex flex-col items-center gap-4">
+              <h2 className="text-base font-bold text-gray-900">Vista previa de la orden</h2>
               <iframe
                 src={pdfUrl}
                 title="Vista previa PDF"
-                style={{ width: '700px', height: '900px', border: '1px solid #e3f0fd', borderRadius: '12px', background: '#f8fbfd' }}
+                style={{ width: '700px', height: '900px', border: '1px solid #e5e7eb', borderRadius: '12px', background: '#f9fafb' }}
               />
-              <div className="flex gap-4 mt-4">
+              <div className="flex gap-3">
                 <button
-                  className="py-2 px-6 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95"
+                  className="py-2 px-6 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-sm font-bold shadow-sm transition-all active:scale-95"
                   onClick={() => {
                     const iframe = document.createElement('iframe');
                     iframe.style.display = 'none';
@@ -847,7 +941,7 @@ const CreateOrder = () => {
                   Imprimir / Descargar
                 </button>
                 <button
-                  className="py-2 px-6 rounded-xl bg-gray-200 text-gray-700 font-bold shadow hover:bg-gray-300"
+                  className="py-2 px-6 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-all"
                   onClick={() => setShowPdfPreview(false)}
                 >
                   Cerrar

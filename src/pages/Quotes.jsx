@@ -260,6 +260,7 @@ export default function Quotes() {
     observaciones: '',
     precioCosto: '',
     utilidad: '',
+    precioBase: '',
     productSearch: '',
     showSuggestions: false,
     suggestionIndex: -1,
@@ -321,6 +322,7 @@ export default function Quotes() {
       importe: ((parseFloat(prev.cantidad) || 1) * u).toFixed(2),
       precioCosto: p.cost_price !== null && p.cost_price !== undefined ? String(p.cost_price) : '',
       utilidad: '',
+      precioBase: String(u),
     }));
     setShowWooModal(false);
     setWooModalSearch('');
@@ -504,10 +506,31 @@ export default function Quotes() {
 
     // Si cambia precioCosto o utilidad, recalcular precioUnitario (precio neto)
     if (field === 'precioCosto' || field === 'utilidad') {
-      const costo = parseFloat(field === 'precioCosto' ? value : updated.precioCosto);
+      const costoExplicito = parseFloat(field === 'precioCosto' ? value : updated.precioCosto);
       const util = parseFloat(field === 'utilidad' ? value : updated.utilidad);
-      if (!isNaN(costo) && costo > 0 && !isNaN(util)) {
-        const precioNeto = costo * (1 + util / 100);
+
+      // Determinar la base del cálculo:
+      // 1) precioCosto si está capturado
+      // 2) precioBase guardado (precio original antes de aplicar %)
+      // 3) precioUnitario actual (primera vez que se aplica %, se bloquea como base)
+      let base;
+      if (!isNaN(costoExplicito) && costoExplicito > 0) {
+        base = costoExplicito;
+      } else {
+        const baseGuardada = parseFloat(updated.precioBase);
+        if (!isNaN(baseGuardada) && baseGuardada > 0) {
+          base = baseGuardada;
+        } else if (field === 'utilidad') {
+          const precioActual = parseFloat(updated.precioUnitario);
+          if (!isNaN(precioActual) && precioActual > 0) {
+            base = precioActual;
+            updated.precioBase = String(precioActual); // bloquear como base para evitar cascada
+          }
+        }
+      }
+
+      if (base !== undefined && !isNaN(util)) {
+        const precioNeto = base * (1 + util / 100);
         updated.precioUnitario = precioNeto.toFixed(2);
         const c = parseFloat(updated.cantidad) || 0;
         updated.importe = (c * precioNeto).toFixed(2);
@@ -518,6 +541,10 @@ export default function Quotes() {
       const c = parseFloat(field === 'cantidad' ? value : updated.cantidad) || 0;
       const u = parseFloat(field === 'precioUnitario' ? value : updated.precioUnitario) || 0;
       updated.importe = (c * u).toFixed(2);
+      // Si el usuario edita el precio manualmente, actualizar la base para futuros cálculos de %
+      if (field === 'precioUnitario' && !updated.precioCosto) {
+        updated.precioBase = value;
+      }
     }
     setCurrentPartida(updated);
   };
@@ -548,6 +575,7 @@ export default function Quotes() {
       observaciones: product.descripcion || '',
       precioCosto: '',
       utilidad: '',
+      precioBase: String(product.precioBase || ''),
       showSuggestions: false,
       suggestionIndex: -1,
     };
@@ -637,6 +665,7 @@ export default function Quotes() {
       observaciones: '',
       precioCosto: '',
       utilidad: '',
+      precioBase: '',
       productSearch: '',
       showSuggestions: false,
       suggestionIndex: -1,
@@ -656,6 +685,7 @@ export default function Quotes() {
       observaciones: p.observaciones,
       precioCosto: p.precioCosto || '',
       utilidad: p.utilidad !== undefined && p.utilidad !== null && p.utilidad !== '' ? String(p.utilidad) : '',
+      precioBase: '',
       productSearch: p.descripcion,
       showSuggestions: false,
       suggestionIndex: -1,
@@ -680,6 +710,7 @@ export default function Quotes() {
       observaciones: '',
       precioCosto: '',
       utilidad: '',
+      precioBase: '',
       productSearch: '',
       showSuggestions: false,
       suggestionIndex: -1,
@@ -1446,14 +1477,14 @@ export default function Quotes() {
                     }
 
                     if (e.key === 'Enter') {
-                      e.preventDefault();
                       const si = currentPartida.obsSuggestionIndex ?? -1;
                       if (si >= 0 && matches[si]) {
+                        e.preventDefault();
                         handleSelectObservationSuggestion(matches[si]);
-                      } else if (matches.length) {
-                        handleSelectObservationSuggestion(matches[0]);
+                        return;
                       }
-                      return;
+                      // No suggestion selected → allow normal newline, just hide suggestions
+                      setCurrentPartida(prev => ({ ...prev, obsShowSuggestions: false, obsSuggestionIndex: -1 }));
                     }
 
                     if (e.key === 'Escape') {
@@ -1503,7 +1534,7 @@ export default function Quotes() {
                 <button
                   type="button"
                   onClick={addOrUpdatePartida}
-                  className="flex-1 py-2 px-3 rounded-lg bg-gradient-to-tr from-primary-500 to-secondary-500 text-white text-sm font-semibold hover:shadow-lg transition-all"
+                  className="flex-1 py-2 px-3 rounded-lg bg-gradient-to-tr from-primary-800 to-primary-500 text-white text-sm font-semibold hover:shadow-lg transition-all"
                 >
                   {editingIndex !== null ? 'Actualizar' : 'Agregar'}
                 </button>
@@ -1652,7 +1683,7 @@ export default function Quotes() {
           </button>
           <button
             type="submit"
-            className="flex-[2] py-3 rounded-2xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white text-sm font-bold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-300"
+            className="flex-[2] py-3 rounded-2xl bg-gradient-to-tr from-primary-800 to-primary-500 text-white text-sm font-bold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-300"
           >
             {isEditMode ? 'Actualizar cotización' : 'Guardar cotización'}
           </button>

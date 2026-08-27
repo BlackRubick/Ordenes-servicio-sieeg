@@ -3,17 +3,31 @@
 @tailwind utilities;
 
 body {
-	@apply bg-background font-sans text-dark min-h-screen antialiased;
+	@apply font-sans text-dark min-h-screen antialiased;
+	background-color: #F4F7FC;
 }
 
-/* Scrollbar elegante */
+.grid-bg {
+	background-color: #F4F7FC;
+	background-image:
+		linear-gradient(rgba(33, 118, 190, 0.06) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(33, 118, 190, 0.06) 1px, transparent 1px);
+	background-size: 28px 28px;
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
-	width: 8px;
-	background: theme('colors.secondary.500');
+	width: 6px;
+}
+::-webkit-scrollbar-track {
+	background: #EBF4FF;
 }
 ::-webkit-scrollbar-thumb {
-	background: theme('colors.primary.500');
-	border-radius: 8px;
+	background: #2176BE;
+	border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+	background: #1A5FA8;
 }
 
 /* Animación fade-in global */

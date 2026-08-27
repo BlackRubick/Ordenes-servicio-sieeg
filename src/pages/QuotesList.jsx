@@ -90,7 +90,10 @@ export default function QuotesList() {
 
   const filteredQuotes = quotes
     .slice()
-    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    .sort((a, b) => {
+      const diff = new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      return diff !== 0 ? diff : (Number(b.id) - Number(a.id));
+    })
     .filter(quote => {
       const emisor = String(quote?.emisor || '').toLowerCase().trim();
       const matchEmisor = emisorFilter === 'sinar' ? emisor === 'sinar' : emisor === 'sieeg';
@@ -318,29 +321,46 @@ export default function QuotesList() {
     return () => clearTimeout(timer);
   }, [wooSearch, showProductModal, productTab]);
 
+  const statusBadge = (status) => {
+    const map = {
+      'Borrador':  { bg: 'bg-gray-100',   text: 'text-gray-600'  },
+      'Pendiente': { bg: 'bg-yellow-50',  text: 'text-yellow-700' },
+      'Aprobado':  { bg: 'bg-green-50',   text: 'text-green-700' },
+      'Cancelada': { bg: 'bg-red-50',     text: 'text-red-600'   },
+    };
+    return map[status] || { bg: 'bg-gray-100', text: 'text-gray-500' };
+  };
+
   return (
     <DashboardLayout>
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <div>
-          <h2 className="text-2xl font-extrabold text-primary-500">Cotizaciones {emisorFilter === 'sinar' ? 'Persona física' : 'SIEEG'}</h2>
-        </div>
-        <div className="flex flex-wrap gap-3 items-center">
+
+      {/* ── Encabezado ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 tracking-tight">Cotizaciones</h2>
+            <p className="text-sm text-gray-400 mt-0.5">{filteredQuotes.length} resultado{filteredQuotes.length !== 1 ? 's' : ''}</p>
+          </div>
+          {/* Toggle emisor */}
           <button
-            className={`px-5 py-2 rounded-xl font-bold shadow-lg transition-all ${
-              emisorFilter === 'sinar'
-                ? 'bg-gradient-to-tr from-primary-500 to-secondary-500 text-white hover:scale-105'
-                  : 'bg-gradient-to-tr from-orange-400 to-orange-500 text-white hover:scale-105'
-            } active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300`}
             onClick={toggleEmisorFilter}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+              emisorFilter === 'sinar'
+                ? 'bg-primary-50 text-primary-700 border-primary-200 hover:bg-primary-100'
+                : 'bg-secondary-500 text-white border-secondary-600 hover:bg-secondary-600'
+            }`}
           >
+            <span className={`w-1.5 h-1.5 rounded-full ${emisorFilter === 'sinar' ? 'bg-primary-500' : 'bg-white'}`} />
             {emisorFilter === 'sinar' ? 'Persona física' : 'SIEEG'}
           </button>
+        </div>
 
-          {/* Filtro por vendedor */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Filtro vendedor */}
           <select
             value={vendedorFilter}
             onChange={e => setVendedorFilter(e.target.value)}
-            className="px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-200"
+            className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-200"
           >
             <option value="">Todos los vendedores</option>
             <option value="sin_vendedor">Sin vendedor</option>
@@ -351,76 +371,102 @@ export default function QuotesList() {
 
           {isAdmin && (
             <button
-              className="px-4 py-2 rounded-xl bg-purple-50 text-purple-700 font-bold border border-purple-200 hover:bg-purple-100 transition-all"
+              className="px-3 py-2 rounded-xl bg-purple-50 text-purple-700 text-sm font-semibold border border-purple-200 hover:bg-purple-100 transition-all"
               onClick={() => navigate('/admin/reportes/vendedores')}
             >
-              Reportes vendedores
+              Reportes
             </button>
           )}
-          {normalizedRole !== 'cotizador' && (
-            <button
-              className="px-5 py-2 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300"
-              onClick={() => navigate('/admin/quotes/create', { state: { defaultEmisor: emisorFilter } })}
-            >
-              + Nueva cotización
-            </button>
-          )}
+
           {normalizedRole !== 'cotizador' && normalizedRole !== 'ejecutivo de ventas' && (
             <button
-              className="px-5 py-2 rounded-xl border border-secondary-200 bg-white text-secondary-600 font-bold shadow-sm hover:bg-secondary-50 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-secondary-300 transition-all"
+              className="px-3 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all"
               onClick={() => navigate('/admin/products')}
             >
-              Ver productos/servicios
+              Productos
+            </button>
+          )}
+
+          {normalizedRole !== 'cotizador' && (
+            <button
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold shadow-sm transition-all active:scale-95"
+              onClick={() => navigate('/admin/quotes/create', { state: { defaultEmisor: emisorFilter } })}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Nueva cotización
             </button>
           )}
         </div>
       </div>
 
+      {/* ── Modal: nueva partida ── */}
       {showProductModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
-          <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl border border-gray-100 overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-primary-500 to-secondary-500 text-white flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-extrabold">Nueva partida</h3>
-                <p className="text-sm text-white/90">Busca en inventario o captura manualmente.</p>
+          <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col" style={{ maxHeight: '90vh' }}>
+
+            {/* Header modal */}
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-primary-50 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">Nueva partida</h3>
+                  <p className="text-xs text-gray-400">Inventario o captura manual</p>
+                </div>
               </div>
-              <button type="button" onClick={handleCloseProductModal} className="text-white/70 hover:text-white text-2xl font-bold leading-none">×</button>
+              <button type="button" onClick={handleCloseProductModal} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 px-6 pt-4">
+            <div className="flex gap-1.5 px-6 pt-4 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => { setProductTab('woo'); setWooSelected(null); }}
-                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${productTab === 'woo' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${productTab === 'woo' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
               >
                 Inventario
               </button>
               <button
                 type="button"
                 onClick={() => setProductTab('manual')}
-                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${productTab === 'manual' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${productTab === 'manual' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
               >
                 Manual
               </button>
             </div>
 
             {productTab === 'woo' ? (
-              <div className="flex flex-col flex-1 overflow-hidden px-6 pb-6 pt-3">
-                <input
-                  type="text"
-                  autoFocus
-                  value={wooSearch}
-                  onChange={e => { setWooSearch(e.target.value); setWooSelected(null); }}
-                  placeholder="Buscar producto en inventario..."
-                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-200 mb-3"
-                />
+              <div className="flex flex-col flex-1 overflow-hidden px-6 pb-6 pt-3 min-h-0">
+                <div className="relative mb-3">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+                  </svg>
+                  <input
+                    type="text"
+                    autoFocus
+                    value={wooSearch}
+                    onChange={e => { setWooSearch(e.target.value); setWooSelected(null); }}
+                    placeholder="Buscar producto en inventario..."
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
+                  />
+                </div>
                 <div className="flex-1 overflow-y-auto border border-gray-100 rounded-xl min-h-0">
                   {wooLoading ? (
-                    <div className="text-center text-gray-400 py-10 text-sm">Buscando en inventario...</div>
+                    <div className="flex items-center justify-center py-12 text-sm text-gray-400 gap-2">
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>
+                      Buscando en inventario...
+                    </div>
                   ) : wooProducts.length === 0 ? (
-                    <div className="text-center text-gray-400 py-10 text-sm">
-                      {wooSearch.trim() ? 'Sin resultados' : 'Escribe para buscar productos'}
+                    <div className="flex flex-col items-center justify-center py-12 text-gray-400 gap-2">
+                      <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" /></svg>
+                      <span className="text-sm">{wooSearch.trim() ? 'Sin resultados' : 'Escribe para buscar productos'}</span>
                     </div>
                   ) : (
                     <ul className="divide-y divide-gray-100">
@@ -428,15 +474,18 @@ export default function QuotesList() {
                         <li
                           key={p.id}
                           onClick={() => handleWooProductSelect(p)}
-                          className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-primary-50 transition-all"
+                          className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-primary-50 transition-colors"
                         >
-                          {p.image && <img src={p.image} alt={p.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />}
+                          {p.image
+                            ? <img src={p.image} alt={p.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+                            : <div className="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0 flex items-center justify-center text-gray-300">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                              </div>
+                          }
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-semibold text-gray-800 truncate">{p.name}</div>
                             <div className="text-xs text-gray-400">{p.sku ? `SKU: ${p.sku}` : ''} {(p.categories || []).join(', ')}</div>
-                            {p.cost_price && (
-                              <div className="text-xs text-orange-600 font-medium">Costo: ${p.cost_price}</div>
-                            )}
+                            {p.cost_price && <div className="text-xs text-secondary-500 font-medium">Costo: ${p.cost_price}</div>}
                           </div>
                           <div className="text-right flex-shrink-0">
                             <div className="text-sm font-bold text-primary-600">${p.price}</div>
@@ -449,64 +498,66 @@ export default function QuotesList() {
                     </ul>
                   )}
                 </div>
-                <button type="button" onClick={handleCloseProductModal} className="mt-3 w-full px-4 py-2 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all">
+                <button type="button" onClick={handleCloseProductModal} className="mt-3 w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all">
                   Cancelar
                 </button>
               </div>
             ) : (
-              <form className="p-6 space-y-4 overflow-y-auto" onSubmit={handleProductSubmit}>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Descripción</label>
+              <form className="p-6 space-y-4 overflow-y-auto flex-1" onSubmit={handleProductSubmit}>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Descripción</label>
                   <input
                     name="descripcion"
                     value={productForm.descripcion}
                     onChange={handleProductChange}
-                    className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.descripcion) ? 'border-red-400' : 'border-gray-200'}`}
+                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm bg-white outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.descripcion) ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
                     placeholder="Descripción del producto o servicio"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Observaciones</label>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Observaciones</label>
                   <textarea
                     name="observaciones"
                     value={productForm.observaciones}
                     onChange={handleProductChange}
-                    className={`w-full min-h-[80px] px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 resize-y ${productValidationAttempted && isEmpty(productForm.observaciones) ? 'border-red-400' : 'border-gray-200'}`}
+                    className={`w-full min-h-[80px] px-3.5 py-2.5 rounded-xl border text-sm bg-white outline-none focus:ring-2 focus:ring-primary-200 resize-y ${productValidationAttempted && isEmpty(productForm.observaciones) ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
                     placeholder="Observaciones del producto o servicio"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Unidad</label>
-                  <select
-                    name="unidad"
-                    value={productForm.unidad}
-                    onChange={handleProductChange}
-                    className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.unidad) ? 'border-red-400' : 'border-gray-200'}`}
-                  >
-                    <option value="">Selecciona una unidad</option>
-                    {unitOptions.map((unidad) => (
-                      <option key={unidad} value={unidad}>{unidad}</option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Unidad</label>
+                    <select
+                      name="unidad"
+                      value={productForm.unidad}
+                      onChange={handleProductChange}
+                      className={`w-full px-3.5 py-2.5 rounded-xl border text-sm bg-white outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.unidad) ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
+                    >
+                      <option value="">Selecciona unidad</option>
+                      {unitOptions.map((unidad) => (
+                        <option key={unidad} value={unidad}>{unidad}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Precio unitario</label>
+                    <input
+                      name="precioUnitario"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={productForm.precioUnitario}
+                      onChange={handleProductChange}
+                      className={`w-full px-3.5 py-2.5 rounded-xl border text-sm bg-white outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.precioUnitario) ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
+                      placeholder="0.00"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">P. Unitario</label>
-                  <input
-                    name="precioUnitario"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={productForm.precioUnitario}
-                    onChange={handleProductChange}
-                    className={`w-full px-3 py-2 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-primary-200 ${productValidationAttempted && isEmpty(productForm.precioUnitario) ? 'border-red-400' : 'border-gray-200'}`}
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="flex gap-3 pt-2">
-                  <button type="button" className="flex-1 px-4 py-3 rounded-2xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all" onClick={handleCloseProductModal}>
+                <div className="flex gap-3 pt-1">
+                  <button type="button" className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all" onClick={handleCloseProductModal}>
                     Cancelar
                   </button>
-                  <button type="submit" className="flex-[2] px-4 py-3 rounded-2xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white text-sm font-bold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all">
+                  <button type="submit" className="flex-[2] px-4 py-2.5 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-sm font-bold shadow-sm transition-all active:scale-95">
                     Continuar a cotización
                   </button>
                 </div>
@@ -515,155 +566,194 @@ export default function QuotesList() {
           </div>
         </div>
       )}
-      {/* Filtros de búsqueda */}
-      <div className="flex flex-wrap gap-3 mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
-        <div className="flex-1 min-w-[180px]">
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Número de cotización</label>
+
+      {/* ── Filtros de búsqueda ── */}
+      <div className="flex flex-wrap gap-3 mb-5">
+        <div className="relative flex-1 min-w-[160px]">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+          </svg>
           <input
             type="text"
             value={searchNumero}
             onChange={e => setSearchNumero(e.target.value)}
-            placeholder="Buscar por número..."
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
+            placeholder="N.º cotización..."
+            className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
           />
         </div>
-        <div className="flex-1 min-w-[180px]">
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Empresa</label>
+        <div className="relative flex-1 min-w-[160px]">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
           <input
             type="text"
             value={searchEmpresa}
             onChange={e => setSearchEmpresa(e.target.value)}
-            placeholder="Buscar por empresa..."
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
+            placeholder="Empresa..."
+            className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
           />
         </div>
-        <div className="flex-1 min-w-[180px]">
-          <label className="block text-xs font-semibold text-gray-500 mb-1">Cliente</label>
+        <div className="relative flex-1 min-w-[160px]">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
           <input
             type="text"
             value={searchCliente}
             onChange={e => setSearchCliente(e.target.value)}
-            placeholder="Buscar por cliente..."
-            className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
+            placeholder="Cliente..."
+            className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-200"
           />
         </div>
         {(searchNumero || searchEmpresa || searchCliente) && (
-          <div className="flex items-end">
-            <button
-              type="button"
-              onClick={() => { setSearchNumero(''); setSearchEmpresa(''); setSearchCliente(''); }}
-              className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-500 hover:bg-gray-100 transition-all"
-            >
-              Limpiar
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => { setSearchNumero(''); setSearchEmpresa(''); setSearchCliente(''); }}
+            className="px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:bg-gray-100 transition-all"
+          >
+            Limpiar
+          </button>
         )}
       </div>
 
-      {/* Resumen de totales */}
-      <div className="flex flex-wrap gap-4 mb-4">
-        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 shadow-sm">
-          <div className="text-xs text-gray-400 font-semibold">Cotizaciones ({filteredQuotes.length})</div>
-          <div className="text-lg font-extrabold text-primary-600">${totalFiltrado.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</div>
+      {/* ── Totales ── */}
+      <div className="flex flex-wrap gap-3 mb-5">
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm px-4 py-3 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center flex-shrink-0">
+            <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          </div>
+          <div>
+            <div className="text-xs text-gray-400 font-medium">Total cotizado ({filteredQuotes.length})</div>
+            <div className="text-base font-bold text-primary-600">${totalFiltrado.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</div>
+          </div>
         </div>
-        <div className="bg-white rounded-xl border border-green-200 px-4 py-3 shadow-sm">
-          <div className="text-xs text-green-600 font-semibold">Aprobado</div>
-          <div className="text-lg font-extrabold text-green-700">${totalAprobado.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</div>
+        <div className="bg-white rounded-xl border border-green-200 shadow-sm px-4 py-3 flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <div>
+            <div className="text-xs text-green-600 font-medium">Aprobado</div>
+            <div className="text-base font-bold text-green-700">${totalAprobado.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</div>
+          </div>
         </div>
       </div>
 
-      <div className="rounded-2xl bg-gradient-to-tr from-primary-100 to-blue-50 shadow-lg p-1 overflow-x-auto animate-fade-in">
-        <table className="min-w-full text-base border-separate border-spacing-0">
-          <thead>
-            <tr className="text-left text-white font-bold bg-gradient-to-tr from-primary-500 to-secondary-500 rounded-2xl">
-              <th className="py-3 px-4 rounded-tl-2xl">#</th>
-              <th className="py-3 px-4">Número</th>
-              <th className="py-3 px-4">Fecha</th>
-              <th className="py-3 px-4">Empresa</th>
-              <th className="py-3 px-4">Cliente</th>
-              <th className="py-3 px-4">Vendedor</th>
-              <th className="py-3 px-4">Total</th>
-              <th className="py-3 px-4">Vigencia</th>
-              <th className="py-3 px-4">Estado</th>
-              <th className="py-3 px-4 rounded-tr-2xl">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredQuotes.length === 0 && (
-              <tr>
-                <td colSpan={10} className="text-center text-muted py-8 bg-white rounded-b-2xl">
-                  {loading ? 'Cargando cotizaciones...' : (error || `No hay cotizaciones de ${emisorFilter === 'sinar' ? 'Persona física' : 'SIEEG'}.`)}
-                </td>
+      {/* ── Tabla ── */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="bg-gray-900 text-left">
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">#</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Número</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Fecha</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Empresa</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Cliente</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Vendedor</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Total</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Vigencia</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Estado</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Acciones</th>
               </tr>
-            )}
-            {filteredQuotes.map((q, idx) => {
-              const isLast = idx === filteredQuotes.length - 1;
-              return (
-                <tr
-                  key={q.id}
-                  className={`transition-all duration-300 group bg-white shadow-card border-b border-border last:border-0 hover:shadow-xl hover:-translate-y-1 ${isLast ? 'rounded-b-2xl' : ''}`}
-                  style={{ borderRadius: isLast ? '0 0 1rem 1rem' : undefined }}
-                >
-                  <td className="py-4 px-4 font-mono text-primary-600 text-lg font-bold align-middle">{idx + 1}</td>
-                  <td className="py-4 px-4 align-middle">{q.numeroCotizacion}</td>
-                  <td className="py-4 px-4 align-middle">{q.fecha}</td>
-                  <td className="py-4 px-4 align-middle">{q.empresa}</td>
-                  <td className="py-4 px-4 align-middle">{q.cliente}</td>
-                  <td className="py-4 px-4 align-middle text-sm text-gray-600">{q.vendedorNombre || '—'}</td>
-                  <td className="py-4 px-4 align-middle">${Number(q.total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
-                  <td className="py-4 px-4 align-middle">{q.vigencia} días</td>
-                  <td className="py-4 px-4 align-middle">
-                    <select
-                      value={q.status || 'Borrador'}
-                      onChange={(e) => handleStatusChange(q, e.target.value)}
-                      disabled={!isAdmin}
-                      className={`w-full min-w-[170px] px-3 py-2 rounded-xl border border-blue-100 bg-white text-sm font-semibold text-blue-700 focus:outline-none focus:ring-2 focus:ring-primary-200 ${!isAdmin ? 'opacity-60 cursor-not-allowed' : ''}`}
-                    >
-                      {statusOptions.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="py-4 px-4 align-middle">
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        className="px-3 py-1 rounded-xl bg-green-50 text-green-700 font-semibold border border-green-100 hover:bg-green-100 transition-all"
-                        onClick={() => handleDownloadPDF(q)}
-                        title="Descargar PDF"
-                      >
-                         PDF
-                      </button>
-                      <button
-                        className="px-3 py-1 rounded-xl bg-blue-50 text-blue-700 font-semibold border border-blue-100 hover:bg-blue-100 transition-all"
-                        onClick={() => navigate('/admin/quotes/create', { state: { preloadedQuote: q } })}
-                        title="Clonar"
-                      >
-                        Clonar
-                      </button>
-                      <button
-                        className="px-3 py-1 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-semibold shadow-soft hover:from-primary-600 hover:to-blue-400 transition-all"
-                        onClick={() => navigate(`/admin/quotes/${q.id}`)}
-                      >
-                        Ver
-                      </button>
-                      {isAdmin && (
-                        <button
-                          className="px-3 py-1 rounded-xl font-semibold border transition-all bg-red-50 text-red-700 border-red-100 hover:bg-red-100"
-                          onClick={() => handleDeleteQuote(q)}
-                          title="Eliminar"
-                        >
-                          Eliminar
-                        </button>
-                      )}
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filteredQuotes.length === 0 && (
+                <tr>
+                  <td colSpan={10} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-2 text-gray-400">
+                      {loading
+                        ? <><svg className="w-5 h-5 animate-spin text-primary-400" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg><span className="text-sm">Cargando cotizaciones...</span></>
+                        : <><svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg><span className="text-sm font-medium">{error || `No hay cotizaciones de ${emisorFilter === 'sinar' ? 'Persona física' : 'SIEEG'}`}</span></>
+                      }
                     </div>
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              )}
+              {filteredQuotes.map((q, idx) => {
+                const badge = statusBadge(q.status);
+                return (
+                  <tr key={q.id} className="group hover:bg-gray-50 transition-colors duration-150">
+                    <td className="py-3.5 px-4 align-middle">
+                      <span className="text-xs font-mono text-gray-400">{idx + 1}</span>
+                    </td>
+                    <td className="py-3.5 px-4 align-middle">
+                      <span className="font-semibold text-primary-600 text-sm">{q.numeroCotizacion}</span>
+                    </td>
+                    <td className="py-3.5 px-4 align-middle">
+                      <span className="text-gray-600 text-sm">{q.fecha}</span>
+                    </td>
+                    <td className="py-3.5 px-4 align-middle">
+                      <span className="font-semibold text-gray-800 text-sm">{q.empresa}</span>
+                    </td>
+                    <td className="py-3.5 px-4 align-middle">
+                      <span className="text-gray-700 text-sm">{q.cliente}</span>
+                    </td>
+                    <td className="py-3.5 px-4 align-middle">
+                      <span className="text-gray-500 text-sm">{q.vendedorNombre || '—'}</span>
+                    </td>
+                    <td className="py-3.5 px-4 align-middle">
+                      <span className="font-semibold text-gray-800 text-sm">${Number(q.total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                    </td>
+                    <td className="py-3.5 px-4 align-middle">
+                      <span className="text-gray-500 text-sm">{q.vigencia} días</span>
+                    </td>
+                    <td className="py-3.5 px-4 align-middle">
+                      {isAdmin ? (
+                        <select
+                          value={q.status || 'Borrador'}
+                          onChange={(e) => handleStatusChange(q, e.target.value)}
+                          className={`px-2.5 py-1 rounded-full border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-200 ${badge.bg} ${badge.text} border-current`}
+                        >
+                          {statusOptions.map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${badge.bg} ${badge.text}`}>
+                          {q.status || 'Borrador'}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-4 align-middle">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-green-50 text-green-700 hover:bg-green-500 hover:text-white transition-all"
+                          onClick={() => handleDownloadPDF(q)}
+                          title="Descargar PDF"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        </button>
+                        <button
+                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white transition-all"
+                          onClick={() => navigate('/admin/quotes/create', { state: { preloadedQuote: q } })}
+                          title="Clonar"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                        </button>
+                        <button
+                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-500 hover:text-white transition-all"
+                          onClick={() => navigate(`/admin/quotes/${q.id}`)}
+                          title="Ver detalle"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        </button>
+                        {isAdmin && (
+                          <button
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all"
+                            onClick={() => handleDeleteQuote(q)}
+                            title="Eliminar"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M10 4h4a1 1 0 011 1v2H9V5a1 1 0 011-1z" /></svg>
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </DashboardLayout>
   );

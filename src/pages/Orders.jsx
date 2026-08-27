@@ -738,430 +738,531 @@ const generateOrderPdfDoc = async (order) => {
       if (fechaA !== fechaB) return fechaB > fechaA ? 1 : -1;
       const createdA = a.createdAt ? new Date(a.createdAt) : new Date(0);
       const createdB = b.createdAt ? new Date(b.createdAt) : new Date(0);
-      return createdA - createdB;
+      const diff = createdB - createdA;
+      return diff !== 0 ? diff : (Number(b.id) - Number(a.id));
     });
 
   return (
     <DashboardLayout>
-      <div className="mb-6 flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-2xl font-extrabold text-primary-500 tracking-tight">Órdenes de Servicio</h2>
-          <p className="text-sm text-text-secondary">Gestiona todas las reparaciones</p>
+
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900 tracking-tight">Órdenes de Servicio</h2>
+          <p className="text-sm text-gray-400 mt-0.5">{filtered.length} orden{filtered.length !== 1 ? 'es' : ''} encontrada{filtered.length !== 1 ? 's' : ''}</p>
         </div>
-        <div className="flex flex-col md:flex-row md:items-center gap-4 w-full">
+        {(isAdmin || isMostrador) && (
+          <button
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary-500 hover:bg-primary-600 text-white font-semibold shadow-sm transition-all duration-150 text-sm active:scale-95"
+            onClick={() => navigate('/admin/orders/create')}
+            type="button"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Nueva Orden
+          </button>
+        )}
+      </div>
+
+      {/* ── Filtros ── */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-5">
+        <div className="relative flex-1">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+          </svg>
           <input
-            className="flex-1 px-5 py-3 rounded-xl border border-border bg-white shadow-card focus:ring-2 focus:ring-primary/30 outline-none transition-all text-base"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:ring-2 focus:ring-primary-200 focus:border-primary-300 outline-none transition-all"
             placeholder="Buscar por folio, cliente, equipo o marca..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
-          <select
-            className="px-4 py-3 rounded-xl border border-border bg-white shadow-card text-base"
-            value={estado}
-            onChange={e => setEstado(e.target.value)}
-          >
-            <option value="">Todos los estados</option>
-            {Object.entries(ESTADOS)
-              .filter(([key]) => key === key.toLowerCase())
-              .map(([key, val]) => (
-                <option key={key} value={key}>{val.label}</option>
-              ))}
-          </select>
-          {!isTechnician && (
-            <select
-              className="px-4 py-3 rounded-xl border border-border bg-white shadow-card text-base"
-              value={tecnico}
-              onChange={e => setTecnico(e.target.value)}
-            >
-              <option value="">Todos los técnicos</option>
-              {allTechnicians.map(t => (
-                <option key={t.id} value={t.nombre || t.name}>{t.nombre || t.name}</option>
-              ))}
-            </select>
-          )}
-          {(isAdmin || isMostrador) && (
-            <button
-              className="px-6 py-3 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-300"
-              onClick={() => navigate('/admin/orders/create')}
-              type="button"
-            >
-              + Nueva Orden
-            </button>
-          )}
         </div>
+        <select
+          className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:ring-2 focus:ring-primary-200 outline-none"
+          value={estado}
+          onChange={e => setEstado(e.target.value)}
+        >
+          <option value="">Todos los estados</option>
+          {Object.entries(ESTADOS)
+            .filter(([key]) => key === key.toLowerCase())
+            .map(([key, val]) => (
+              <option key={key} value={key}>{val.label}</option>
+            ))}
+        </select>
+        {!isTechnician && (
+          <select
+            className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-gray-700 focus:ring-2 focus:ring-primary-200 outline-none"
+            value={tecnico}
+            onChange={e => setTecnico(e.target.value)}
+          >
+            <option value="">Todos los técnicos</option>
+            {allTechnicians.map(t => (
+              <option key={t.id} value={t.nombre || t.name}>{t.nombre || t.name}</option>
+            ))}
+          </select>
+        )}
       </div>
-      <div className="rounded-2xl bg-gradient-to-tr from-primary-100 to-blue-50 shadow-lg p-1 overflow-x-auto animate-fade-in">
-        <table className="min-w-full text-base border-separate border-spacing-0">
-          <thead>
-            <tr className="text-left text-white font-bold bg-gradient-to-tr from-primary-500 to-secondary-500 rounded-2xl">
-              <th className="py-3 px-4 rounded-tl-2xl">Folio</th>
-              <th className="py-3 px-4">Fecha</th>
-              <th className="py-3 px-4">Cliente</th>
-              <th className="py-3 px-4">Equipo</th>
-              <th className="py-3 px-4">Técnico</th>
-              <th className="py-3 px-4">Estado</th>
-              <th className="py-3 px-4">Total</th>
-              <th className="py-3 px-4 rounded-tr-2xl">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={8} className="text-center text-muted py-8 bg-white rounded-b-2xl">No hay órdenes que coincidan.</td>
+
+      {/* ── Tabla ── */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="bg-gray-900 text-left">
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Folio</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Fecha</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Cliente</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Equipo</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Técnico</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Estado</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Total</th>
+                <th className="py-3 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Acciones</th>
               </tr>
-            )}
-            {filtered.map((o, idx) => {
-              const isLast = idx === filtered.length - 1;
-              return (
-                <tr
-                  key={o.folio}
-                  className={`transition-all duration-300 group bg-white shadow-card border-b border-border last:border-0 hover:shadow-xl hover:-translate-y-1 ${highlightedFolio === o.folio ? 'ring-2 ring-amber-300' : ''} ${isLast ? 'rounded-b-2xl' : ''}`}
-                  style={{ borderRadius: isLast ? '0 0 1rem 1rem' : undefined }}
-                >
-                  <td className="py-4 px-4 font-mono text-primary-600 text-lg font-bold align-middle">{o.folio}</td>
-                  <td className="py-4 px-4 align-middle"><span className="flex items-center gap-2"><svg className="w-5 h-5 text-primary-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>{o.fecha}</span></td>
-                  <td className="py-4 px-4 align-middle"><span className="font-bold text-dark">{o.clientName}</span></td>
-                  <td className="py-4 px-4 align-middle"><span className="font-semibold text-dark lowercase">{[o.marca, o.modelo, o.serie].filter(Boolean).join(' ')}</span></td>
-                  <td className="py-4 px-4 align-middle">
-                    {!isAdmin || ['cancelada', 'eliminada'].includes(o.status || o.estado) ? (
-                      <span className="text-primary-500 font-semibold">{o.tecnico}</span>
-                    ) : (
-                      <select
-                        className="px-3 py-1 rounded-full border font-semibold text-xs shadow-sm bg-white text-primary-500 border-primary-200 focus:outline-none focus:ring-2 focus:ring-primary-200"
-                        value={o.tecnico}
-                        onChange={async e => {
-                          const newTecnico = e.target.value;
-                          // Buscar el id del técnico seleccionado
-                          const selected = allTechnicians.find(t => (t.nombre || t.name) === newTecnico);
-                          if (!selected) return;
-                          setOrders(prev => prev.map((ord) => ord.folio === o.folio ? { ...ord, tecnico: newTecnico } : ord));
-                          try {
-                            await fetch(`/api/orders/${o.folio}/tecnico`, {
-                              method: 'PUT',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ technicianId: selected.id })
-                            });
-                          } catch (err) {
-                            Swal.fire('Error', 'No se pudo actualizar el técnico en el servidor', 'error');
-                          }
-                        }}
-                      >
-                        {allTechnicians.map(t => (
-                          <option key={t.id} value={t.nombre || t.name}>{t.nombre || t.name}</option>
-                        ))}
-                      </select>
-                    )}
-                  </td>
-                  <td className="py-4 px-4 align-middle">
-                    {!isAdmin ? (
-                      getEstado(o.status || o.estado) ? (
-                        <span className={`px-4 py-1 rounded-full border font-semibold text-xs shadow-sm ${getEstado(o.status || o.estado).bg} ${getEstado(o.status || o.estado).text} border-current`}>
-                          {getEstado(o.status || o.estado).label}
-                        </span>
-                      ) : (
-                        <span className="px-4 py-1 rounded-full border font-semibold text-xs shadow-sm bg-gray-200 text-gray-500 border-current">Estado desconocido</span>
-                      )
-                    ) : ['cancelada', 'eliminada'].includes(o.status || o.estado) ?
-                      (getEstado(o.status || o.estado) ? (
-                        <span className={`px-4 py-1 rounded-full border font-semibold text-xs shadow-sm ${getEstado(o.status || o.estado).bg} ${getEstado(o.status || o.estado).text} border-current`}>
-                          {getEstado(o.status || o.estado).label}
-                        </span>
-                      ) : (
-                        <span className="px-4 py-1 rounded-full border font-semibold text-xs shadow-sm bg-gray-200 text-gray-500 border-current">Estado desconocido</span>
-                      ))
-                      : (
-                      <select
-                        className={`px-4 py-1 rounded-full border font-semibold text-xs shadow-sm ${(getEstado(o.status || o.estado)?.bg || 'bg-gray-200')} ${(getEstado(o.status || o.estado)?.text || 'text-gray-500')} border-current focus:outline-none focus:ring-2 focus:ring-primary-200`}
-                        value={o.status || o.estado}
-                        onChange={async e => {
-                          const newEstado = e.target.value;
-                          if (newEstado === 'entregada') {
-                            setEntregaOrderFolio(o.folio);
-                          } else {
-                            // Actualiza en frontend
-                            setOrders(prev => prev.map((ord) => ord.folio === o.folio ? { ...ord, status: newEstado, estado: newEstado } : ord));
-                            // Actualiza en backend
-                            try {
-                              await fetch(`/api/orders/${o.folio}/estado`, {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ estado: newEstado })
-                              });
-                            } catch (err) {
-                              Swal.fire('Error', 'No se pudo guardar el estado en el servidor', 'error');
-                            }
-                          }
-                        }}
-                      >
-                        {Object.entries(ESTADOS)
-                          .filter(([key]) => key === key.toLowerCase())
-                          .filter(([key]) => key !== 'cancelada' && key !== 'eliminada')
-                          .map(([key, val]) => (
-                            <option key={key} value={key}>{val.label}</option>
-                          ))}
-                      </select>
-                    )}
-                  </td>
-                  <td className="py-4 px-4 align-middle font-bold text-dark">{typeof o.resumen?.total === 'number' ? `$${o.resumen.total.toFixed(2)}` : '$0.00'}</td>
-                  <td className="py-4 px-4 align-middle flex gap-2">
-                    <button
-                      className="flex items-center justify-center w-9 h-9 rounded-full bg-primary-100 text-primary-600 hover:bg-primary-500 hover:text-white transition-all shadow-sm"
-                      title={isAdmin || isMostrador ? 'Ver detalle' : 'Ver PDF'}
-                      onClick={() => (isAdmin || isMostrador ? handleOpenOrderDetail(o.folio) : handlePreviewPdf(o))}
-                    >
-                      {/* Eye icon */}
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-2 text-gray-400">
+                      <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                    </button>
-                    <button
-                      className="flex items-center justify-center w-9 h-9 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-500 hover:text-white transition-all shadow-sm"
-                      title="Descargar PDF"
-                      onClick={() => handleDownloadPdf(o)}
-                    >
-                      {/* Download icon */}
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 10l5 5 5-5" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v12" />
-                      </svg>
-                    </button>
-                    <button
-                      className="flex items-center justify-center w-9 h-9 rounded-full bg-green-100 text-green-700 hover:bg-green-500 hover:text-white transition-all shadow-sm"
-                      title="Subir/Tomar imágenes"
-                      onClick={() => openImagesModal(o)}
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 7a2 2 0 012-2h3l1.2-1.4A2 2 0 0110.7 3h2.6a2 2 0 011.5.6L16 5h3a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
-                        <circle cx="12" cy="13" r="4" />
-                      </svg>
-                    </button>
-                    {/* Solo admin puede eliminar/cancelar */}
-                    {isAdmin && (
-                      <>
-                        {(o.status || o.estado) === 'cancelada' ? (
-                          <button className="flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-400 hover:text-white transition-all shadow-sm" title="Eliminar" onClick={() => {
-                            Swal.fire({
-                              title: '¿Estás seguro?',
-                              text: 'Esta acción eliminará la orden de forma permanente.',
-                              icon: 'warning',
-                              showCancelButton: true,
-                              confirmButtonColor: '#d33',
-                              cancelButtonColor: '#3085d6',
-                              confirmButtonText: 'Sí, eliminar',
-                              cancelButtonText: 'Cancelar',
-                            }).then(async (result) => {
-                              if (result.isConfirmed) {
-                                try {
-                                  const res = await fetch(`/api/orders/${o.folio}`, { method: 'DELETE' });
-                                  if (!res.ok) throw new Error('No se pudo eliminar');
-                                  setOrders(prev => prev.filter(ord => ord.folio !== o.folio));
-                                  Swal.fire('Eliminada', 'La orden ha sido eliminada.', 'success');
-                                } catch (err) {
-                                  Swal.fire('Error', 'No se pudo eliminar la orden en el servidor', 'error');
-                                }
-                              }
-                            });
-                          }}>
-                            {/* Trash icon */}
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M10 4h4a1 1 0 011 1v2H9V5a1 1 0 011-1z" />
-                            </svg>
-                          </button>
-                        ) : (o.status || o.estado) === 'eliminada' ? null : (
-                          <button className="flex items-center justify-center w-9 h-9 rounded-full bg-red-100 text-red-600 hover:bg-red-500 hover:text-white transition-all shadow-sm" title="Cancelar" onClick={() => setCancelOrderFolio(o.folio)}>
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                          </button>
-                        )}
-                      </>
-                    )}
+                      <span className="text-sm font-medium">No hay órdenes que coincidan</span>
+                    </div>
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              )}
+              {filtered.map((o) => {
+                const estadoInfo = getEstado(o.status || o.estado);
+                return (
+                  <tr
+                    key={o.folio}
+                    className={`group hover:bg-gray-50 transition-colors duration-150 ${highlightedFolio === o.folio ? 'bg-amber-50 ring-1 ring-inset ring-amber-300' : ''}`}
+                  >
+                    {/* Folio */}
+                    <td className="py-3.5 px-4 align-middle">
+                      <span className="font-mono font-bold text-primary-600 text-sm">{o.folio}</span>
+                    </td>
+
+                    {/* Fecha */}
+                    <td className="py-3.5 px-4 align-middle">
+                      <span className="text-gray-600 text-sm">{o.fecha}</span>
+                    </td>
+
+                    {/* Cliente */}
+                    <td className="py-3.5 px-4 align-middle">
+                      <span className="font-semibold text-gray-800 text-sm">{o.clientName}</span>
+                    </td>
+
+                    {/* Equipo */}
+                    <td className="py-3.5 px-4 align-middle">
+                      <span className="text-gray-600 text-sm lowercase">{[o.marca, o.modelo, o.serie].filter(Boolean).join(' ')}</span>
+                    </td>
+
+                    {/* Técnico */}
+                    <td className="py-3.5 px-4 align-middle">
+                      {!isAdmin || ['cancelada', 'eliminada'].includes(o.status || o.estado) ? (
+                        <span className="text-gray-700 text-sm font-medium">{o.tecnico}</span>
+                      ) : (
+                        <select
+                          className="px-2.5 py-1 rounded-lg border border-gray-200 text-xs font-medium bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                          value={o.tecnico}
+                          onChange={async e => {
+                            const newTecnico = e.target.value;
+                            const selected = allTechnicians.find(t => (t.nombre || t.name) === newTecnico);
+                            if (!selected) return;
+                            setOrders(prev => prev.map((ord) => ord.folio === o.folio ? { ...ord, tecnico: newTecnico } : ord));
+                            try {
+                              await fetch(`/api/orders/${o.folio}/tecnico`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ technicianId: selected.id })
+                              });
+                            } catch (err) {
+                              Swal.fire('Error', 'No se pudo actualizar el técnico en el servidor', 'error');
+                            }
+                          }}
+                        >
+                          {allTechnicians.map(t => (
+                            <option key={t.id} value={t.nombre || t.name}>{t.nombre || t.name}</option>
+                          ))}
+                        </select>
+                      )}
+                    </td>
+
+                    {/* Estado */}
+                    <td className="py-3.5 px-4 align-middle">
+                      {!isAdmin ? (
+                        estadoInfo ? (
+                          <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${estadoInfo.bg} ${estadoInfo.text}`}>
+                            {estadoInfo.label}
+                          </span>
+                        ) : (
+                          <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">Desconocido</span>
+                        )
+                      ) : ['cancelada', 'eliminada'].includes(o.status || o.estado) ? (
+                        estadoInfo ? (
+                          <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${estadoInfo.bg} ${estadoInfo.text}`}>
+                            {estadoInfo.label}
+                          </span>
+                        ) : (
+                          <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500">Desconocido</span>
+                        )
+                      ) : (
+                        <select
+                          className={`px-2.5 py-1 rounded-full border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-200 ${(estadoInfo?.bg || 'bg-gray-100')} ${(estadoInfo?.text || 'text-gray-500')} border-current`}
+                          value={o.status || o.estado}
+                          onChange={async e => {
+                            const newEstado = e.target.value;
+                            if (newEstado === 'entregada') {
+                              setEntregaOrderFolio(o.folio);
+                            } else {
+                              setOrders(prev => prev.map((ord) => ord.folio === o.folio ? { ...ord, status: newEstado, estado: newEstado } : ord));
+                              try {
+                                await fetch(`/api/orders/${o.folio}/estado`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ estado: newEstado })
+                                });
+                              } catch (err) {
+                                Swal.fire('Error', 'No se pudo guardar el estado en el servidor', 'error');
+                              }
+                            }
+                          }}
+                        >
+                          {Object.entries(ESTADOS)
+                            .filter(([key]) => key === key.toLowerCase())
+                            .filter(([key]) => key !== 'cancelada' && key !== 'eliminada')
+                            .map(([key, val]) => (
+                              <option key={key} value={key}>{val.label}</option>
+                            ))}
+                        </select>
+                      )}
+                    </td>
+
+                    {/* Total */}
+                    <td className="py-3.5 px-4 align-middle">
+                      <span className="font-semibold text-gray-800 text-sm">{typeof o.resumen?.total === 'number' ? `$${o.resumen.total.toFixed(2)}` : '$0.00'}</span>
+                    </td>
+
+                    {/* Acciones */}
+                    <td className="py-3.5 px-4 align-middle">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white transition-all"
+                          title={isAdmin || isMostrador ? 'Ver detalle' : 'Ver PDF'}
+                          onClick={() => (isAdmin || isMostrador ? handleOpenOrderDetail(o.folio) : handlePreviewPdf(o))}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </button>
+                        <button
+                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white transition-all"
+                          title="Descargar PDF"
+                          onClick={() => handleDownloadPdf(o)}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 4v12" />
+                          </svg>
+                        </button>
+                        <button
+                          className="w-8 h-8 flex items-center justify-center rounded-lg bg-green-50 text-green-700 hover:bg-green-500 hover:text-white transition-all"
+                          title="Subir/Tomar imágenes"
+                          onClick={() => openImagesModal(o)}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 7a2 2 0 012-2h3l1.2-1.4A2 2 0 0110.7 3h2.6a2 2 0 011.5.6L16 5h3a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                            <circle cx="12" cy="13" r="4" />
+                          </svg>
+                        </button>
+                        {isAdmin && (
+                          <>
+                            {(o.status || o.estado) === 'cancelada' ? (
+                              <button
+                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-400 hover:text-white transition-all"
+                                title="Eliminar"
+                                onClick={() => {
+                                  Swal.fire({
+                                    title: '¿Estás seguro?',
+                                    text: 'Esta acción eliminará la orden de forma permanente.',
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#d33',
+                                    cancelButtonColor: '#3085d6',
+                                    confirmButtonText: 'Sí, eliminar',
+                                    cancelButtonText: 'Cancelar',
+                                  }).then(async (result) => {
+                                    if (result.isConfirmed) {
+                                      try {
+                                        const res = await fetch(`/api/orders/${o.folio}`, { method: 'DELETE' });
+                                        if (!res.ok) throw new Error('No se pudo eliminar');
+                                        setOrders(prev => prev.filter(ord => ord.folio !== o.folio));
+                                        Swal.fire('Eliminada', 'La orden ha sido eliminada.', 'success');
+                                      } catch (err) {
+                                        Swal.fire('Error', 'No se pudo eliminar la orden en el servidor', 'error');
+                                      }
+                                    }
+                                  });
+                                }}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M1 7h22M10 4h4a1 1 0 011 1v2H9V5a1 1 0 011-1z" />
+                                </svg>
+                              </button>
+                            ) : (o.status || o.estado) === 'eliminada' ? null : (
+                              <button
+                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all"
+                                title="Cancelar"
+                                onClick={() => setCancelOrderFolio(o.folio)}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
-      {/* Modal para motivo de cancelación */}
+
+      {/* ── Modal cancelación ── */}
       {cancelOrderFolio !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md flex flex-col gap-4">
-            <h3 className="text-xl font-bold text-red-600">Cancelar orden</h3>
-            <p className="text-sm text-gray-700">Por favor, indica el motivo de la cancelación:</p>
-            <textarea
-              className="w-full min-h-[80px] rounded-xl border border-border p-3 text-base focus:ring-2 focus:ring-red-200 outline-none"
-              value={cancelReason}
-              onChange={e => setCancelReason(e.target.value)}
-              placeholder="Motivo de cancelación..."
-            />
-            <div className="flex gap-2 justify-end">
-              <button className="px-4 py-2 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300" onClick={() => { setCancelOrderFolio(null); setCancelReason(''); }}>Cancelar</button>
-              <button className="px-4 py-2 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700" disabled={!cancelReason.trim()} onClick={async () => {
-                try {
-                  await fetch(`/api/orders/${cancelOrderFolio}/estado`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ estado: 'cancelada' })
-                  });
-                  setOrders(prev => prev.map((ord) => ord.folio === cancelOrderFolio ? { ...ord, status: 'cancelada', estado: 'cancelada', motivoCancelacion: cancelReason } : ord));
-                  setCancelOrderFolio(null);
-                  setCancelReason('');
-                } catch (err) {
-                  Swal.fire('Error', 'No se pudo cancelar la orden en el servidor', 'error');
-                }
-              }}>Confirmar</button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Cancelar orden</h3>
+                <p className="text-xs text-gray-400">Indica el motivo de la cancelación</p>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal para entrega (nombre y firma) */}
-      {entregaOrderFolio !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 touch-none">
-          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-2xl flex flex-col gap-6" style={{ maxWidth: '700px' }}>
-            <h3 className="text-2xl font-bold text-blue-600">Entregar orden</h3>
-            <p className="text-base text-gray-700">Por favor, escribe el nombre de la persona que recibe y firma abajo:</p>
-            <input
-              className="w-full rounded-xl border border-border p-3 text-lg focus:ring-2 focus:ring-blue-200 outline-none"
-              value={recipientName}
-              onChange={e => setRecipientName(e.target.value)}
-              placeholder="Nombre de quien recibe..."
-            />
-            <div>
-              <label className="block text-base font-semibold mb-2 text-blue-600">Firma:</label>
-              <div className="border rounded-xl p-4 bg-gray-50 flex flex-col items-center w-full" style={{ minWidth: 0 }}>
-                {/* SignaturePadCanvas */}
-                <SignaturePadCanvas
-                  ref={signaturePadRef}
-                  width={600}
-                  height={220}
-                  style={{ touchAction: 'none', maxWidth: '100%', height: '220px', borderRadius: 12, background: 'white', boxShadow: '0 1px 8px #0001' }}
-                  onEnd={() => {
-                    const canvas = signaturePadRef.current.getTrimmedCanvas();
-                    setSignatureData(canvas.toDataURL());
+            <div className="px-6 py-5 flex flex-col gap-4">
+              <textarea
+                className="w-full min-h-[90px] rounded-xl border border-gray-200 p-3 text-sm focus:ring-2 focus:ring-red-200 focus:border-red-300 outline-none resize-none"
+                value={cancelReason}
+                onChange={e => setCancelReason(e.target.value)}
+                placeholder="Motivo de cancelación..."
+              />
+              <div className="flex gap-2 justify-end">
+                <button
+                  className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all"
+                  onClick={() => { setCancelOrderFolio(null); setCancelReason(''); }}
+                >
+                  Volver
+                </button>
+                <button
+                  className="px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 disabled:opacity-50 transition-all"
+                  disabled={!cancelReason.trim()}
+                  onClick={async () => {
+                    try {
+                      await fetch(`/api/orders/${cancelOrderFolio}/estado`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ estado: 'cancelada' })
+                      });
+                      setOrders(prev => prev.map((ord) => ord.folio === cancelOrderFolio ? { ...ord, status: 'cancelada', estado: 'cancelada', motivoCancelacion: cancelReason } : ord));
+                      setCancelOrderFolio(null);
+                      setCancelReason('');
+                    } catch (err) {
+                      Swal.fire('Error', 'No se pudo cancelar la orden en el servidor', 'error');
+                    }
                   }}
-                />
-                <button className="mt-4 px-5 py-2 rounded bg-blue-200 text-blue-700 font-semibold text-base" onClick={() => {
-                  signaturePadRef.current.clear();
-                  setSignatureData(null);
-                }}>Limpiar firma</button>
-                <span className="text-xs text-gray-500 mt-2">Usa tu dedo o stylus para firmar. Si te equivocas, puedes limpiar y volver a intentar.</span>
+                >
+                  Confirmar cancelación
+                </button>
               </div>
-            </div>
-            <div className="flex gap-4 justify-end mt-2">
-              <button className="px-5 py-2 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 text-base" onClick={() => {
-                setEntregaOrderFolio(null);
-                setRecipientName('');
-                setSignatureData(null);
-                if (signaturePadRef.current) signaturePadRef.current.clear();
-              }}>Cancelar</button>
-              <button className="px-5 py-2 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 text-base" disabled={!recipientName.trim() || !signatureData} onClick={async () => {
-                try {
-                  const res = await fetch(`/api/orders/${entregaOrderFolio}/estado`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ estado: 'entregada', firma: signatureData, nombreRecibe: recipientName })
-                  });
-                  if (!res.ok) throw new Error('No se pudo registrar la entrega en el servidor');
-                  setOrders(prev => prev.map((ord) => ord.folio === entregaOrderFolio ? { ...ord, status: 'entregada', estado: 'entregada', firma: signatureData, nombreRecibe: recipientName } : ord));
-                  setEntregaOrderFolio(null);
-                  setRecipientName('');
-                  setSignatureData(null);
-                  if (signaturePadRef.current) signaturePadRef.current.clear();
-                } catch (err) {
-                  Swal.fire('Error', 'No se pudo registrar la entrega en el servidor', 'error');
-                }
-              }}>Confirmar entrega</button>
             </div>
           </div>
         </div>
       )}
 
-      {imageOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-2xl mx-4">
-            <h3 className="text-xl font-bold text-green-700 mb-2">Evidencia fotográfica - Orden {imageOrder.folio}</h3>
-            <p className="text-sm text-gray-600 mb-4">Puedes subir o tomar fotos con cámara. Máximo 2 imágenes por orden.</p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-              <label className="px-4 py-3 rounded-xl border border-border bg-gray-50 text-sm font-semibold cursor-pointer hover:bg-gray-100 text-center">
-                Subir desde galería
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleAddImages}
-                  className="hidden"
-                />
-              </label>
-
-              <label className="px-4 py-3 rounded-xl border border-border bg-gray-50 text-sm font-semibold cursor-pointer hover:bg-gray-100 text-center">
-                Tomar foto con cámara
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handleAddImages}
-                  className="hidden"
-                />
-              </label>
-            </div>
-
-            {(existingImages.length > 0 || newImagePreviews.length > 0) && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                {existingImages.map((img, idx) => (
-                  <div key={`old-${idx}`} className="relative group">
-                    <img
-                      src={img}
-                      alt={`Evidencia ${idx + 1}`}
-                      className="w-full h-24 object-cover rounded-lg border"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeExistingImage(idx)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 opacity-0 group-hover:opacity-100"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-                {newImagePreviews.map((preview, idx) => (
-                  <div key={`new-${idx}`} className="relative group">
-                    <img
-                      src={preview}
-                      alt={`Nueva evidencia ${idx + 1}`}
-                      className="w-full h-24 object-cover rounded-lg border border-green-300"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeNewImage(idx)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 opacity-0 group-hover:opacity-100"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+      {/* ── Modal entrega ── */}
+      {entregaOrderFolio !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 touch-none px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full overflow-hidden" style={{ maxWidth: '700px' }}>
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </div>
-            )}
+              <div>
+                <h3 className="text-base font-bold text-gray-900">Entregar orden</h3>
+                <p className="text-xs text-gray-400">Registra quién recibe el equipo</p>
+              </div>
+            </div>
+            <div className="px-6 py-5 flex flex-col gap-5">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nombre de quien recibe</label>
+                <input
+                  className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-300 outline-none"
+                  value={recipientName}
+                  onChange={e => setRecipientName(e.target.value)}
+                  placeholder="Nombre completo..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Firma del cliente</label>
+                <div className="border border-gray-200 rounded-xl bg-gray-50 flex flex-col items-center p-4">
+                  <SignaturePadCanvas
+                    ref={signaturePadRef}
+                    width={600}
+                    height={220}
+                    style={{ touchAction: 'none', maxWidth: '100%', height: '220px', borderRadius: 10, background: 'white', boxShadow: '0 1px 6px #0001' }}
+                    onEnd={() => {
+                      const canvas = signaturePadRef.current.getTrimmedCanvas();
+                      setSignatureData(canvas.toDataURL());
+                    }}
+                  />
+                  <button
+                    className="mt-3 px-4 py-1.5 rounded-lg bg-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-300 transition-all"
+                    onClick={() => { signaturePadRef.current.clear(); setSignatureData(null); }}
+                  >
+                    Limpiar firma
+                  </button>
+                  <p className="text-xs text-gray-400 mt-2 text-center">Usa tu dedo o stylus para firmar</p>
+                </div>
+              </div>
+              <div className="flex gap-2 justify-end pt-1">
+                <button
+                  className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all"
+                  onClick={() => {
+                    setEntregaOrderFolio(null);
+                    setRecipientName('');
+                    setSignatureData(null);
+                    if (signaturePadRef.current) signaturePadRef.current.clear();
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="px-5 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition-all"
+                  disabled={!recipientName.trim() || !signatureData}
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(`/api/orders/${entregaOrderFolio}/estado`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ estado: 'entregada', firma: signatureData, nombreRecibe: recipientName })
+                      });
+                      if (!res.ok) throw new Error('No se pudo registrar la entrega en el servidor');
+                      setOrders(prev => prev.map((ord) => ord.folio === entregaOrderFolio ? { ...ord, status: 'entregada', estado: 'entregada', firma: signatureData, nombreRecibe: recipientName } : ord));
+                      setEntregaOrderFolio(null);
+                      setRecipientName('');
+                      setSignatureData(null);
+                      if (signaturePadRef.current) signaturePadRef.current.clear();
+                    } catch (err) {
+                      Swal.fire('Error', 'No se pudo registrar la entrega en el servidor', 'error');
+                    }
+                  }}
+                >
+                  Confirmar entrega
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={closeImagesModal}
-                className="px-4 py-2 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300"
-                disabled={savingImages}
-              >
-                Cancelar
+      {/* ── Modal imágenes ── */}
+      {imageOrder && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-green-100 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 7a2 2 0 012-2h3l1.2-1.4A2 2 0 0110.7 3h2.6a2 2 0 011.5.6L16 5h3a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900">Evidencia fotográfica</h3>
+                  <p className="text-xs text-gray-400">Orden {imageOrder.folio} · máx. 2 imágenes</p>
+                </div>
+              </div>
+              <button onClick={closeImagesModal} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
-              <button
-                type="button"
-                onClick={handleSaveImages}
-                className="px-4 py-2 rounded-xl bg-green-600 text-white font-bold hover:bg-green-700 disabled:opacity-60"
-                disabled={savingImages}
-              >
-                {savingImages ? 'Guardando...' : 'Guardar imágenes'}
-              </button>
+            </div>
+            <div className="px-6 py-5 flex flex-col gap-4">
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex flex-col items-center gap-2 px-4 py-4 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 text-sm font-medium text-gray-600 cursor-pointer hover:border-green-300 hover:bg-green-50 hover:text-green-700 transition-all">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  Subir desde galería
+                  <input type="file" accept="image/*" multiple onChange={handleAddImages} className="hidden" />
+                </label>
+                <label className="flex flex-col items-center gap-2 px-4 py-4 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 text-sm font-medium text-gray-600 cursor-pointer hover:border-green-300 hover:bg-green-50 hover:text-green-700 transition-all">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 7a2 2 0 012-2h3l1.2-1.4A2 2 0 0110.7 3h2.6a2 2 0 011.5.6L16 5h3a2 2 0 012 2v11a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                  Tomar con cámara
+                  <input type="file" accept="image/*" capture="environment" onChange={handleAddImages} className="hidden" />
+                </label>
+              </div>
+
+              {(existingImages.length > 0 || newImagePreviews.length > 0) && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {existingImages.map((img, idx) => (
+                    <div key={`old-${idx}`} className="relative group">
+                      <img src={img} alt={`Evidencia ${idx + 1}`} className="w-full h-24 object-cover rounded-xl border border-gray-200" />
+                      <button
+                        type="button"
+                        onClick={() => removeExistingImage(idx)}
+                        className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                      >×</button>
+                    </div>
+                  ))}
+                  {newImagePreviews.map((preview, idx) => (
+                    <div key={`new-${idx}`} className="relative group">
+                      <img src={preview} alt={`Nueva ${idx + 1}`} className="w-full h-24 object-cover rounded-xl border-2 border-green-300" />
+                      <button
+                        type="button"
+                        onClick={() => removeNewImage(idx)}
+                        className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-1 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={closeImagesModal}
+                  className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all"
+                  disabled={savingImages}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveImages}
+                  className="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-bold hover:bg-green-700 disabled:opacity-50 transition-all"
+                  disabled={savingImages}
+                >
+                  {savingImages ? 'Guardando...' : 'Guardar imágenes'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

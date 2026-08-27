@@ -234,7 +234,7 @@ export default function ReporteVendedores() {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-6 overflow-x-auto">
             <table className="min-w-full text-sm border-separate border-spacing-0">
               <thead>
-                <tr className="bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold">
+                <tr className="bg-gradient-to-tr from-primary-800 to-primary-500 text-white font-bold">
                   <th className="py-3 px-4 rounded-tl-2xl text-left">Vendedor</th>
                   <th className="py-3 px-4 text-center">Cotizaciones</th>
                   <th className="py-3 px-4 text-right">Total cotizado</th>

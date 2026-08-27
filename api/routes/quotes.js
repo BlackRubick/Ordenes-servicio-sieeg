@@ -54,7 +54,7 @@ const VENDEDOR_INCLUDE = {
 router.get('/', async (req, res) => {
   try {
     const quotes = await Quote.findAll({
-      order: [['createdAt', 'DESC']],
+      order: [['createdAt', 'DESC'], ['id', 'DESC']],
       include: [VENDEDOR_INCLUDE],
     });
     const result = quotes.map(q => {

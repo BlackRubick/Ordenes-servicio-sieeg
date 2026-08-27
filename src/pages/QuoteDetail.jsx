@@ -210,7 +210,7 @@ export default function QuoteDetail() {
           {/* Crear orden desde cotización — solo admin/mostrador */}
           {(isAdmin || normalizedRole === 'mostrador') && (
             <button
-              className="px-4 py-2 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-60"
+              className="px-4 py-2 rounded-xl bg-gradient-to-tr from-primary-800 to-primary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-60"
               onClick={handleCrearOrden}
               disabled={creatingOrder}
               title="Genera una orden de servicio a partir de esta cotización"
@@ -272,7 +272,7 @@ export default function QuoteDetail() {
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm border-separate border-spacing-0">
               <thead>
-                <tr className="bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold">
+                <tr className="bg-gradient-to-tr from-primary-800 to-primary-500 text-white font-bold">
                   <th className="py-2 px-3 rounded-tl-2xl">#</th>
                   <th className="py-2 px-3">Descripción</th>
                   <th className="py-2 px-3">Cantidad</th>

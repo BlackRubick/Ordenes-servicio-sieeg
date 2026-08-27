@@ -229,7 +229,7 @@ export default function ProductsList() {
             ← Volver a cotizaciones
           </button>
           <button
-            className="px-5 py-2 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95"
+            className="px-5 py-2 rounded-xl bg-gradient-to-tr from-primary-800 to-primary-500 text-white font-bold shadow-lg hover:scale-105 active:scale-95"
             onClick={() => {
               resetForm();
               setShowAddModal(true);
@@ -243,7 +243,7 @@ export default function ProductsList() {
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
           <div className="w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-primary-500 to-secondary-500 text-white">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-primary-800 to-primary-500 text-white">
               <h3 className="text-lg font-extrabold">Agregar producto / servicio</h3>
               <p className="text-sm text-white/90">Captura la información para registrar un nuevo producto o servicio.</p>
             </div>
@@ -317,7 +317,7 @@ export default function ProductsList() {
                 </button>
                 <button
                   type="button"
-                  className="flex-1 px-4 py-3 rounded-2xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white text-sm font-bold shadow-lg hover:scale-[1.02] transition-all"
+                  className="flex-1 px-4 py-3 rounded-2xl bg-gradient-to-tr from-primary-800 to-primary-500 text-white text-sm font-bold shadow-lg hover:scale-[1.02] transition-all"
                   onClick={handleAddProduct}
                 >
                   Guardar producto
@@ -331,7 +331,7 @@ export default function ProductsList() {
       {showEditModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
           <div className="w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-primary-500 to-secondary-500 text-white">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-primary-800 to-primary-500 text-white">
               <h3 className="text-lg font-extrabold">Editar producto / servicio</h3>
               <p className="text-sm text-white/90">Actualiza la información del registro.</p>
             </div>
@@ -409,7 +409,7 @@ export default function ProductsList() {
                 </button>
                 <button
                   type="button"
-                  className="flex-1 px-4 py-3 rounded-2xl bg-gradient-to-tr from-primary-500 to-secondary-500 text-white text-sm font-bold shadow-lg hover:scale-[1.02] transition-all"
+                  className="flex-1 px-4 py-3 rounded-2xl bg-gradient-to-tr from-primary-800 to-primary-500 text-white text-sm font-bold shadow-lg hover:scale-[1.02] transition-all"
                   onClick={handleUpdateProduct}
                 >
                   Guardar cambios
@@ -428,7 +428,7 @@ export default function ProductsList() {
         ) : (
           <table className="min-w-full text-base border-separate border-spacing-0">
             <thead>
-              <tr className="text-left text-white font-bold bg-gradient-to-tr from-primary-500 to-secondary-500 rounded-2xl">
+              <tr className="text-left text-white font-bold bg-gradient-to-tr from-primary-800 to-primary-500 rounded-2xl">
                 <th className="py-3 px-4 rounded-tl-2xl">#</th>
                 <th className="py-3 px-4">Nombre</th>
                 <th className="py-3 px-4">Descripción</th>

@@ -507,7 +507,7 @@ function ForeignServicesCreate() {
           <div className="mt-6 rounded-2xl bg-gradient-to-tr from-primary-100 to-blue-50 shadow-lg p-1 overflow-x-auto animate-fade-in">
             <table className="min-w-full text-base border-separate border-spacing-0">
               <thead>
-                <tr className="text-left text-white font-bold bg-gradient-to-tr from-primary-500 to-secondary-500 rounded-2xl">
+                <tr className="text-left text-white font-bold bg-gradient-to-tr from-primary-800 to-primary-500 rounded-2xl">
                   <th className="py-3 px-4 rounded-tl-2xl">Área</th>
                   <th className="py-3 px-4">Limpieza de filtros</th>
                   <th className="py-3 px-4">Limpieza de condensadora</th>

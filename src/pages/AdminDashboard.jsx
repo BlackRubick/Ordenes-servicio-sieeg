@@ -50,15 +50,13 @@ const ICONS = { pendiente: IconClock, revision: IconSearch, reparacion: IconWren
 // ─── Componente: pill de estado ──────────────────────────────────────────────
 const PillEstado = ({ status }) => {
   const key = (status || '').toLowerCase();
-  const cfg = ESTADO_CFG[key] || { soft: '#f1f5f9', txt: '#475569', label: status };
+  const cfg = ESTADO_CFG[key] || { soft: '#f1f5f9', txt: '#475569', accent: '#cbd5e1', label: status };
   return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: '5px',
-      padding: '3px 10px', borderRadius: '20px',
-      fontSize: '11px', fontWeight: 700, letterSpacing: '0.3px',
-      background: cfg.soft, color: cfg.txt,
-    }}>
-      <span style={{ width: 6, height: 6, borderRadius: '50%', background: cfg.accent, display: 'inline-block', flexShrink: 0 }} />
+    <span
+      style={{ background: cfg.soft, color: cfg.txt }}
+      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold"
+    >
+      <span style={{ background: cfg.accent }} className="w-1.5 h-1.5 rounded-full flex-shrink-0" />
       {cfg.label || status}
     </span>
   );
@@ -69,66 +67,36 @@ const StatCard = ({ estado, count }) => {
   const cfg = ESTADO_CFG[estado];
   const Icon = ICONS[estado];
   return (
-    <div style={{
-      background: '#fff',
-      borderRadius: '16px',
-      padding: '20px 18px',
-      border: '1px solid #f0f0f0',
-      borderLeft: `4px solid ${cfg.accent}`,
-      display: 'flex', flexDirection: 'column', gap: '12px',
-      boxShadow: '0 1px 8px rgba(0,0,0,0.04)',
-      transition: 'transform 0.2s, box-shadow 0.2s',
-      cursor: 'pointer',
-    }}
-    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = `0 8px 24px rgba(0,0,0,0.08)`; }}
-    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 8px rgba(0,0,0,0.04)'; }}
+    <div
+      style={{ borderLeft: `4px solid ${cfg.accent}` }}
+      className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-col gap-3 hover:-translate-y-1 hover:shadow-md transition-all duration-200 cursor-pointer"
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
-          {cfg.label}
-        </span>
-        <div style={{ width: 34, height: 34, borderRadius: '10px', background: cfg.soft, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{cfg.label}</span>
+        <div style={{ background: cfg.soft }} className="w-9 h-9 rounded-xl flex items-center justify-center">
           <Icon color={cfg.accent} size={16} />
         </div>
       </div>
-      <div style={{ fontSize: '32px', fontWeight: 800, color: '#0f172a', lineHeight: 1 }}>
-        {count}
-      </div>
+      <div className="text-3xl font-extrabold text-gray-900 leading-none">{count}</div>
     </div>
   );
 };
 
 // ─── Componente: tarjeta hero (ingresos) ────────────────────────────────────
 const HeroCard = ({ label, value, icon: Icon, sub }) => (
-  <div style={{
-    background: 'linear-gradient(135deg, #0052cc 0%, #0078ff 60%, #38bdf8 100%)',
-    borderRadius: '16px',
-    padding: '22px 20px',
-    display: 'flex', flexDirection: 'column', gap: '10px',
-    boxShadow: '0 4px 24px rgba(0,120,255,0.25)',
-    cursor: 'pointer',
-    transition: 'transform 0.2s, box-shadow 0.2s',
-    position: 'relative',
-    overflow: 'hidden',
-  }}
-  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,120,255,0.35)'; }}
-  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,120,255,0.25)'; }}
-  >
-    {/* Círculo decorativo fondo */}
-    <div style={{ position: 'absolute', right: -20, top: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
-    <div style={{ position: 'absolute', right: 20, bottom: -30, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
-      <span style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.75)', letterSpacing: '0.6px', textTransform: 'uppercase' }}>
-        {label}
-      </span>
-      <div style={{ width: 34, height: 34, borderRadius: '10px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+  <div className="relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-primary-800 via-primary-600 to-primary-400 shadow-md hover:-translate-y-1 hover:shadow-xl transition-all duration-200 cursor-pointer flex flex-col gap-2">
+    <div className="absolute -right-5 -top-5 w-24 h-24 rounded-full bg-white/10 pointer-events-none" />
+    <div className="absolute right-5 -bottom-8 w-20 h-20 rounded-full bg-white/5 pointer-events-none" />
+    <div className="relative flex items-center justify-between">
+      <span className="text-xs font-semibold text-white/70 uppercase tracking-wider">{label}</span>
+      <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center">
         <Icon color="#fff" size={16} />
       </div>
     </div>
-    <div style={{ fontSize: '28px', fontWeight: 800, color: '#fff', lineHeight: 1, position: 'relative' }}>
+    <div className="relative text-3xl font-extrabold text-white leading-none">
       ${Number(value).toFixed(2)}
     </div>
-    {sub && <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', position: 'relative' }}>{sub}</div>}
+    {sub && <div className="relative text-xs text-white/60">{sub}</div>}
   </div>
 );
 
@@ -212,154 +180,115 @@ const AdminDashboard = () => {
 
   return (
     <DashboardLayout>
-      <div style={{ background: '#f8fafc', minHeight: '100vh', padding: '0' }}>
 
-        {/* ── Header ── */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginBottom: '28px', paddingBottom: '20px',
-          borderBottom: '1px solid #f0f0f0',
-        }}>
-          <div>
-            <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>
-              Panel de control
-            </h1>
-            <p style={{ fontSize: '13px', color: '#94a3b8', margin: '4px 0 0', fontWeight: 400 }}>
-              Ingeniería SIEEG — Órdenes de servicio
-            </p>
-          </div>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            background: '#0078ff', color: '#fff',
-            padding: '8px 16px', borderRadius: '10px',
-            fontSize: '13px', fontWeight: 600, cursor: 'pointer',
-          }}
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between mb-6 pb-5 border-b border-gray-200">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 tracking-tight">Panel de control</h1>
+          <p className="text-sm text-gray-400 mt-0.5">Ingeniería SIEEG — Órdenes de servicio</p>
+        </div>
+        <button
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-sm font-semibold shadow-sm transition-all active:scale-95"
           onClick={() => navigate('/admin/orders/new')}
-          >
-            <svg width="16" height="16" fill="none" stroke="#fff" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" d="M12 5v14M5 12h14"/></svg>
-            Nueva orden
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+          Nueva orden
+        </button>
+      </div>
+
+      {/* ── Tarjetas hero ── */}
+      <div className="grid grid-cols-2 gap-4 mb-5">
+        <HeroCard label="Ingresos totales (entregadas)" value={ingresos} icon={IconTrend} sub="Suma de órdenes entregadas" />
+        <HeroCard label="Total general (todas)" value={totalGeneral} icon={IconMoney} sub="Incluye todas las órdenes con valor" />
+      </div>
+
+      {/* ── Tarjetas de estados ── */}
+      <div className="grid grid-cols-3 gap-4 mb-5">
+        {ESTADOS.map(estado => (
+          <StatCard key={estado} estado={estado} count={stats[estado]} />
+        ))}
+      </div>
+
+      {/* ── Gráfica + Últimas órdenes ── */}
+      <div className="grid gap-4" style={{ gridTemplateColumns: '1.6fr 1fr' }}>
+
+        {/* Gráfica */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-sm font-bold text-gray-900">Órdenes por estado</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Distribución actual</p>
+            </div>
+            <div className="flex gap-2">
+              <select className="px-3 py-1.5 rounded-xl border border-gray-200 text-xs text-gray-500 bg-white outline-none focus:ring-2 focus:ring-primary-200 cursor-pointer">
+                <option>Este mes</option>
+                <option>Este año</option>
+              </select>
+              <select className="px-3 py-1.5 rounded-xl border border-gray-200 text-xs text-gray-500 bg-white outline-none focus:ring-2 focus:ring-primary-200 cursor-pointer">
+                <option>Todos los técnicos</option>
+              </select>
+            </div>
+          </div>
+          <div className="h-64">
+            <Bar data={chartData} options={chartOptions} />
           </div>
         </div>
 
-        {/* ── Tarjetas hero ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px', marginBottom: '20px' }}>
-          <HeroCard label="Ingresos totales (entregadas)" value={ingresos} icon={IconTrend} sub="Suma de órdenes entregadas" />
-          <HeroCard label="Total general (todas)" value={totalGeneral} icon={IconMoney} sub="Incluye todas las órdenes con valor" />
-        </div>
-
-        {/* ── Tarjetas de estados ── */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '14px',
-          marginBottom: '24px',
-        }}>
-          {ESTADOS.map(estado => (
-            <StatCard key={estado} estado={estado} count={stats[estado]} />
-          ))}
-        </div>
-
-        {/* ── Gráfica + Tabla ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: '16px' }}>
-
-          {/* Gráfica */}
-          <div style={panelStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <div>
-                <h2 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Órdenes por estado</h2>
-                <p style={{ fontSize: '12px', color: '#94a3b8', margin: '3px 0 0' }}>Distribución actual</p>
-              </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <select style={{
-                  padding: '6px 12px', borderRadius: '8px',
-                  border: '1px solid #e2e8f0', fontSize: '12px',
-                  color: '#475569', background: '#f8fafc', outline: 'none', cursor: 'pointer',
-                }}>
-                  <option>Este mes</option>
-                  <option>Este año</option>
-                </select>
-                <select style={{
-                  padding: '6px 12px', borderRadius: '8px',
-                  border: '1px solid #e2e8f0', fontSize: '12px',
-                  color: '#475569', background: '#f8fafc', outline: 'none', cursor: 'pointer',
-                }}>
-                  <option>Todos los técnicos</option>
-                </select>
-              </div>
+        {/* Últimas órdenes */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-sm font-bold text-gray-900">Últimas órdenes</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Las 5 más recientes</p>
             </div>
-            <div style={{ height: '260px' }}>
-              <Bar data={chartData} options={chartOptions} />
-            </div>
+            <button
+              onClick={() => navigate('/admin/orders')}
+              className="text-xs text-primary-600 font-semibold border border-primary-200 rounded-lg px-3 py-1.5 hover:bg-primary-50 transition-all"
+            >
+              Ver todas
+            </button>
           </div>
 
-          {/* Tabla últimas órdenes */}
-          <div style={panelStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <div>
-                <h2 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', margin: 0 }}>Últimas órdenes</h2>
-                <p style={{ fontSize: '12px', color: '#94a3b8', margin: '3px 0 0' }}>Las 5 más recientes</p>
+          <div className="flex flex-col gap-0.5">
+            {ultimas.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-10 text-gray-400 gap-2">
+                <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span className="text-sm">Sin órdenes recientes</span>
               </div>
-              <button
-                onClick={() => navigate('/admin/orders')}
-                style={{
-                  fontSize: '12px', color: '#0078ff', background: 'transparent',
-                  border: '1px solid #bfdbfe', borderRadius: '8px',
-                  padding: '5px 12px', cursor: 'pointer', fontWeight: 600,
-                }}
-              >
-                Ver todas
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {ultimas.length === 0 && (
-                <div style={{ textAlign: 'center', color: '#94a3b8', padding: '32px 0', fontSize: '13px' }}>
-                  Sin órdenes recientes
-                </div>
-              )}
-              {ultimas.map((o, idx) => {
-                const total = getTotalOrden(o);
-                return (
-                  <div
-                    key={o.id || idx}
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '10px 12px', borderRadius: '10px',
-                      transition: 'background 0.15s', cursor: 'pointer',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                    onClick={() => navigate(`/ordenes/${o.folio || o.id}`)}
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', fontFamily: 'monospace' }}>
-                          #{o.folio || o.id}
-                        </span>
-                        <PillEstado status={o.status} />
-                      </div>
-                      <span style={{ fontSize: '12px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {o.clientName || o.cliente || '—'}
-                      </span>
+            )}
+            {ultimas.map((o, idx) => {
+              const total = getTotalOrden(o);
+              return (
+                <div
+                  key={o.id || idx}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => navigate(`/ordenes/${o.folio || o.id}`)}
+                >
+                  <div className="flex flex-col gap-1 flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-gray-900 font-mono">#{o.folio || o.id}</span>
+                      <PillEstado status={o.status} />
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
-                        ${total.toFixed(2)}
-                      </span>
-                      <div style={{
-                        width: 28, height: 28, borderRadius: '8px',
-                        background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <svg width="14" height="14" fill="none" stroke="#0078ff" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" d="M9 18l6-6-6-6"/></svg>
-                      </div>
+                    <span className="text-xs text-gray-500 truncate">{o.clientName || o.cliente || '—'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                    <span className="text-sm font-bold text-gray-900">${total.toFixed(2)}</span>
+                    <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center">
+                      <svg className="w-3.5 h-3.5 text-primary-500" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
+                      </svg>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
-
         </div>
+
       </div>
     </DashboardLayout>
   );

@@ -47,11 +47,6 @@ export async function generateQuotePdfDoc(quote, mode = 'client') {
       fontSize -= 0.5;
     }
 
-    // No truncar con '...': si con el tamaño mínimo sigue habiendo más líneas,
-    // devolver todas las líneas para que el alto de la fila aumente y el texto
-    // quede visible (se evita recortar con puntos suspensivos).
-    // Esto permite que la descripción/observaciones se muestren completas.
-
     return { lines, fontSize };
   };
 
@@ -69,10 +64,6 @@ export async function generateQuotePdfDoc(quote, mode = 'client') {
       if (lines.length <= maxLines) break;
       fontSize -= 0.25;
     }
-
-    // Si con el tamaño mínimo hay más líneas, devolver todas las líneas
-    // para que el alto de la fila aumente y el texto quede visible.
-    // No se añaden puntos suspensivos.
 
     return { lines, fontSize };
   };
@@ -126,11 +117,6 @@ export async function generateQuotePdfDoc(quote, mode = 'client') {
   doc.text(cnLabel, cnX, 76);
   doc.setFont('helvetica', 'bold');
   doc.text(cnValue, cnX + cnLabelW + 10, 76);
-
-  // Removed header separator line (was drawing a thin horizontal line at y=90)
-  // stroke('#bbbbbb');
-  // doc.setLineWidth(0.6);
-  // doc.line(MX, 90, W - MX, 90);
 
   // ══════════════════════════════════════════════════════════
   // GRID DATOS GENERALES
@@ -191,8 +177,7 @@ export async function generateQuotePdfDoc(quote, mode = 'client') {
     gy += rowValueHeight;
   });
 
-  // ── Descripción ───────────────────────────────────────────
-const bodyY = gy + 8;
+  const bodyY = gy + 8;
 
   // ══════════════════════════════════════════════════════════
   // COLUMNAS DE LA TABLA (varía según el modo)
@@ -217,101 +202,137 @@ const bodyY = gy + 8;
   const thH  = 26;
   const rowH = 22;
 
-  // ══════════════════════════════════════════════════════════
-  // ZONA FIJA AL PIE: totales (3×20) + banco (2 líneas) + margen
-  // Esto se dibuja SIEMPRE al fondo, independiente de cuántos productos haya
-  // ══════════════════════════════════════════════════════════
   const tRowH   = 20;
-  const bankH   = 40;  // 2 líneas de texto banco
-  const footerY = H - bankH - tRowH * 3 - 14; // Y donde empiezan los totales
+  const bankH   = 40;
+  const footerY = H - bankH - tRowH * 3 - 14;
 
-  // — Totales —
+  const tLabelCol = TC[3];
+  const tValCol   = TC[4];
+
+  // Totales pre-calculados
   const subtotal = (quote.partidas || []).reduce((s, p) => s + (parseFloat(p.importe) || 0), 0);
   const iva      = subtotal * 0.16;
   const total    = subtotal + iva;
 
-  const tLabelCol = TC[3];
-  const tValCol   = TC[4];
-  let totY = footerY;
+  // ══════════════════════════════════════════════════════════
+  // HELPER: encabezado de tabla en la Y indicada
+  // ══════════════════════════════════════════════════════════
+  const drawTableHeader = (startY) => {
+    TC.forEach(({ x, w }) => {
+      fill(NAVY);
+      doc.setLineWidth(0.3);
+      doc.rect(x, startY, w, thH, 'F');
+    });
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); color(WHITE);
+    TC.forEach(({ label, x, w }) => {
+      const lines = label.split('\n');
+      if (lines.length === 2) {
+        doc.text(lines[0], x + w / 2, startY + 10, { align: 'center' });
+        doc.text(lines[1], x + w / 2, startY + 18, { align: 'center' });
+      } else {
+        doc.text(label, x + w / 2, startY + thH / 2 + 1, { align: 'center' });
+      }
+    });
+    return startY + thH;
+  };
 
-  // Observaciones: caja a la izquierda de los totales
-  const obsX = MX;
-  const obsW = tLabelCol.x - MX;
-  const obsY = footerY;
-  const obsH = tRowH * 3;
-  fill(LIGHT_BOX);
-  doc.setLineWidth(0.3);
-  doc.rect(obsX, obsY, obsW, obsH, 'F');
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(5); color(BLACK);
-  const obsText = quote.observaciones && String(quote.observaciones).trim()
-    ? String(quote.observaciones).trim()
-    : '';
-  if (obsText !== '') {
-    const allObsLines = doc.splitTextToSize(obsText, obsW - 12);
-    const obsLineH = 6.5;
-    const maxLines = Math.max(1, Math.floor((obsH - 10) / obsLineH));
-    const visibleLines = allObsLines.slice(0, maxLines);
-    doc.text(visibleLines, obsX + 6, obsY + 9);
-  }
-
-  [
-    { label: 'SUBTOTAL', value: subtotal },
-    { label: 'IVA',      value: iva      },
-    { label: 'TOTAL',    value: total    },
-  ].forEach(({ label, value }) => {
+  // ══════════════════════════════════════════════════════════
+  // HELPER: pie de página (totales + datos bancarios)
+  // Se dibuja siempre al fondo de la página actual
+  // ══════════════════════════════════════════════════════════
+  const drawFooter = () => {
+    // — Observaciones (caja izquierda de los totales) —
+    const obsX = MX;
+    const obsW = tLabelCol.x - MX;
+    const obsY = footerY;
+    const obsH = tRowH * 3;
     fill(LIGHT_BOX);
     doc.setLineWidth(0.3);
-    doc.rect(tLabelCol.x, totY, tLabelCol.w, tRowH, 'F');
-    doc.rect(tValCol.x,   totY, tValCol.w,   tRowH, 'F');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); color(BLACK);
-    doc.text(label, tLabelCol.x + tLabelCol.w / 2, totY + tRowH / 2 + 3, { align: 'center' });
-    doc.text(
-      '$' + value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-      tValCol.x + tValCol.w / 2, totY + tRowH / 2 + 3, { align: 'center' }
-    );
-    totY += tRowH;
-  });
-
-  // — Datos bancarios —
-  // (Los datos bancarios se renderizan más abajo según el emisor)
-  // Los logos se cargan al inicio del documento para usarlos aquí.
-
-  // ══════════════════════════════════════════════════════════
-  // ENCABEZADO DE TABLA
-  // ══════════════════════════════════════════════════════════
-  TC.forEach(({ x, w }) => {
-    fill(NAVY);
-    doc.setLineWidth(0.3);
-    doc.rect(x, bodyY, w, thH, 'F');
-  });
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); color(WHITE);
-  TC.forEach(({ label, x, w }) => {
-    const lines = label.split('\n');
-    if (lines.length === 2) {
-      doc.text(lines[0], x + w / 2, bodyY + 10, { align: 'center' });
-      doc.text(lines[1], x + w / 2, bodyY + 18, { align: 'center' });
-    } else {
-      doc.text(label, x + w / 2, bodyY + thH / 2 + 1, { align: 'center' });
+    doc.rect(obsX, obsY, obsW, obsH, 'F');
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(5); color(BLACK);
+    const obsText = quote.observaciones && String(quote.observaciones).trim()
+      ? String(quote.observaciones).trim()
+      : '';
+    if (obsText !== '') {
+      const allObsLines = doc.splitTextToSize(obsText, obsW - 12);
+      const obsLineH = 6.5;
+      const maxLines = Math.max(1, Math.floor((obsH - 10) / obsLineH));
+      const visibleLines = allObsLines.slice(0, maxLines);
+      doc.text(visibleLines, obsX + 6, obsY + 9);
     }
-  });
+
+    // — Totales —
+    let totY = footerY;
+    [
+      { label: 'SUBTOTAL', value: subtotal },
+      { label: 'IVA',      value: iva      },
+      { label: 'TOTAL',    value: total    },
+    ].forEach(({ label, value }) => {
+      fill(LIGHT_BOX);
+      doc.setLineWidth(0.3);
+      doc.rect(tLabelCol.x, totY, tLabelCol.w, tRowH, 'F');
+      doc.rect(tValCol.x,   totY, tValCol.w,   tRowH, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); color(BLACK);
+      doc.text(label, tLabelCol.x + tLabelCol.w / 2, totY + tRowH / 2 + 3, { align: 'center' });
+      doc.text(
+        '$' + value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+        tValCol.x + tValCol.w / 2, totY + tRowH / 2 + 3, { align: 'center' }
+      );
+      totY += tRowH;
+    });
+
+    // — Datos bancarios —
+    let bankY = footerY + tRowH * 3 + 14;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    color(NAVY);
+
+    const bankLogoH = 10;
+    const bbvaW     = bbvaLogoBase64    ? bankLogoH * (201 / 60) : 0;
+    const banorteW  = banorteLogoBase64 ? bankLogoH * (417 / 60) : 0;
+
+    if ((quote.razonSocial || '').toUpperCase().includes('SIEEG')) {
+      if (bbvaLogoBase64) {
+        doc.addImage(bbvaLogoBase64, 'PNG', MX, bankY - bankLogoH, bbvaW, bankLogoH);
+      }
+      doc.text('Cta: 0123875156   Clabe: 012100001238751568   Nombre: SIEEG INGENIERIA Y TELECOMUNICACIONES SA DE CV', MX + bbvaW + 5, bankY);
+    } else {
+      const textX = MX + Math.max(banorteW, bbvaW) + 5;
+      if (banorteLogoBase64) {
+        doc.addImage(banorteLogoBase64, 'PNG', MX, bankY - bankLogoH, banorteW, bankLogoH);
+      }
+      doc.text('Cta: 0295855215   Clabe: 072 100 002958552154   Nombre: Sinar Adrián Casanova García', textX, bankY);
+      bankY += 16;
+      if (bbvaLogoBase64) {
+        const bbvaX = MX + (Math.max(banorteW, bbvaW) - bbvaW) / 2;
+        doc.addImage(bbvaLogoBase64, 'PNG', bbvaX, bankY - bankLogoH, bbvaW, bankLogoH);
+      }
+      doc.text('Cta: 0480072338   Clabe: 012 100 004800723387   Nombre: Sinar Adrián Casanova García', textX, bankY);
+    }
+  };
 
   // ══════════════════════════════════════════════════════════
-  // FILAS DE PRODUCTOS — crecen hacia abajo desde el header
-  // Se detienen antes de pisar los totales
-  // Incluyen observaciones debajo de cada producto si existen
+  // ENCABEZADO DE TABLA (página 1)
   // ══════════════════════════════════════════════════════════
-  const partidas    = quote.partidas || [];
-  const tableEndY   = footerY - 6; // límite: no pisar totales
-  let ry = bodyY + thH;
+  let ry = drawTableHeader(bodyY);
 
-  // Pre-calcular el tamaño de fuente mínimo entre todas las descripciones
-  // para que todas las filas usen el mismo tamaño y se vean uniformes
+  // Límite inferior antes del pie de página
+  const tableEndY      = footerY - 6;
+  // Margen superior para páginas de continuación
+  const CONTINUATION_TOP = 30;
+
+  // ══════════════════════════════════════════════════════════
+  // FILAS DE PRODUCTOS — con soporte de paginación
+  // ══════════════════════════════════════════════════════════
+  const partidas = quote.partidas || [];
+
   const globalDescFontSize = partidas.length > 0
     ? Math.min(...partidas.map(p => fitWrappedTextStyled(p.descripcion || '', TC[1].w - 8, 7.5, 6, 3, 'normal').fontSize))
     : 7.5;
 
+  let lastRowY = ry;
+
   partidas.forEach((p, i) => {
-    // Separar descripción y observaciones y calcular la altura total de la celda
     const obsText = p.observaciones && String(p.observaciones).trim() !== '' ? String(p.observaciones) : '';
     const descFit = fitWrappedTextStyled(p.descripcion || '', TC[1].w - 8, globalDescFontSize, globalDescFontSize, 3, 'normal');
     const obsFit  = obsText ? fitWrappedTextStyled(obsText, TC[1].w - 8, 7.2, 6, 2, 'bold') : { lines: [], fontSize: 7.2 };
@@ -319,8 +340,11 @@ const bodyY = gy + 8;
     const lineGap = 9;
     const dynH = Math.max(rowH, combinedLines.length * lineGap + 8);
 
-    // Verificar si cabe (producto con su descripción/observaciones)
-    if (ry + dynH > tableEndY) return;
+    // Si la fila no cabe, agregar nueva página y redibujar encabezado de tabla
+    if (ry + dynH > tableEndY) {
+      doc.addPage();
+      ry = drawTableHeader(CONTINUATION_TOP);
+    }
 
     // ─ Dibujar fila del producto ─
     fill(i % 2 === 0 ? GRAY_ROW : WHITE);
@@ -342,9 +366,7 @@ const bodyY = gy + 8;
 
     TC.forEach(({ key, x, w }) => {
       if (key === 'descripcion') {
-        // Renderizar descripción (normal) con ajuste dinámico de tamaño
         doc.setFont('helvetica', 'normal'); doc.setFontSize(descFit.fontSize); color(BLACK);
-        // Calcular posición inicial para centrar verticalmente el bloque de texto
         const totalLines = descFit.lines.length + obsFit.lines.length;
         const totalTextHeight = totalLines * lineGap;
         let startY = ry + Math.max(8, (dynH - totalTextHeight) / 2 + 6);
@@ -354,7 +376,6 @@ const bodyY = gy + 8;
           doc.text(ln, x + 4, ly, isLast ? { align: 'left' } : { align: 'justify', maxWidth: w - 8 });
           ly += lineGap;
         });
-        // Renderizar observaciones en negrita si existen (también con ajuste dinámico)
         if (obsFit.lines.length) {
           doc.setFont('helvetica', 'bold'); doc.setFontSize(obsFit.fontSize); color(BLACK);
           obsFit.lines.forEach((ln, idx) => {
@@ -362,7 +383,6 @@ const bodyY = gy + 8;
             doc.text(ln, x + 4, ly, isLast ? { align: 'left' } : { align: 'justify', maxWidth: w - 8 });
             ly += lineGap;
           });
-          // restaurar fuente normal para las demás celdas
           doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); color(BLACK);
         }
       } else if (key === 'precioCosto') {
@@ -391,22 +411,22 @@ const bodyY = gy + 8;
       }
     });
 
+    lastRowY = ry + dynH;
     ry += dynH;
   });
 
   // ══════════════════════════════════════════════════════════
-  // OBSERVACIONES EXTRA EN LA MITAD DEL PDF
-  // Se muestran solo cuando el checkbox está activo y hay texto capturado
+  // OBSERVACIONES EXTRA (en la última página, entre filas y pie)
   // ══════════════════════════════════════════════════════════
   const observacionesExtra = String(quote.observacionesExtra || '').trim();
   if (quote.pruebaRendimiento && observacionesExtra) {
     const boxWidth = 480;
-    const boxX = (W - boxWidth) / 2 + 20; // Centrado + 20px hacia la derecha
+    const boxX = (W - boxWidth) / 2 + 20;
     const bodyWidth = boxWidth - 10;
     const wrapped = doc.splitTextToSize(observacionesExtra, bodyWidth);
     const bodyLineH = 7;
     const boxH = (wrapped.length * bodyLineH) + 8;
-    const boxY = Math.max(ry + 20, ry + ((footerY - ry - boxH) / 2));
+    const boxY = Math.max(lastRowY + 20, lastRowY + ((footerY - lastRowY - boxH) / 2));
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6.8);
@@ -415,36 +435,9 @@ const bodyY = gy + 8;
   }
 
   // ══════════════════════════════════════════════════════════
-  // DATOS BANCARIOS SEGÚN EMISOR
+  // PIE DE PÁGINA (totales + datos bancarios) — siempre en la última página
   // ══════════════════════════════════════════════════════════
-  // Asegurar que los datos bancarios queden al final, justo debajo de los totales
-  // añadir un salto extra para que no quede tan pegado a los totales
-  let bankY = footerY + tRowH * 3 + 14;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  color(NAVY);
+  drawFooter();
 
-  const bankLogoH = 10; // altura en pt para los logos de banco
-  const bbvaW     = bbvaLogoBase64    ? bankLogoH * (201 / 60) : 0;
-  const banorteW  = banorteLogoBase64 ? bankLogoH * (417 / 60) : 0;
-
-  if ((quote.razonSocial || '').toUpperCase().includes('SIEEG')) {
-    if (bbvaLogoBase64) {
-      doc.addImage(bbvaLogoBase64, 'PNG', MX, bankY - bankLogoH, bbvaW, bankLogoH);
-    }
-    doc.text('Cta: 0123875156   Clabe: 012100001238751568   Nombre: SIEEG INGENIERIA Y TELECOMUNICACIONES SA DE CV', MX + bbvaW + 5, bankY);
-  } else {
-    const textX = MX + Math.max(banorteW, bbvaW) + 5; // alinear texto de ambos bancos al mismo X
-    if (banorteLogoBase64) {
-      doc.addImage(banorteLogoBase64, 'PNG', MX, bankY - bankLogoH, banorteW, bankLogoH);
-    }
-    doc.text('Cta: 0295855215   Clabe: 072 100 002958552154   Nombre: Sinar Adrián Casanova García', textX, bankY);
-    bankY += 16;
-    if (bbvaLogoBase64) {
-      const bbvaX = MX + (Math.max(banorteW, bbvaW) - bbvaW) / 2; // centrar BBVA respecto al ancho de Banorte
-      doc.addImage(bbvaLogoBase64, 'PNG', bbvaX, bankY - bankLogoH, bbvaW, bankLogoH);
-    }
-    doc.text('Cta: 0480072338   Clabe: 012 100 004800723387   Nombre: Sinar Adrián Casanova García', textX, bankY);
-  }
   return doc;
 }
