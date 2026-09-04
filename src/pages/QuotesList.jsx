@@ -188,7 +188,7 @@ export default function QuotesList() {
     };
 
     setShowProductModal(false);
-    navigate('/admin/quotes/create', { state: { preloadedPartida: normalizedProduct } });
+    navigate('/admin/quotes/create', { state: { preloadedPartida: normalizedProduct, defaultEmisor: emisorFilter } });
   };
 
   const handleDeleteQuote = async (quote) => {

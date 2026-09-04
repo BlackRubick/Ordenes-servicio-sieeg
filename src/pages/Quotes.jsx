@@ -206,8 +206,16 @@ export default function Quotes() {
 
     if (preloadedPartida && !isEditMode) {
       const modalObservaciones = String(preloadedPartida.observaciones || '').trim();
+      const emisorData = defaultEmisorKey ? EMISORES.find(e => e.key === defaultEmisorKey) : null;
       return {
         ...initialData,
+        ...(emisorData ? {
+          emisor: emisorData.key,
+          direccion: emisorData.direccion,
+          razonSocial: emisorData.razonSocial,
+          rfc: emisorData.rfc,
+          repse: emisorData.repse || '',
+        } : {}),
         observaciones: modalObservaciones || initialData.observaciones,
         partidas: [{
           cantidad: preloadedPartida.cantidad !== undefined && preloadedPartida.cantidad !== null ? String(preloadedPartida.cantidad) : '',
@@ -944,7 +952,7 @@ export default function Quotes() {
           {/* Radios de emisor */}
           <div className="mb-4 flex flex-wrap gap-6 items-center">
             <span className="text-sm font-semibold text-gray-700 mr-2">Emisor:</span>
-            {EMISORES.map(e => (
+            {(defaultEmisorKey ? EMISORES.filter(e => e.key === defaultEmisorKey) : EMISORES).map(e => (
               <label key={e.key} className="flex items-center gap-2 cursor-pointer select-none">
                 <input
                   type="radio"
@@ -959,19 +967,21 @@ export default function Quotes() {
                 <span className="text-base font-medium text-gray-700">{e.label}</span>
               </label>
             ))}
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="radio"
-                name="emisor"
-                value=""
-                checked={emisorSelect === ''}
-                onChange={handleEmisorChange}
-                required
-                className="form-radio h-5 w-5 text-primary-500 border-gray-300 focus:ring-primary-400"
-                style={{ accentColor: '#2563eb' }}
-              />
-              <span className="text-base font-medium text-gray-500">Manual</span>
-            </label>
+            {!defaultEmisorKey && (
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="radio"
+                  name="emisor"
+                  value=""
+                  checked={emisorSelect === ''}
+                  onChange={handleEmisorChange}
+                  required
+                  className="form-radio h-5 w-5 text-primary-500 border-gray-300 focus:ring-primary-400"
+                  style={{ accentColor: '#2563eb' }}
+                />
+                <span className="text-base font-medium text-gray-500">Manual</span>
+              </label>
+            )}
             {validationAttempted && !isEditMode && !emisorSelect && (
               <p className="w-full text-xs font-medium text-red-500">Selecciona un emisor antes de guardar.</p>
             )}
