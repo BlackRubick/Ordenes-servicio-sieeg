@@ -173,7 +173,7 @@ export default function QuoteDetail() {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <h2 className="text-2xl font-extrabold text-primary-500">Cotización {quote.numeroCotizacion}</h2>
         <div className="flex flex-wrap gap-2">
-          {isAdmin && (
+          {(isAdmin || normalizedRole === 'mostrador') && (
             <button
               className="px-4 py-2 rounded-xl border border-blue-100 bg-blue-50 text-blue-700 font-bold hover:bg-blue-100 transition-all"
               onClick={() => navigate(`/admin/quotes/${id}/edit`)}

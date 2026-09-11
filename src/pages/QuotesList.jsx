@@ -723,6 +723,15 @@ export default function QuotesList() {
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                         </button>
+                        {(isAdmin || normalizedRole === 'mostrador') && (
+                          <button
+                            className="w-8 h-8 flex items-center justify-center rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-500 hover:text-white transition-all"
+                            onClick={() => navigate(`/admin/quotes/${q.id}/edit`)}
+                            title="Editar"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                          </button>
+                        )}
                         <button
                           className="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white transition-all"
                           onClick={() => navigate('/admin/quotes/create', { state: { preloadedQuote: q } })}

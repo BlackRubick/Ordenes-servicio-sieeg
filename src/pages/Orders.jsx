@@ -59,6 +59,7 @@ const parseImagenes = (imagenes) => {
 };
 
 const ORDERS_NAV_CONTEXT_KEY = 'orders_nav_context';
+const PAGE_SIZE = 20;
 
 const getDashboardScrollContainer = () => document.getElementById('dashboard-scroll-container');
 
@@ -100,6 +101,7 @@ const Orders = () => {
   const [newImagePreviews, setNewImagePreviews] = useState([]);
   const [savingImages, setSavingImages] = useState(false);
   const [highlightedFolio, setHighlightedFolio] = useState(null);
+  const [page, setPage] = useState(1);
   const signaturePadRef = React.useRef();
   const hasRestoredScrollRef = React.useRef(false);
 
@@ -703,6 +705,9 @@ const generateOrderPdfDoc = async (order) => {
     return () => clearTimeout(timer);
   }, [highlightedFolio]);
 
+  // Reset página cuando cambian filtros
+  React.useEffect(() => { setPage(1); }, [search, estado, tecnico]);
+
   // Obtener técnicos únicos (ya no se usa, pero lo dejamos para el filtro por técnico)
   const tecnicos = Array.from(new Set(orders.map(o => o.tecnico)));
 
@@ -742,6 +747,12 @@ const generateOrderPdfDoc = async (order) => {
       return diff !== 0 ? diff : (Number(b.id) - Number(a.id));
     });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const pageStart = filtered.length === 0 ? 0 : (safePage - 1) * PAGE_SIZE + 1;
+  const pageEnd = Math.min(safePage * PAGE_SIZE, filtered.length);
+
   return (
     <DashboardLayout>
 
@@ -749,7 +760,9 @@ const generateOrderPdfDoc = async (order) => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h2 className="text-xl font-bold text-gray-900 tracking-tight">Órdenes de Servicio</h2>
-          <p className="text-sm text-gray-400 mt-0.5">{filtered.length} orden{filtered.length !== 1 ? 'es' : ''} encontrada{filtered.length !== 1 ? 's' : ''}</p>
+          <p className="text-sm text-gray-400 mt-0.5">
+            {filtered.length === 0 ? 'Sin resultados' : `${pageStart}–${pageEnd} de ${filtered.length} orden${filtered.length !== 1 ? 'es' : ''}`}
+          </p>
         </div>
         {(isAdmin || isMostrador) && (
           <button
@@ -833,7 +846,7 @@ const generateOrderPdfDoc = async (order) => {
                   </td>
                 </tr>
               )}
-              {filtered.map((o) => {
+              {paginated.map((o) => {
                 const estadoInfo = getEstado(o.status || o.estado);
                 return (
                   <tr
@@ -1035,6 +1048,43 @@ const generateOrderPdfDoc = async (order) => {
         </div>
       </div>
 
+      {/* ── Paginación ── */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-5">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={safePage === 1}
+            className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
+            .reduce((acc, p, idx, arr) => {
+              if (idx > 0 && p - arr[idx - 1] > 1) acc.push('...');
+              acc.push(p);
+              return acc;
+            }, [])
+            .map((item, idx) =>
+              item === '...'
+                ? <span key={`ellipsis-${idx}`} className="px-1 text-gray-400 text-sm">…</span>
+                : <button
+                    key={item}
+                    onClick={() => setPage(item)}
+                    className={`w-9 h-9 rounded-xl text-sm font-semibold border transition-all ${safePage === item ? 'bg-primary-500 text-white border-primary-500 shadow-sm' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                  >{item}</button>
+            )
+          }
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={safePage === totalPages}
+            className="w-9 h-9 flex items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+          </button>
+        </div>
+      )}
+
       {/* ── Modal cancelación ── */}
       {cancelOrderFolio !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
@@ -1092,9 +1142,10 @@ const generateOrderPdfDoc = async (order) => {
 
       {/* ── Modal entrega ── */}
       {entregaOrderFolio !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 touch-none px-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full overflow-hidden" style={{ maxWidth: '700px' }}>
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 touch-none px-4 pb-4 sm:pb-0">
+          <div className="bg-white rounded-2xl shadow-2xl w-full flex flex-col" style={{ maxWidth: '680px', maxHeight: '92vh' }}>
+            {/* Header fijo */}
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 flex-shrink-0">
               <div className="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
                 <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1105,7 +1156,8 @@ const generateOrderPdfDoc = async (order) => {
                 <p className="text-xs text-gray-400">Registra quién recibe el equipo</p>
               </div>
             </div>
-            <div className="px-6 py-5 flex flex-col gap-5">
+            {/* Contenido con scroll */}
+            <div className="px-6 py-5 flex flex-col gap-5 overflow-y-auto flex-1">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">Nombre de quien recibe</label>
                 <input
@@ -1113,66 +1165,74 @@ const generateOrderPdfDoc = async (order) => {
                   value={recipientName}
                   onChange={e => setRecipientName(e.target.value)}
                   placeholder="Nombre completo..."
+                  autoComplete="off"
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Firma del cliente</label>
-                <div className="border border-gray-200 rounded-xl bg-gray-50 flex flex-col items-center p-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Firma del cliente
+                  {signatureData && <span className="ml-2 text-xs text-green-600 font-normal">✓ Capturada</span>}
+                </label>
+                <div className="border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 flex flex-col items-center p-3">
                   <SignaturePadCanvas
                     ref={signaturePadRef}
-                    width={600}
-                    height={220}
-                    style={{ touchAction: 'none', maxWidth: '100%', height: '220px', borderRadius: 10, background: 'white', boxShadow: '0 1px 6px #0001' }}
+                    width={580}
+                    height={180}
+                    style={{ touchAction: 'none', width: '100%', height: '180px', borderRadius: 8, background: 'white', boxShadow: '0 1px 4px #0001', display: 'block' }}
                     onEnd={() => {
                       const canvas = signaturePadRef.current.getTrimmedCanvas();
                       setSignatureData(canvas.toDataURL());
                     }}
                   />
                   <button
-                    className="mt-3 px-4 py-1.5 rounded-lg bg-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-300 transition-all"
+                    type="button"
+                    className="mt-2 px-4 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-xs font-medium hover:bg-gray-200 transition-all"
                     onClick={() => { signaturePadRef.current.clear(); setSignatureData(null); }}
                   >
                     Limpiar firma
                   </button>
-                  <p className="text-xs text-gray-400 mt-2 text-center">Usa tu dedo o stylus para firmar</p>
+                  <p className="text-xs text-gray-400 mt-1 text-center">Dibuja la firma con el dedo o con el mouse</p>
                 </div>
               </div>
-              <div className="flex gap-2 justify-end pt-1">
-                <button
-                  className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all"
-                  onClick={() => {
+            </div>
+            {/* Botones fijos abajo */}
+            <div className="px-6 py-4 border-t border-gray-100 flex gap-2 justify-end flex-shrink-0">
+              <button
+                type="button"
+                className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-all"
+                onClick={() => {
+                  setEntregaOrderFolio(null);
+                  setRecipientName('');
+                  setSignatureData(null);
+                  if (signaturePadRef.current) signaturePadRef.current.clear();
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="px-5 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition-all"
+                disabled={!recipientName.trim() || !signatureData}
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`/api/orders/${entregaOrderFolio}/estado`, {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ estado: 'entregada', firma: signatureData, nombreRecibe: recipientName })
+                    });
+                    if (!res.ok) throw new Error('No se pudo registrar la entrega en el servidor');
+                    setOrders(prev => prev.map((ord) => ord.folio === entregaOrderFolio ? { ...ord, status: 'entregada', estado: 'entregada', firma: signatureData, nombreRecibe: recipientName } : ord));
                     setEntregaOrderFolio(null);
                     setRecipientName('');
                     setSignatureData(null);
                     if (signaturePadRef.current) signaturePadRef.current.clear();
-                  }}
-                >
-                  Cancelar
-                </button>
-                <button
-                  className="px-5 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 disabled:opacity-50 transition-all"
-                  disabled={!recipientName.trim() || !signatureData}
-                  onClick={async () => {
-                    try {
-                      const res = await fetch(`/api/orders/${entregaOrderFolio}/estado`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ estado: 'entregada', firma: signatureData, nombreRecibe: recipientName })
-                      });
-                      if (!res.ok) throw new Error('No se pudo registrar la entrega en el servidor');
-                      setOrders(prev => prev.map((ord) => ord.folio === entregaOrderFolio ? { ...ord, status: 'entregada', estado: 'entregada', firma: signatureData, nombreRecibe: recipientName } : ord));
-                      setEntregaOrderFolio(null);
-                      setRecipientName('');
-                      setSignatureData(null);
-                      if (signaturePadRef.current) signaturePadRef.current.clear();
-                    } catch (err) {
-                      Swal.fire('Error', 'No se pudo registrar la entrega en el servidor', 'error');
-                    }
-                  }}
-                >
-                  Confirmar entrega
-                </button>
-              </div>
+                  } catch (err) {
+                    Swal.fire('Error', 'No se pudo registrar la entrega en el servidor', 'error');
+                  }
+                }}
+              >
+                Confirmar entrega
+              </button>
             </div>
           </div>
         </div>
