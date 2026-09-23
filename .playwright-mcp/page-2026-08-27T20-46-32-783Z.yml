@@ -1,0 +1,17 @@
+- generic [ref=f2e4]:
+  - generic [ref=f2e5]:
+    - img "Ingeniería SIEEG" [ref=f2e6]
+    - generic [ref=f2e7]: Órdenes de Servicio
+  - generic [ref=f2e9]:
+    - generic [ref=f2e19]: Error de conexión
+    - generic [ref=f2e10]:
+      - generic [ref=f2e11]: Correo electrónico
+      - textbox "Correo electrónico" [ref=f2e13]:
+        - /placeholder: usuario@correo.com
+        - text: blackrubick14@gmail.com
+    - generic [ref=f2e14]:
+      - generic [ref=f2e15]: Contraseña
+      - textbox "Contraseña" [ref=f2e17]:
+        - /placeholder: ••••••••
+        - text: Cuco2024**
+    - button "Entrar" [active] [ref=f2e18] [cursor=pointer]

@@ -1,0 +1,14 @@
+- generic [ref=f4e4]:
+  - generic [ref=f4e5]:
+    - img "Ingeniería SIEEG" [ref=f4e6]
+    - generic [ref=f4e7]: Órdenes de Servicio
+  - generic [ref=f4e9]:
+    - generic [ref=f4e10]:
+      - generic [ref=f4e11]: Correo electrónico
+      - textbox "Correo electrónico" [ref=f4e13]:
+        - /placeholder: usuario@correo.com
+    - generic [ref=f4e14]:
+      - generic [ref=f4e15]: Contraseña
+      - textbox "Contraseña" [ref=f4e17]:
+        - /placeholder: ••••••••
+    - button "Entrar" [ref=f4e18] [cursor=pointer]
