@@ -189,7 +189,9 @@ export default function Quotes() {
   const isEditMode = Boolean(id);
   const preloadedPartida = location.state?.preloadedPartida;
   const preloadedQuote = location.state?.preloadedQuote;
-  const defaultEmisorKey = !isEditMode ? (location.state?.defaultEmisor || '') : '';
+  const defaultEmisorKey = !isEditMode
+    ? (location.state?.defaultEmisor || String(preloadedQuote?.emisor || '').toLowerCase().trim())
+    : '';
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
   const [form, setForm] = useState(() => {
@@ -198,6 +200,7 @@ export default function Quotes() {
       const today = new Date().toISOString().slice(0, 10);
       return {
         ...base,
+        emisor: defaultEmisorKey,
         numeroCotizacion: '',
         fecha: today,
         status: 'Borrador',
@@ -246,7 +249,7 @@ export default function Quotes() {
   });
   const [loadingQuote, setLoadingQuote] = useState(isEditMode);
   const [emisorSelect, setEmisorSelect] = useState(() => {
-    if (preloadedQuote && !isEditMode) return preloadedQuote.emisor || '';
+    if (preloadedQuote && !isEditMode) return defaultEmisorKey;
     if (defaultEmisorKey) return defaultEmisorKey;
     return '';
   });
@@ -276,8 +279,9 @@ export default function Quotes() {
     obsSuggestionIndex: -1,
   });
   const [editingIndex, setEditingIndex] = useState(null);
-  const [showOtroInput, setShowOtroInput] = useState(false);
-  const [otroText, setOtroText] = useState('');
+  const clonedOtro = preloadedQuote && !isEditMode ? String(preloadedQuote.otro || '') : '';
+  const [showOtroInput, setShowOtroInput] = useState(clonedOtro.trim() !== '');
+  const [otroText, setOtroText] = useState(clonedOtro);
 
   const { role } = useAuthStore();
   const normalizedRole = String(role || '')
