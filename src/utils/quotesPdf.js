@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { computeQuoteTotals } from './quoteTotals';
 
 // mode: 'client' (default, oculta precioCosto) | 'internal' (muestra columna COSTO)
 export async function generateQuotePdfDoc(quote, mode = 'client') {
@@ -210,9 +211,7 @@ export async function generateQuotePdfDoc(quote, mode = 'client') {
   const tValCol   = TC[4];
 
   // Totales pre-calculados
-  const subtotal = (quote.partidas || []).reduce((s, p) => s + (parseFloat(p.importe) || 0), 0);
-  const iva      = subtotal * 0.16;
-  const total    = subtotal + iva;
+  const { subtotal, iva, total } = computeQuoteTotals(quote.partidas);
 
   // ══════════════════════════════════════════════════════════
   // HELPER: encabezado de tabla en la Y indicada

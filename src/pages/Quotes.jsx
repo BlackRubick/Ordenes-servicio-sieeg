@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { generateQuotePdfDoc } from '../utils/quotesPdf';
+import { computeQuoteTotals } from '../utils/quoteTotals';
 import Swal from 'sweetalert2';
 import { useAuthStore } from '../store/authStore';
 
@@ -735,9 +736,7 @@ export default function Quotes() {
     setForm({ ...form, partidas: form.partidas.filter((_, i) => i !== idx) });
   };
 
-  const subtotal = form.partidas.reduce((sum, p) => sum + (parseFloat(p.importe) || 0), 0);
-  const iva = subtotal * 0.16;
-  const total = subtotal + iva;
+  const { subtotal, iva, total } = computeQuoteTotals(form.partidas);
 
   useEffect(() => {
     if (!isEditMode) return;

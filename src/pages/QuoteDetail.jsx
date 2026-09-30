@@ -4,6 +4,7 @@ import { generateQuotePdfDoc } from '../utils/quotesPdf';
 import { useParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
+import { computeQuoteTotals } from '../utils/quoteTotals';
 
 export default function QuoteDetail() {
   const { id } = useParams();
@@ -315,8 +316,8 @@ export default function QuoteDetail() {
                             : '—'}
                         </td>
                       )}
-                      <td className="py-2 px-3">${pu.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
-                      <td className="py-2 px-3">${Number(p.importe || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                      <td className="py-2 px-3">${pu.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      <td className="py-2 px-3">${Number(p.importe || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     </tr>
                   );
                 })}
@@ -327,27 +328,27 @@ export default function QuoteDetail() {
 
         <div className="flex flex-col items-end gap-1 mt-6">
           {(() => {
-            const subtotal = Number(quote.total || 0);
-            const iva = subtotal * 0.16;
-            const totalConIva = subtotal + iva;
+            const { subtotal, iva, total: totalConIva } = partidas.length > 0
+              ? computeQuoteTotals(partidas)
+              : computeQuoteTotals([{ importe: quote.total || 0 }]);
             return (
               <>
                 <div className="flex items-baseline gap-3">
                   <span className="text-sm text-gray-500">Subtotal:</span>
                   <span className="text-base font-semibold text-gray-700 w-36 text-right">
-                    ${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    ${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div className="flex items-baseline gap-3">
                   <span className="text-sm text-gray-500">IVA 16%:</span>
                   <span className="text-base font-semibold text-gray-700 w-36 text-right">
-                    ${iva.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    ${iva.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div className="flex items-baseline gap-3 border-t border-gray-200 pt-1 mt-1">
                   <span className="text-lg font-bold text-gray-700">Total:</span>
                   <span className="text-2xl font-extrabold text-primary-600 w-36 text-right">
-                    ${totalConIva.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    ${totalConIva.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               </>
