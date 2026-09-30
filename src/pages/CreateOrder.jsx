@@ -62,9 +62,7 @@ const CreateOrder = () => {
     } else if (!/^[A-Za-zÁÉÍÓÚáéíóúÑñ ]+$/.test(form.nombre)) {
       errors.nombre = 'Solo letras y espacios';
     }
-    if (!form.correo) {
-      errors.correo = 'El correo es obligatorio';
-    } else if (!/^([a-zA-Z0-9_\-.+]+)@([a-zA-Z0-9\-.]+)\.([a-zA-Z]{2,})$/.test(form.correo)) {
+    if (form.correo && !/^([a-zA-Z0-9_\-.+]+)@([a-zA-Z0-9\-.]+)\.([a-zA-Z]{2,})$/.test(form.correo)) {
       errors.correo = 'Correo inválido';
     }
     if (!form.tipo) errors.tipo = 'El tipo de equipo es obligatorio';
@@ -547,7 +545,7 @@ const CreateOrder = () => {
               {touched.telefono && errors.telefono && <span className="text-red-500 text-xs">{errors.telefono}</span>}
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Correo <span className="text-red-400">*</span></label>
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Correo</label>
               <input
                 name="correo"
                 type="email"
