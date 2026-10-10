@@ -1464,10 +1464,14 @@ export default function Quotes() {
                   onKeyDown={(e) => {
                     const q = String(currentPartida.observaciones || '').trim().toLowerCase();
                     const matches = observationCatalog.filter(text => text.toLowerCase().includes(q)).slice(0, 6);
+                    const showingSuggestions = q.length > 0 && currentPartida.obsShowSuggestions !== false && matches.length > 0;
+                    const selectedIndex = currentPartida.obsSuggestionIndex ?? -1;
+                    // Solo saltar a las sugerencias con ↓ si el cursor está en la última línea del texto
+                    const caretOnLastLine = !e.target.value.slice(e.target.selectionEnd).includes('\n');
 
-                    if (e.key === 'ArrowDown') {
+                    if (e.key === 'ArrowDown' && showingSuggestions && (selectedIndex >= 0 || caretOnLastLine)) {
                       e.preventDefault();
-                      const current = currentPartida.obsSuggestionIndex ?? -1;
+                      const current = selectedIndex;
                       const next = Math.min(current + 1, Math.max(matches.length - 1, 0));
                       setCurrentPartida(prev => ({ ...prev, obsSuggestionIndex: next, obsShowSuggestions: true }));
                       setTimeout(() => {
@@ -1477,11 +1481,12 @@ export default function Quotes() {
                       return;
                     }
 
-                    if (e.key === 'ArrowUp') {
+                    if (e.key === 'ArrowUp' && showingSuggestions && selectedIndex >= 0) {
                       e.preventDefault();
-                      const current = currentPartida.obsSuggestionIndex ?? 0;
-                      const prevIndex = Math.max(current - 1, 0);
+                      // Desde la primera sugerencia, ↑ regresa al texto
+                      const prevIndex = selectedIndex - 1;
                       setCurrentPartida(prev => ({ ...prev, obsSuggestionIndex: prevIndex, obsShowSuggestions: true }));
+                      if (prevIndex < 0) return;
                       setTimeout(() => {
                         const el = document.getElementById(`obs-sugg-${prevIndex}`);
                         if (el) el.scrollIntoView({ block: 'nearest' });
