@@ -422,14 +422,15 @@ export async function generateQuotePdfDoc(quote, mode = 'client') {
     const boxWidth = 480;
     const boxX = (W - boxWidth) / 2 + 20;
     const bodyWidth = boxWidth - 10;
+    // La fuente debe fijarse antes de partir el texto, si no se mide con el tamaño anterior y se desborda
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.8);
+    color(BLACK);
     const wrapped = doc.splitTextToSize(observacionesExtra, bodyWidth);
     const bodyLineH = 7;
     const boxH = (wrapped.length * bodyLineH) + 8;
     const boxY = Math.max(lastRowY + 20, lastRowY + ((footerY - lastRowY - boxH) / 2));
 
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(6.8);
-    color(BLACK);
     doc.text(wrapped, boxX + 5, boxY + 14);
   }
 
