@@ -33,8 +33,8 @@ UNA VEZ REALIZADO EL PAGO SE PROCEDE A LIBERAR O AGENDAR EL SERVICIO`,
 };
 
 const SectionCard = ({ icon, title, subtitle, iconClass, children }) => (
-  <div className="bg-white rounded-2xl shadow-card mb-4 overflow-hidden border border-gray-100">
-    <div className="flex items-center gap-3 px-5 py-3 bg-gray-50 border-b border-gray-100">
+  <div className="bg-white rounded-2xl shadow-card mb-4 border border-gray-100">
+    <div className="flex items-center gap-3 px-5 py-3 bg-gray-50 rounded-t-2xl border-b border-gray-100">
       <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm ${iconClass}`}>
         {icon}
       </div>
