@@ -68,7 +68,13 @@ export default function QuotesList() {
   const [wooProducts, setWooProducts] = useState([]);
   const [wooLoading, setWooLoading] = useState(false);
   const [wooSelected, setWooSelected] = useState(null);
-  const [emisorFilter, setEmisorFilter] = useState('sinar');
+  const [emisorFilter, setEmisorFilter] = useState(() => {
+    try {
+      return sessionStorage.getItem('quotesEmisorFilter') === 'sieeg' ? 'sieeg' : 'sinar';
+    } catch {
+      return 'sinar';
+    }
+  });
   const [vendedorFilter, setVendedorFilter] = useState('');
   const [searchCliente, setSearchCliente] = useState('');
   const [searchEmpresa, setSearchEmpresa] = useState('');
@@ -80,6 +86,14 @@ export default function QuotesList() {
   const isEjecutivo = normalizedRole === 'ejecutivo de ventas';
 
   const isEmpty = (value) => String(value ?? '').trim() === '';
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('quotesEmisorFilter', emisorFilter);
+    } catch {
+      // sin almacenamiento disponible, el filtro solo vive en memoria
+    }
+  }, [emisorFilter]);
 
   const toggleEmisorFilter = () => {
     setEmisorFilter(prev => {
