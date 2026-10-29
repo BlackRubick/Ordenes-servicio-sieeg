@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import Swal from 'sweetalert2';
 import { generateQuotePdfDoc } from '../utils/quotesPdf';
+import { computeQuoteTotals, round2 } from '../utils/quoteTotals';
 
 const statusOptions = ['Borrador', 'Pendiente', 'Aprobado', 'Cancelada'];
 
@@ -48,6 +49,14 @@ const unitOptions = [
   'Caja grande',
   'Unidad',
 ];
+
+// q.total guarda el subtotal; el total con IVA se calcula igual que en el detalle
+const quoteTotalConIva = (q) => {
+  const partidas = Array.isArray(q?.partidas) ? q.partidas : [];
+  return (partidas.length > 0
+    ? computeQuoteTotals(partidas)
+    : computeQuoteTotals([{ importe: q?.total || 0 }])).total;
+};
 
 const initialProductForm = {
   descripcion: '',
@@ -135,10 +144,10 @@ export default function QuotesList() {
   );
 
   // Totales del filtro actual
-  const totalFiltrado = filteredQuotes.reduce((s, q) => s + (Number(q.total) || 0), 0);
-  const totalAprobado = filteredQuotes
+  const totalFiltrado = round2(filteredQuotes.reduce((s, q) => s + quoteTotalConIva(q), 0));
+  const totalAprobado = round2(filteredQuotes
     .filter(q => q.status === 'Aprobado')
-    .reduce((s, q) => s + (Number(q.total) || 0), 0);
+    .reduce((s, q) => s + quoteTotalConIva(q), 0));
 
   const handleOpenProductModal = () => {
     setProductForm(initialProductForm);
@@ -706,7 +715,7 @@ export default function QuotesList() {
                       <span className="text-gray-500 text-sm">{q.vendedorNombre || '—'}</span>
                     </td>
                     <td className="py-3.5 px-4 align-middle">
-                      <span className="font-semibold text-gray-800 text-sm">${Number(q.total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                      <span className="font-semibold text-gray-800 text-sm">${quoteTotalConIva(q).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </td>
                     <td className="py-3.5 px-4 align-middle">
                       <span className="text-gray-500 text-sm">{q.vigencia} días</span>
